@@ -1,0 +1,52 @@
+##
+# File:    OeDescriptorUtils.py
+# Author:  jdw
+# Date:    22-May-2017
+# Version: 0.001
+#
+# Updates:
+#
+##
+"""
+Utilities to standardize chemical descriptors
+
+"""
+__docformat__ = "restructuredtext en"
+__author__ = "John Westbrook"
+__email__ = "jwest@rcsb.rutgers.edu"
+__license__ = "Creative Commons Attribution 3.0 Unported"
+__version__ = "V0.01"
+
+import logging
+logger = logging.getLogger(__name__)
+
+from openeye import oechem
+
+
+class OeDescriptorUtils(object):
+    ''' Utilities to standardize chemical descriptors
+    '''
+
+    def __init__(self):
+        pass
+        #
+
+    def standardizeSmiles(self, smiles, type="ISOMERIC"):
+        """ Return a standardized SMILES (type) or None
+        """
+        smilesOut = None
+        try:
+            mol = oechem.OEGraphMol()
+            if (oechem.OEParseSmiles(mol, smiles) == 1):
+                oechem.OEAssignAromaticFlags(mol)
+                if type == "CANNONICAL":
+                    smilesOut = oechem.OECreateCanSmiString(mol)
+                elif type == "ISOMERIC":
+                    smilesOut = oechem.OECreateIsoSmiString(mol)
+            else:
+                logger.error("Unable to parse input SMILES '{0}'".format(smiles))
+
+        except Exception as e:
+            logger.exception("Error '{0}' occured. Arguments {1}.".format(e.message, e.args))
+
+        return smilesOut
