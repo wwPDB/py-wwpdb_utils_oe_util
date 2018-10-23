@@ -18,6 +18,7 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.01"
 
+import os
 import sys
 import unittest
 import traceback
@@ -32,15 +33,17 @@ except ImportError as e:
 from mmcif_utils.chemcomp.PdbxChemCompModelIo import PdbxChemCompModelIo
 from mmcif_utils.chemcomp.PdbxChemCompModel import PdbxChemCompModelDescriptor
 
-
 @unittest.skipIf(skiptests, "Requires oe library")
 class OeBuildModelMolTests(unittest.TestCase):
 
     def setUp(self):
         self.__lfh = sys.stderr
         self.__verbose = True
-        self.__modelFilePath = '../data/MTGL00001.cif'
-        self.__modelFilePathList = ['../data/MTGL00001.cif']
+        HERE = os.path.abspath(os.path.dirname(__file__))
+        TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
+        mockTopPath = os.path.join(TOPDIR, 'wwpdb', 'mock-data')
+        self.__modelFilePath = os.path.join(mockTopPath, 'CCD', 'MTGL00001.cif')
+        self.__modelFilePathList = [self.__modelFilePath]
 
     def tearDown(self):
         pass
