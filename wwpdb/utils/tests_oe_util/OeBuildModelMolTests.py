@@ -66,7 +66,7 @@ class OeBuildModelMolTests(unittest.TestCase):
             dL = pccm.getDescriptorList()
             for d in dL:
                 pd = PdbxChemCompModelDescriptor(d, verbose=self.__verbose, log=self.__lfh)
-                print pd.getType()
+                print(pd.getType())
                 if pd.getType() == 'SMILES_CANNONICAL':
                     sm = pd.getDescriptor()
                     if (sm == oem.getIsoSMILES()):
