@@ -47,7 +47,7 @@ setup(
     },
     #
     # Also depends on 'openeye.oechem' but cannot install by pypi
-    install_requires=['mmcif.utils'],
+    install_requires=['mmcif.utils', 'wwpdb.utils.cc_dict_util'],
     packages=find_packages(exclude=['wwpdb.apps.tests_oe_util']),
     package_data={
         # If any package contains *.md or *.rst ...  files, include them:

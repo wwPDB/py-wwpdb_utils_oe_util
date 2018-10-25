@@ -32,15 +32,15 @@ import sys
 import traceback
 
 
-from cc_dict_util.persist.PdbxChemCompPersist import PdbxChemCompIt, PdbxChemCompAtomIt, PdbxChemCompBondIt
-from cc_dict_util.persist.PdbxChemCompPersist import PdbxChemCompDescriptorIt, PdbxChemCompIdentifierIt
+from wwpdb.utils.cc_dict_util.persist.PdbxChemCompPersist import PdbxChemCompIt, PdbxChemCompAtomIt, PdbxChemCompBondIt
+from wwpdb.utils.cc_dict_util.persist.PdbxChemCompPersist import PdbxChemCompDescriptorIt, PdbxChemCompIdentifierIt
 from mmcif.api.PdbxContainers import *
-from pdbx_v2.cc.PdbxChemComp import PdbxChemCompConstants
+from mmcif_utils.chemcomp.PdbxChemComp import PdbxChemCompConstants
 
 if sys.platform in ['darwin']:
-    from pdbx_v2.adapter.IoAdapterPy import IoAdapterPy as IoAdapter
+    from mmcif.io.IoAdapterPy import IoAdapterPy as IoAdapter
 else:
-    from pdbx_v2.adapter.IoAdapterCore import IoAdapterCore as IoAdapter
+    from mmcif.io.IoAdapterCore import IoAdapterCore as IoAdapter
 
 from openeye.oechem import *
 
