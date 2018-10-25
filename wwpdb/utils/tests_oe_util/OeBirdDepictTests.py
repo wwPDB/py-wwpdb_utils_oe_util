@@ -31,12 +31,17 @@ import shutil
 import fnmatch
 import string
 
-from mmcif_utils.bird.PdbxBirdIndex import PdbxBirdIndex
-from wwpdb.utils.oe_util.build.OeChemCompIoUtils import OeChemCompIoUtils
-from wwpdb.utils.oe_util.oedepict.OeAlignDepictUtils import OeDepictMCSAlign, OeDepictMCSAlignMulti, OeDepictMCSAlignSingle, OeTestMCSAlign
-from wwpdb.utils.oe_util.oedepict.OeDepict import OeDepict, OeDepictMultiPage
+try:
+    from mmcif_utils.bird.PdbxBirdIndex import PdbxBirdIndex
+    from wwpdb.utils.oe_util.build.OeChemCompIoUtils import OeChemCompIoUtils
+    from wwpdb.utils.oe_util.oedepict.OeAlignDepictUtils import OeDepictMCSAlign, OeDepictMCSAlignMulti, OeDepictMCSAlignSingle, OeTestMCSAlign
+    from wwpdb.utils.oe_util.oedepict.OeDepict import OeDepict, OeDepictMultiPage
+    skiptests = False
+except ImportError:
+    skiptests = True
+    
 
-
+@unittest.skipIf(skiptests, 'Could not import openeye')
 class OeBirdDepictTests(unittest.TestCase):
 
     def setUp(self):
