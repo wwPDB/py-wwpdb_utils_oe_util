@@ -25,7 +25,7 @@ import os
 import os.path
 
 
-from oe_util.build.OeBuildMol import OeBuildMol
+from wwpdb.utils.oe_util.build.OeBuildMol import OeBuildMol
 #
 #  Storage adapater can be changed here --
 if sys.platform in ['darwin']:

@@ -30,9 +30,14 @@ import os
 import os.path
 import shutil
 
-from wwpdb.utils.oe_util.oedepict.OeAlignDepictUtils import OeDepictMCSAlign, OeDepictMCSAlignMulti, OeDepictMCSAlignSingle, OeTestMCSAlign
+try:
+    from wwpdb.utils.oe_util.oedepict.OeAlignDepictUtils import OeDepictMCSAlign, OeDepictMCSAlignMulti, OeDepictMCSAlignSingle, OeTestMCSAlign
+    skiptests = False
+except ImportError:
+    skiptests = True
 
 
+@unittest.skipIf(skiptests, "Could not import openeye")
 class OeAlignDepictUtilsTests(unittest.TestCase):
 
     def setUp(self):

@@ -30,13 +30,13 @@ import os.path
 import shutil
 
 
+from wwpdb.utils.oe_util.build.OeChemCompIoUtils import OeChemCompIoUtils
+from wwpdb.utils.oe_util.oedepict.OeDepict import OeDepictBase
+
+from wwpdb.utils.cc_dict_util.timeout.TimeoutMultiProc import timeout, TimeoutException
+
 from openeye.oechem import *
 from openeye.oedepict import *
-
-from oe_util.build.OeChemCompIoUtils import OeChemCompIoUtils
-from oe_util.oedepict.OeDepict import OeDepictBase
-
-from cc_dict_util.timeout.TimeoutMultiProc import timeout, TimeoutException
 
 
 class OeDepictAlignBase(object):

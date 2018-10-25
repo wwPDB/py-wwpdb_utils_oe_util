@@ -25,9 +25,14 @@ import traceback
 import time
 import os
 
-from wwpdb.utils.oe_util.build.OeChemCompIoUtils import OeChemCompIoUtils
+try:
+    from wwpdb.utils.oe_util.build.OeChemCompIoUtils import OeChemCompIoUtils
+    skiptests = False
+except ImportError:
+    skiptests = True
+    
 
-
+@unittest.skipIf(skiptests, 'Could not import openeye')
 class OeChemCompIoUtilsTests(unittest.TestCase):
 
     def setUp(self):
