@@ -29,12 +29,16 @@ import os.path
 import fnmatch
 import string
 
-from wwpdb.utils.oe_util.oedepict.OeDepict import OeDepict, OeDepictMultiPage
-from wwpdb.utils.oe_util.build.OeChemCompIoUtils import OeChemCompIoUtils
-#
-from wwpdb.utils.oe_util.build.OeBuildMol import OeBuildMol
+try:
+    from wwpdb.utils.oe_util.oedepict.OeDepict import OeDepict, OeDepictMultiPage
+    from wwpdb.utils.oe_util.build.OeChemCompIoUtils import OeChemCompIoUtils
+    from wwpdb.utils.oe_util.build.OeBuildMol import OeBuildMol
+    skiptests = False
+except ImportError:
+    skiptests = True
 
 
+@unittest.skipIf(skiptests, "Cannot import openeye.oechem for tests")
 class OeDepictTests(unittest.TestCase):
 
     def setUp(self):

@@ -1,8 +1,8 @@
 ##
 #
-# File:    OePersistFullDictTests.py
+# File:    OeShapeSearchtests.py
 # Author:  J. Westbrook
-# Date:    24-Jan-2012
+# Date:    22-Feb-2012
 # Version: 0.001
 #
 # Updated:
@@ -12,7 +12,11 @@
 ##
 """
 Test cases for persistent storage of serialized OE molecule objects
-for the the full chemical component dictionary + PRD chemical components
+for the the full chemical component dictionary + PRD chemical components.
+
+Examples here illustrate building all of the persistent supporting data stores
+and index files required to support the search from scratch.   Each of the
+stores can also be updated incrementally.
 
 """
 __docformat__ = "restructuredtext en"
@@ -30,16 +34,23 @@ import os
 import os.path
 import string
 
-from cc_dict_util.persist.PdbxChemCompDictUtil import PdbxChemCompDictUtil
-from cc_dict_util.persist.PdbxChemCompDictIndex import PdbxChemCompDictIndex
+from wwpdb.utils.cc_dict_util.persist.PdbxChemCompDictUtil import PdbxChemCompDictUtil
+from wwpdb.utils.cc_dict_util.persist.PdbxChemCompDictIndex import PdbxChemCompDictIndex
 
-from oe_util.build.OePersist import OePersist
-from oe_util.build.OeBuildMol import OeBuildMol
+try:
+    from wwpdb.utils.oe_util.build.OePersist import OePersist
+    from wwpdb.utils.oe_util.build.OeBuildMol import OeBuildMol
+    from wwpdb.utils.oe_util.search.OeShapeSearch import OeShapeSearch
 
-from pdbx_v2.persist.PdbxPersist import PdbxPersist
+    from mmcif_utils.persist.PdbxPersist import PdbxPersist
+    from mmcif_utils.persist.PdbxPyIoAdapter import PdbxPyIoAdapter as PdbxIoAdapter
+    skiptests = False
+except ImportError:
+    skiptests = True
 
 
-class OePersistFullDictTests(unittest.TestCase):
+@unittest.skipIf(skiptests, "Cannot import openeye.oechem for tests")
+class OeShapeSearchtests(unittest.TestCase):
 
     def setUp(self):
         self.__lfh = sys.stdout
@@ -48,15 +59,16 @@ class OePersistFullDictTests(unittest.TestCase):
         ##
         # Set these as appropriate to checked out versions of the CC and PRDCC CVS repositories
         ##
-        self.__pathChemCompCVS = "../../../../../reference/components/ligand-dict-v3"
-        self.__pathPrdChemCompCVS = "../../../../../reference/components/prdcc-v3"
+        self.__pathChemCompCVS = "/data/components/ligand-dict-v3"
+        self.__pathPrdChemCompCVS = "/data/components/prdcc-v3"
         ##
         # file names for persistent stores -
         self.__persistStorePathCC = "chemcomp-store.db"
         self.__indexPathCC = "chemcomp-index.pic"
         self.__storePath = "oe-store.db"
         #
-        # Test list of PRD molecule ids
+        # Test list of PRD molecule ids  -- In future check the convention on the identifiers
+        #
         #
         self.__prdIdListO = ['PRDCC_000009', 'PRDCC_000109', 'PRDCC_000159', 'PRDCC_000199', 'PRDCC_000209', 'PRDCC_000219',
                              'PRDCC_000239', 'PRDCC_000259', 'PRDCC_000289', 'PRDCC_000299', 'PRDCC_000309', 'PRDCC_000319', 'PRDCC_000339',
@@ -129,7 +141,7 @@ class OePersistFullDictTests(unittest.TestCase):
     def testUpdateChemCompStoreWithPrd(self):
         """Test case -  update persistent store from a path list of PRD chemical component defintions.
 
-                        Extract the path list from the file system of the PRD CVS repository.
+                        Extract the path list from the fie system of the PRD CVS repository.
         """
         startTime = time.time()
         self.__lfh.write("\nStarting %s %s at %s\n" % (self.__class__.__name__,
@@ -138,7 +150,7 @@ class OePersistFullDictTests(unittest.TestCase):
         try:
             ccPathList = self.getPathList(topPath=self.__pathPrdChemCompCVS, pattern="*.cif", excludeDirs=['CVS', 'REMOVED', 'FULL'])
             if (self.__verbose):
-                self.__lfh.write("PRDCC pathlist length is %d\n" % len(ccPathList))
+                self.__lfh.write("Pathlist length is %d\n" % len(ccPathList))
             #
             dUtil = PdbxChemCompDictUtil(verbose=self.__verbose, log=self.__lfh)
             dUtil.updateStoreByFile(pathList=ccPathList, storePath=self.__persistStorePathCC)
@@ -174,19 +186,23 @@ class OePersistFullDictTests(unittest.TestCase):
                                                                      endTime - startTime))
 
     def testCreateStoreOE(self):
-        """Test case -  build persistent store of OE molecules using the contents of the persistent store
-                        of chemical component defintions.
+        """Test case -  build persistent store of serialized OE molecules using the contents of the chemical
+                        dictionary persistent store containing all of chemical component defintions.
+
+                        ***NOTE - This will display diagnostics from OE toolkit for molecules with
+                           problematic features.  These issues will not impact the shape search.
+
         """
         startTime = time.time()
         self.__lfh.write("\nStarting %s %s at %s\n" % (self.__class__.__name__,
                                                        sys._getframe().f_code.co_name,
                                                        time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
         try:
+            # Get handle for
             myPersist = PdbxPersist(self.__verbose, self.__lfh)
             indexD = myPersist.getIndex(dbFileName=self.__persistStorePathCC)
             myPersist.open(dbFileName=self.__persistStorePathCC)
             containerNameList = myPersist.getStoreContainerIndex()
-
             oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
             molList = []
             for ccId in containerNameList:
@@ -196,15 +212,18 @@ class OePersistFullDictTests(unittest.TestCase):
                     continue
                 #
                 oem.set(ccId, dcChemCompAtom=ccAt, dcChemCompBond=ccBnd)
-                oem.build3D()
-                if (self.__debug):
-                    self.__lfh.write("Title              = %s\n" % oem.getTitle())
-                    self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
-                    self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
-                molD = {}
-                molD['name'] = ccId
-                molD['oeb'] = oem.serialize()
-                molList.append(molD)
+                ok = oem.build3D()
+                if ok:
+                    if (self.__debug):
+                        self.__lfh.write("Title              = %s\n" % oem.getTitle())
+                        self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
+                        self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
+                    molD = {}
+                    molD['name'] = ccId
+                    molD['oeb'] = oem.serialize()
+                    molList.append(molD)
+                else:
+                    self.__lfh.write("+WARN - failed to build OE molecule for %s\n" % ccId)
 
             myPersist.close()
             #
@@ -226,82 +245,11 @@ class OePersistFullDictTests(unittest.TestCase):
                                                                      time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
                                                                      endTime - startTime))
 
-    def testFetchAll(self):
-        """Test case -  fetch all of the molecules in an 'open' persistent store
-        """
-        startTime = time.time()
-        self.__lfh.write("\nStarting %s %s at %s\n" % (self.__class__.__name__,
-                                                       sys._getframe().f_code.co_name,
-                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
-        try:
-            myPersist = OePersist(self.__verbose, self.__lfh)
-            myPersist.open(dbFileName=self.__storePath)
-            moleculeNameList = myPersist.getStoreMoleculeIndex()
-            #
-            oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
-            for ccId in moleculeNameList:
-                molD = myPersist.fetchMolecule(moleculeName=ccId)
-                name = molD['name']
-                ok = oem.deserialize(molD['oeb'])
-                if not ok:
-                    self.__lfh.write("Deserialized status %s = %d\n" % (ccId, ok))
-                    continue
-                if (self.__debug):
-                    self.__lfh.write("Deserialized SMILES (canonical) = %s\n" % oem.getCanSMILES())
-                    self.__lfh.write("Deserialized SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
-
-            myPersist.close()
-
-        except:
-            traceback.print_exc(file=self.__lfh)
-            self.fail()
-
-        endTime = time.time()
-        self.__lfh.write("\nCompleted %s %s at %s (%d seconds)\n" % (self.__class__.__name__,
-                                                                     sys._getframe().f_code.co_name,
-                                                                     time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                     endTime - startTime))
-
-    def testFetchOne(self):
-        """Test case -  fetch all of the molecules in the persistent store one by one.  Each fetch reopens
-           the store.
-        """
-        startTime = time.time()
-        self.__lfh.write("\nStarting %s %s at %s\n" % (self.__class__.__name__,
-                                                       sys._getframe().f_code.co_name,
-                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
-        try:
-            myPersist = OePersist(self.__verbose, self.__lfh)
-            moleculeNameList = myPersist.getIndex(dbFileName=self.__storePath)
-            #
-            oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
-            for ccId in moleculeNameList:
-                molD = myPersist.fetchOneMolecule(dbFileName=self.__storePath, moleculeName=ccId)
-                name = molD['name']
-                ok = oem.deserialize(molD['oeb'])
-                if not ok:
-                    self.__lfh.write("Deserialized status %s = %d\n" % (ccId, ok))
-                    continue
-
-                if (self.__debug):
-                    self.__lfh.write("Deserialized SMILES (canonical) = %s\n" % oem.getCanSMILES())
-                    self.__lfh.write("Deserialized SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
-
-        except:
-            traceback.print_exc(file=self.__lfh)
-            self.fail()
-
-        endTime = time.time()
-        self.__lfh.write("\nCompleted %s %s at %s (%d seconds)\n" % (self.__class__.__name__,
-                                                                     sys._getframe().f_code.co_name,
-                                                                     time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                     endTime - startTime))
-
-    def testBoundedFormulaSearch(self):
+    def testBoundedFormulaShapeSearch(self):
         """Test case -  for the set of PRD tests cases, perform a bounded formula search on the index file
            and then extract the candidate matching molecules from the OE persistent store.
 
-           This approximates a typical search scenario.
+           Search the formula filtered candidates with the target molecule via a shape search.
 
         """
         startTime = time.time()
@@ -309,32 +257,68 @@ class OePersistFullDictTests(unittest.TestCase):
                                                        sys._getframe().f_code.co_name,
                                                        time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
         try:
+            # Get handle for store of serialized OE molecules
             myPersist = OePersist(self.__verbose, self.__lfh)
-            oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
             #
+            # These will represent the objects for the reference and library molecules.
+            oemRef = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
+            oemFit = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
+            #
+            # Get handle search index and recover the index as dictioanry object.
             dIndx = PdbxChemCompDictIndex(verbose=self.__verbose, log=self.__lfh)
             ccIdx = dIndx.readIndex(indexPath=self.__indexPathCC)
-            self.__lfh.write("Index %s length = %d\n" % (self.__indexPathCC, len(ccIdx)))
+            #
+            # Test each of the example PRD molecules -
             #
             for prdId in self.__prdIdList:
-                if prdId in ccIdx:
-                    d = ccIdx[prdId]
-                    eCounts = d['typeCounts']
-                    mL = dIndx.searchBoundedFormula(elementCounts=eCounts, indexPath=self.__indexPathCC)
-                    self.__lfh.write("Formula filter count for %s = %d\n" % (prdId, len(mL)))
-                    for ccId in mL:
-                        molD = myPersist.fetchOneMolecule(dbFileName=self.__storePath, moleculeName=ccId)
-                        name = molD['name']
-                        ok = oem.deserialize(molD['oeb'])
-                        if not ok:
-                            self.__lfh.write("Deserialized status %s = %d\n" % (ccId, ok))
-                            continue
-                        if (self.__debug):
-                            self.__lfh.write("Deserialized SMILES (canonical) = %s\n" % oem.getCanSMILES())
-                            self.__lfh.write("Deserialized SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
-                else:
-                    self.__lfh.write("+WARNING - Index %s missing id %s \n" % (self.__indexPathCC, prdId))
+                d = ccIdx[prdId]
+                #
+                # Do the formula filtering using element composition stored in the index -
+                #
+                # The list of matching candidates id codes is returned in list mL -
+                #
+                eCounts = d['typeCounts']
+                mL = dIndx.searchBoundedFormula(elementCounts=eCounts, indexPath=self.__indexPathCC, upperOffset=4, lowerOffset=2)
+                self.__lfh.write("Formula filter count for %s = %d\n" % (prdId, len(mL)))
+                #
+                #
+                # Recover the reference molecule -
+                #
+                refMolD = myPersist.fetchOneMolecule(dbFileName=self.__storePath, moleculeName=prdId)
+                refName = refMolD['name']
+                ok = oemRef.deserialize(refMolD['oeb'])
+                if not ok:
+                    self.__lfh.write("Deserialized status for ref molecule %s = %d\n" % (ccId, ok))
+                    continue
+                #
+                # Initialize the shape search and set the reference molecule
+                #
+                oeShape = OeShapeSearch(verbose=self.__verbose, log=self.__lfh)
+                oeShape.setRefMol(oemRef.getMol())
+                retList = []
 
+                #
+                # Test each of the candidates from the formula filter -
+                #
+                for ccId in mL:
+                    fitMolD = myPersist.fetchOneMolecule(dbFileName=self.__storePath, moleculeName=ccId)
+                    name = fitMolD['name']
+                    ok = oemFit.deserialize(fitMolD['oeb'])
+                    if not ok:
+                        self.__lfh.write("Deserialized status %s = %d\n" % (ccId, ok))
+                        continue
+                    if (self.__debug):
+                        self.__lfh.write("Deserialized SMILES (canonical) = %s\n" % oemFit.getCanSMILES())
+                        self.__lfh.write("Deserialized SMILES (isomeric)  = %s\n" % oemFit.getIsoSMILES())
+                    #
+                    # Invoke the shape search here and save the score result list
+                    #
+                    rD = oeShape.setFitMol(oemFit.getMol())
+                    retList.append(rD)
+                #
+                # Output the ordered list of shape scores -- for this PRD reference molecule
+                for r in retList:
+                    self.__lfh.write("Target %s match %r\n" % (prdId, r.items()))
         except:
             traceback.print_exc(file=self.__lfh)
             self.fail()
@@ -344,39 +328,114 @@ class OePersistFullDictTests(unittest.TestCase):
                                                                      sys._getframe().f_code.co_name,
                                                                      time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
                                                                      endTime - startTime))
+
+    def testSimpleShapeSearch(self):
+        """Test case -  build OE molecule from chemical component definitions and perform shape search
+
+        """
+        startTime = time.time()
+        self.__lfh.write("\nStarting %s %s at %s\n" % (self.__class__.__name__,
+                                                       sys._getframe().f_code.co_name,
+                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
+        try:
+            #
+            # Get the path list of PRD CC  -
+            ccPathList = self.getPathList(topPath=self.__pathPrdChemCompCVS, pattern="*.cif", excludeDirs=['CVS', 'REMOVED', 'FULL'])
+            for ii, ccPath in enumerate(ccPathList):
+                self.__lfh.write(" %d %s\n" % (ii, ccPath))
+
+            #
+            # Initialize the shape search and set the reference molecule
+            #
+            oeMolRef = self.__getOEMol(ccPath=ccPathList[255])
+            oeShape = OeShapeSearch(verbose=self.__verbose, log=self.__lfh)
+            oeShape.setRefMol(oeMolRef)
+            retList = []
+            for ccPath in ccPathList[279:290]:
+                oeMolFit = self.__getOEMol(ccPath=ccPath)
+                #
+                # Test each of the molecule in the path list -
+                # Invoke the shape search here and save the score result list
+                #
+                rD = oeShape.setFitMol(oeMolFit)
+                retList.append(rD)
+                #
+            # Output the list of shape scores --
+            for r in retList:
+                self.__lfh.write("Reference %s match %r\n" % (oeMolRef.GetTitle(), r.items()))
+        except:
+            traceback.print_exc(file=self.__lfh)
+            self.fail()
+
+        endTime = time.time()
+        self.__lfh.write("\nCompleted %s %s at %s (%d seconds)\n" % (self.__class__.__name__,
+                                                                     sys._getframe().f_code.co_name,
+                                                                     time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
+                                                                     endTime - startTime))
+
+    def __getOEMol(self, ccPath):
+        """Test case -  build OE molecule using 3D data in the definition source data
+
+        """
+        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
+                                                 sys._getframe().f_code.co_name))
+        try:
+            oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
+            myReader = PdbxIoAdapter(self.__verbose, self.__lfh)
+            ok = myReader.read(pdbxFilePath=ccPath)
+            #
+            # myReader.write(pdbxFilePath="TMP.cif")
+            #
+            for container in myReader.getContainerList():
+                oem.set(container.getName(),
+                        dcChemCompAtom=container.getObj("chem_comp_atom"),
+                        dcChemCompBond=container.getObj("chem_comp_bond"))
+                oem.build3D(coordType="model")
+                if self.__debug:
+                    self.__lfh.write("Title              = %s\n" % oem.getTitle())
+                    self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
+                    self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
+
+            return oem.getMol()
+
+        except:
+            traceback.print_exc(file=self.__lfh)
+            self.fail()
 
 
 def suiteCreateStoreCC():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(OePersistFullDictTests("testCreateChemCompStore"))
-    suiteSelect.addTest(OePersistFullDictTests("testUpdateChemCompStoreWithPrd"))
+    suiteSelect.addTest(OeShapeSearchtests("testCreateChemCompStore"))
+    suiteSelect.addTest(OeShapeSearchtests("testUpdateChemCompStoreWithPrd"))
     return suiteSelect
 
 
 def suiteCreateIndexCC():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(OePersistFullDictTests("testCreateChemCompIndex"))
+    suiteSelect.addTest(OeShapeSearchtests("testCreateChemCompIndex"))
     return suiteSelect
 
 
 def suiteCreateStoreOE():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(OePersistFullDictTests("testCreateStoreOE"))
-    #    suiteSelect.addTest(OePersistFullDictTests("testFetchAll"))
-    #    suiteSelect.addTest(OePersistFullDictTests("testFetchOne"))
-
+    suiteSelect.addTest(OeShapeSearchtests("testCreateStoreOE"))
     return suiteSelect
 
 
 def suiteSearchStoreOE():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(OePersistFullDictTests("testFetchAll"))
-    suiteSelect.addTest(OePersistFullDictTests("testFetchOne"))
-    suiteSelect.addTest(OePersistFullDictTests("testBoundedFormulaSearch"))
+    suiteSelect.addTest(OeShapeSearchtests("testBoundedFormulaShapeSearch"))
+    return suiteSelect
+
+
+def suiteSearchSimple():
+    suiteSelect = unittest.TestSuite()
+    suiteSelect.addTest(OeShapeSearchtests("testSimpleShapeSearch"))
     return suiteSelect
 
 if __name__ == '__main__':
     #
+
     if (not os.access("chemcomp-store.db", os.F_OK)):
         mySuite = suiteCreateStoreCC()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
@@ -390,4 +449,7 @@ if __name__ == '__main__':
         unittest.TextTestRunner(verbosity=2).run(mySuite)
 
     mySuite = suiteSearchStoreOE()
+    unittest.TextTestRunner(verbosity=2).run(mySuite)
+
+    mySuite = suiteSearchSimple()
     unittest.TextTestRunner(verbosity=2).run(mySuite)
