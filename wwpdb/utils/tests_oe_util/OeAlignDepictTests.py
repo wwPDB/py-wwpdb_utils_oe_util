@@ -25,6 +25,7 @@ import sys
 import unittest
 import traceback
 import sys
+import platform
 import time
 import os
 import os.path
@@ -44,9 +45,17 @@ class OeAlignDepictTests(unittest.TestCase):
         self.__lfh = sys.stderr
         self.__verbose = True
         #
+
+        self.__here = os.path.abspath(os.path.dirname(__file__))
+        self.__examples = os.path.join(self.__here, 'examples')
+        self.__testoutput = os.path.join(self.__here, 'test-output', platform.python_version())
+        self.__datadir = os.path.join(self.__here, 'data')
+        if not os.path.exists(self.__testoutput):
+            os.makedirs(self.__testoutput)
+
         # Chemical component repository path -
-        self.__topCachePath = "../../../../../reference/components/ligand-dict-v3"
-        self.__rnaPairFile = './examples/rna-linking-components.txt'
+        self.__topCachePath = os.path.join(self.__here, "ligand-dict-v3")
+        self.__rnaPairFile = os.path.join(self.__examples, 'rna-linking-components.txt')
         #
         self.__refId = 'C'
         #
@@ -75,7 +84,7 @@ class OeAlignDepictTests(unittest.TestCase):
             oed.setRefId(self.__refId, cachePath=self.__topCachePath)
             for fitId in self.__idList:
                 oed.setFitId(fitId, cachePath=self.__topCachePath)
-                fName = "ref-" + self.__refId + "-trg-" + fitId + ".png"
+                fName = os.path.join(self.__testoutput, "ref-" + self.__refId + "-trg-" + fitId + ".png")
                 aML = oed.alignPair(imagePath=fName)
                 if len(aML) > 0:
                     for (rCC, rAt, tCC, tAt) in aML:
@@ -93,7 +102,7 @@ class OeAlignDepictTests(unittest.TestCase):
             oed = OeDepictMCSAlign(verbose=self.__verbose, log=self.__lfh)
             oed.setRefId(self.__refId, cachePath=self.__topCachePath)
             oed.setFitIdList(self.__idList, cachePath=self.__topCachePath)
-            imageFile = "list-example-mcs-alignment.pdf"
+            imageFile = os.path.join(self.__testoutput, "list-example-mcs-alignment.pdf")
             aML = oed.alignPairList(imagePath=imageFile)
             if len(aML) > 0:
                 for (rCC, rAt, tCC, tAt) in aML:
@@ -111,7 +120,7 @@ class OeAlignDepictTests(unittest.TestCase):
         try:
             oed = OeDepictMCSAlign(verbose=self.__verbose, log=self.__lfh)
             oed.setPairIdList(self.__pairIdList, cachePath=self.__topCachePath)
-            imageFile = "pair-list-example-mcs-alignment.pdf"
+            imageFile = os.path.join(self.__testoutput, "pair-list-example-mcs-alignment.pdf")
             aML = oed.alignPairList(imagePath=imageFile)
             if len(aML) > 0:
                 for (rCC, rAt, tCC, tAt) in aML:
@@ -130,7 +139,7 @@ class OeAlignDepictTests(unittest.TestCase):
             pairIdList = self.__readPairList(fn=self.__rnaPairFile)
             oed = OeDepictMCSAlign(verbose=self.__verbose, log=self.__lfh)
             oed.setPairIdList(pairIdList, cachePath=self.__topCachePath)
-            imageFile = "rna-modified-pair-alignment.pdf"
+            imageFile = os.path.join(self.__testoutput, "rna-modified-pair-alignment.pdf")
             aML = oed.alignPairList(imagePath=imageFile)
             if len(aML) > 0:
                 for (rCC, rAt, tCC, tAt) in aML:
@@ -166,7 +175,8 @@ class OeAlignDepictTests(unittest.TestCase):
         self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name))
         try:
             # self.__extPairTup=('../data/ATP.sdf','ATP')
-            self.__extPairTup = ('../data/ATP.sdf', '../data/ATP.cif')
+            self.__extPairTup = (os.path.join(self.__datadir, 'ATP.sdf'), 
+                                 os.path.join(self.__datadir, 'ATP.cif'))
             refPath = self.__extPairTup[0]
             fitId = self.__extPairTup[1]
             fitPath = self.__extPairTup[1]
@@ -196,9 +206,11 @@ class OeAlignDepictTests(unittest.TestCase):
         try:
             oed = OeDepictMCSAlign(verbose=self.__verbose, log=self.__lfh)
             oed.setSearchType(sType='relaxed')
-            oed.setRefPath(ccPath='./examples/PRDCC_000225.cif', title="PRD_000225", suppressHydrogens=False)
-            oed.setFitPath(ccPath='./examples/L_LDI_990_.comp.cif', title='L_LDI_990', suppressHydrogens=False)
-            fName = "relaxed-fit.png"
+            oed.setRefPath(ccPath=os.path.join(self.__examples, 'PRDCC_000225.cif'), 
+                           title="PRD_000225", suppressHydrogens=False)
+            oed.setFitPath(ccPath=os.path.join(self.__examples, 'L_LDI_990_.comp.cif'), 
+                           title='L_LDI_990', suppressHydrogens=False)
+            fName = os.path.join(self.__testoutput, "relaxed-fit.png")
             aML = oed.alignPair(imagePath=fName)
             if len(aML) > 0:
                 for (rCC, rAt, tCC, tAt) in aML:
