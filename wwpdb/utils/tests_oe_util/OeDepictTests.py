@@ -22,6 +22,7 @@ __version__ = "V0.01"
 
 import sys
 import unittest
+import platform
 import traceback
 import time
 import os
@@ -44,32 +45,31 @@ class OeDepictTests(unittest.TestCase):
     def setUp(self):
         self.__lfh = sys.stderr
         self.__verbose = True
-        self.__sdfFilePath = '../data/ATP.sdf'
-        self.__topCachePath = '../../../../../reference/components/ligand-dict-v3'
-        self.__idList = ['atp', 'gtp', 'A', 'C', 'G', 'DG', 'HYP']
-        self.__pathList = [
-            '../../../../../reference/components/ligand-dict-v3/H/HYP/HYP.cif',
-            '../../../../../reference/components/ligand-dict-v3/A/A00/A00.cif',
-            '../../../../../reference/components/ligand-dict-v3/A/A01/A01.cif',
-            '../../../../../reference/components/ligand-dict-v3/A/A02/A02.cif',
-            '../../../../../reference/components/ligand-dict-v3/A/A03/A03.cif',
-            '../../../../../reference/components/ligand-dict-v3/A/A04/A04.cif',
-            '../../../../../reference/components/ligand-dict-v3/A/A05/A05.cif',
-            '../../../../../reference/components/ligand-dict-v3/A/A07/A07.cif',
-            '../../../../../reference/components/ligand-dict-v3/A/A09/A09.cif',
-            '../../../../../reference/components/ligand-dict-v3/A/A0A/A0A.cif',
-            '../../../../../reference/components/ligand-dict-v3/A/A0D/A0D.cif',
-            '../../../../../reference/components/ligand-dict-v3/A/A0H/A0H.cif',
-            '../../../../../reference/components/ligand-dict-v3/A/A0P/A0P.cif',
-            '../../../../../reference/components/ligand-dict-v3/A/A10/A10.cif',
-            '../../../../../reference/components/ligand-dict-v3/A/A11/A11.cif',
-            '../../../../../reference/components/ligand-dict-v3/A/A12/A12.cif',
-            '../../../../../reference/components/ligand-dict-v3/A/A13/A13.cif',
-            '../../../../../reference/components/ligand-dict-v3/A/A14/A14.cif']
 
+        self.__here = os.path.abspath(os.path.dirname(__file__))
+        self.__examples = os.path.join(self.__here, 'examples')
+        self.__datadir = os.path.join(self.__here, 'data')
+        self.__testoutput = os.path.join(self.__here, 'test-output', platform.python_version())
+        if not os.path.exists(self.__testoutput):
+            os.makedirs(self.__testoutput)
+
+        self.__sdfFilePath = os.path.join(self.__datadir, 'ATP.sdf')
+        self.__topCachePath = os.path.join(self.__here, 'ligand-dict-v3')
+        self.__idList = ['atp', 'gtp', 'A', 'C', 'G', 'DG', 'UAR']
+        self.__pathList = [
+            os.path.join(self.__topCachePath, 'H/H2U/H2U.cif'),
+            os.path.join(self.__topCachePath, 'A/A23/A23.cif'),
+            os.path.join(self.__topCachePath, 'A/A/A.cif'),
+            os.path.join(self.__topCachePath, 'A/A2L/A2L.cif'),
+            os.path.join(self.__topCachePath, 'A/A5O/A5O.cif'),
+            os.path.join(self.__topCachePath, 'A/AET/AET.cif'),
+            os.path.join(self.__topCachePath, 'A/ATP/ATP.cif'),
+            os.path.join(self.__topCachePath, 'D/DG/DG.cif'),
+            os.path.join(self.__topCachePath, 'A/A/A.cif')]
+                         
         self.__pathList2 = ['../data/PRD_000027.cif']
-        self.__pathPrdChemCompCVS = "../../../../../reference/components/prdcc-v3"
-        self.__pathChemCompCVS = "../../../../../reference/components/ligand-dict-v3"
+        self.__pathPrdChemCompCVS = os.path.join(self.__here, "prdcc-v3")
+        self.__pathChemCompCVS = self.__topCachePath
 
     def tearDown(self):
         pass
@@ -135,7 +135,7 @@ class OeDepictTests(unittest.TestCase):
 
         # expand pattern
         pattern = pattern or '*'
-        patternList = string.splitfields(pattern, ';')
+        patternList = str.split(pattern, ';')
 
         for name in names:
             fullname = os.path.normpath(os.path.join(topPath, name))
@@ -160,13 +160,14 @@ class OeDepictTests(unittest.TestCase):
         try:
             #idList = self.__getIdsFromFile('IDLIST.list')
             idList = self.__idList
-            oeMolTitleList = self.__testMakeFromIds(idList)
+            oeMolTitleZip = self.__testMakeFromIds(idList)
+            oeMolTitleList = list(oeMolTitleZip)
             if (self.__verbose):
                 self.__lfh.write("molTitleList length is %d\n" % len(oeMolTitleList))
             #
             for ccId, mol, title in oeMolTitleList:
                 dirPath, fName = os.path.split(title)
-                imagePath = ccId + ".svg"
+                imagePath = os.path.join(self.__testoutput, ccId + ".svg")
                 oed = OeDepict(verbose=self.__verbose, log=self.__lfh)
                 title = ''
                 oed.setMolTitleList([(ccId, mol, title)])
@@ -186,13 +187,14 @@ class OeDepictTests(unittest.TestCase):
                                                  sys._getframe().f_code.co_name))
         try:
             ccPathList = self.__getPathList(topPath=self.__pathPrdChemCompCVS, pattern="*.cif", excludeDirs=['CVS', 'REMOVED', 'FULL'])
-            oeMolTitleList = self.__testMakeFromFiles(pathList=ccPathList)
+            oeMolTitleZip = self.__testMakeFromFiles(pathList=ccPathList)
+            oeMolTitleList = list(oeMolTitleZip)
             if (self.__verbose):
                 self.__lfh.write("molTitleList length is %d\n" % len(oeMolTitleList))
             #
             for ccId, mol, title in oeMolTitleList:
                 dirPath, fName = os.path.split(title)
-                imagePath = fName[:-4] + ".svg"
+                imagePath = os.path.join(self.__testoutput, fName[:-4] + ".svg")
                 oed = OeDepict(verbose=self.__verbose, log=self.__lfh)
                 oed.setMolTitleList([(ccId, mol, title)])
                 oed.setDisplayOptions(labelAtomName=False, labelAtomCIPStereo=True, labelAtomIndex=False, labelBondIndex=False, bondDisplayWidth=0.5)
@@ -216,7 +218,7 @@ class OeDepictTests(unittest.TestCase):
                                   labelAtomIndex=False, labelBondIndex=False, bondDisplayWidth=0.5)
             oed.setGridOptions(rows=2, cols=2)
             oed.prepare()
-            oed.write("myIdListtest.png")
+            oed.write(os.path.join(self.__testoutput, "myIdListtest.png"))
         except:
             traceback.print_exc(file=self.__lfh)
             self.fail()
@@ -233,7 +235,7 @@ class OeDepictTests(unittest.TestCase):
             oed.setDisplayOptions(imageX=1500, imageY=1500, labelAtomName=True, labelAtomCIPStereo=True, labelAtomIndex=False, labelBondIndex=False, bondDisplayWidth=0.5)
             oed.setGridOptions(rows=3, cols=3)
             oed.prepare()
-            oed.write("pathListtest.png")
+            oed.write(os.path.join(self.__testoutput, "pathListtest.png"))
         except:
             traceback.print_exc(file=self.__lfh)
             self.fail()
@@ -248,7 +250,7 @@ class OeDepictTests(unittest.TestCase):
             oed = OeDepictMultiPage(verbose=self.__verbose, log=self.__lfh)
             oed.setMolTitleList(oeMolTitleList)
             oed.prepare()
-            oed.write("mulitIdListtest.pdf")
+            oed.write(os.path.join(self.__testoutput, "mulitIdListtest.pdf"))
         except:
             traceback.print_exc(file=self.__lfh)
             self.fail()
@@ -264,7 +266,7 @@ class OeDepictTests(unittest.TestCase):
             oed.setDisplayOptions(pageOrientation='Portrait', labelAtomName=True, labelAtomCIPStereo=True, labelAtomIndex=False, labelBondIndex=False, bondDisplayWidth=0.5)
             oed.setGridOptions(rows=2, cols=1)
             oed.prepare()
-            oed.write("multiPathListtest.pdf")
+            oed.write(os.path.join(self.__testoutput, "multiPathListtest.pdf"))
         except:
             traceback.print_exc(file=self.__lfh)
             self.fail()
@@ -294,7 +296,7 @@ class OeDepictTests(unittest.TestCase):
             if oem.importFile(self.__sdfFilePath, type='3D'):
                 self.__lfh.write("Title              = %s\n" % oem.getTitle())
             #
-            imagePath = "ATP.svg"
+            imagePath = os.path.join(self.__testoutput, "ATP.svg")
             oed = OeDepict(verbose=self.__verbose, log=self.__lfh)
             oed.setMolTitleList([('ATP', oem, 'Title for ATP')])
             oed.setDisplayOptions(labelAtomName=True, labelAtomCIPStereo=True, labelAtomIndex=False, labelBondIndex=False, bondDisplayWidth=0.5)
@@ -311,7 +313,7 @@ class OeDepictTests(unittest.TestCase):
         self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
                                                  sys._getframe().f_code.co_name))
         try:
-            imagePath = "benzene.svg"
+            imagePath = os.path.join(self.__testoutput, "benzene.svg")
             oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
             ok = oem.importSmiles("c1ccccc1")
 
