@@ -222,8 +222,10 @@ class OeDepict(OeDepictBase):
 
     def prepare(self):
         self.__setupImage()
+        # We convert to list as may come in as a python 3 zipobject with is not indexable
+        mollist = list(self._molTitleList)
         for idx, cell in enumerate(self.__grid.GetCells()):
-            ccId, oeMol, title = self._molTitleList[idx]
+            ccId, oeMol, title = mollist[idx]
             #
             if self._params['suppressHydrogens']:
                 mol = oeMol.getGraphMolSuppressH()
