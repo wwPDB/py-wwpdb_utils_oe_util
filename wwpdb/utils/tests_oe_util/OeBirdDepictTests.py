@@ -157,7 +157,8 @@ class OeBirdDepictTests(unittest.TestCase):
             ofh.write("</ul>\n")
             ofh.write("</body>\n")
             ofh.write("</html>\n")
-
+            ofh.close()
+            
         except:
             traceback.print_exc(file=self.__lfh)
             self.fail()
