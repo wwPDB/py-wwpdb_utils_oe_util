@@ -25,6 +25,7 @@ __version__ = "V0.01"
 import sys
 import unittest
 import traceback
+import platform
 import time
 import os
 
@@ -42,8 +43,15 @@ class OeBuildMolTests(unittest.TestCase):
     def setUp(self):
         self.__lfh = sys.stderr
         self.__verbose = True
-        self.__sdfFilePath = '../data/ATP.sdf'
-        self.__pathList = ['../data/ATP.cif', '../data/GTP.cif', '../data/ARG.cif']
+        self.__here = os.path.abspath(os.path.dirname(__file__))
+        self.__testoutput = os.path.join(self.__here, 'test-output', platform.python_version())
+        if not os.path.exists(self.__testoutput):
+            os.makedirs(self.__testoutput)
+        self.__datadir = os.path.join(self.__here, 'data')
+        self.__sdfFilePath = os.path.join(self.__datadir, 'ATP.sdf')
+        self.__pathList = [os.path.join(self.__datadir, 'ATP.cif'),
+                           os.path.join(self.__datadir, 'GTP.cif'),
+                           os.path.join(self.__datadir, 'ARG.cif')]
 
     def tearDown(self):
         pass
@@ -101,7 +109,8 @@ class OeBuildMolTests(unittest.TestCase):
             for pth in self.__pathList:
                 myReader = PdbxIoAdapter(self.__verbose, self.__lfh)
                 ok = myReader.read(pdbxFilePath=pth)
-                myReader.write(pdbxFilePath="TMP.cif")
+                myReader.write(pdbxFilePath=os.path.join(self.__testoutput,
+                                                         "TMP.cif"))
                 for container in myReader.getContainerList():
                     oem.set(container.getName(),
                             dcChemCompAtom=container.getObj("chem_comp_atom"),
@@ -136,7 +145,8 @@ class OeBuildMolTests(unittest.TestCase):
             for pth in self.__pathList:
                 myReader = PdbxIoAdapter(self.__verbose, self.__lfh)
                 ok = myReader.read(pdbxFilePath=pth)
-                myReader.write(pdbxFilePath="TMP.cif")
+                myReader.write(pdbxFilePath=os.path.join(self.__testoutput,
+                                                         "TMP.cif"))
                 for container in myReader.getContainerList():
                     oem.set(container.getName(),
                             dcChemCompAtom=container.getObj("chem_comp_atom"),

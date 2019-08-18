@@ -32,6 +32,7 @@ except ImportError:
     
 
 @unittest.skipIf(skiptests, 'Could not import openeye')
+@unittest.skip('Input files not available - family-members-alternative')
 class OeBirdDepictTests(unittest.TestCase):
     def setUp(self):
         self.__lfh=sys.stderr

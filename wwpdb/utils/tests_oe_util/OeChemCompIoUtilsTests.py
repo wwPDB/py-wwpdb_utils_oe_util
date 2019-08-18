@@ -22,6 +22,7 @@ __version__ = "V0.01"
 import sys
 import unittest
 import traceback
+import platform
 import time
 import os
 
@@ -38,8 +39,16 @@ class OeChemCompIoUtilsTests(unittest.TestCase):
     def setUp(self):
         self.__lfh = sys.stdout
         self.__verbose = True
-        self.__topCachePath = "../../../../../reference/components/ligand-dict-v3"
-        self.__pathList = ['../data/ATP.cif', '../data/GTP.cif', '../data/ARG.cif']
+        self.__here = os.path.abspath(os.path.dirname(__file__))
+        self.__testoutput = os.path.join(self.__here, 'test-output', platform.python_version())
+        if not os.path.exists(self.__testoutput):
+            os.makedirs(self.__testoutput)
+        self.__datadir = os.path.join(self.__here, 'data')
+
+        self.__topCachePath = os.path.join(self.__here, "ligand-dict-v3")
+        self.__pathList = [os.path.join(self.__datadir, 'ATP.cif'),
+                           os.path.join(self.__datadir, 'GTP.cif'),
+                           os.path.join(self.__datadir, 'ARG.cif')]
         self.__idList = ['MSE', 'GTP', 'TRP']
 
     def tearDown(self):

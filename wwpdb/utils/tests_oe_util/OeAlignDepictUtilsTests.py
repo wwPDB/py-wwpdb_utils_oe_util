@@ -24,6 +24,7 @@ __version__ = "V0.01"
 import sys
 import unittest
 import traceback
+import platform
 import sys
 import time
 import os
@@ -44,18 +45,37 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
         self.__lfh = sys.stderr
         self.__verbose = True
         #
+        self.__here = os.path.abspath(os.path.dirname(__file__))
+        self.__examples = os.path.join(self.__here, 'examples')
+        self.__testoutput = os.path.join(self.__here, 'test-output',
+                                         platform.python_version())
+        self.__datadir = os.path.join(self.__here, 'data')
+        if not os.path.exists(self.__testoutput):
+            os.makedirs(self.__testoutput)
         # Chemical component repository path -
-        self.__topCachePath = "../../../../../reference/components/ligand-dict-v3"
-        self.__rnaPairFile = './examples/rna-linking-components.txt'
+        self.__topCachePath = os.path.join(self.__here, "ligand-dict-v3")
+        self.__rnaPairFile = os.path.join(self.__examples, 'rna-linking-components.txt')
         #
         self.__refId = 'C'
         #
         self.__idList = ['cg1', 'atp', 'gtp', 'A', 'C', 'G', 'DG']
         self.__pairIdList = [('c', 'cg1'), ('c', 'atp'), ('c', 'gtp'), ('c', 'A'), ('c', 'C'), ('c', 'G'), ('c', 'DG')]
         #
-        self.__refPathTup = ('A', '../data/A.cif', './A-ref.svg')
-        self.__fitPathTupList = [('A', '../data/A.cif', './A-fit.svg'), ('T', '../data/T.cif', './T-fit.svg'),
-                                 ('ATP', '../data/ATP.cif', './ATP-fit.svg'), ('GTP', '../data/GTP.cif', './GTP-fit.svg')]
+        self.__refPathTup = ('A',
+                             os.path.join(self.__datadir, 'A.cif'),
+                             os.path.join(self.__testoutput, 'A-ref.svg'))
+        self.__fitPathTupList = [('A',
+                                  os.path.join(self.__datadir, 'A.cif'),
+                                  os.path.join(self.__testoutput, 'A-fit.svg')),
+                                 ('T',
+                                  os.path.join(self.__datadir, 'T.cif'),
+                                  os.path.join(self.__testoutput, 'T-fit.svg')),
+                                 ('ATP',
+                                  os.path.join(self.__datadir, 'ATP.cif'),
+                                  os.path.join(self.__testoutput, 'ATP-fit.svg')),
+                                 ('GTP',
+                                  os.path.join(self.__datadir, 'GTP.cif'),
+                                  os.path.join(self.__testoutput, 'GTP-fit.svg'))]
         #
 
     def tearDown(self):

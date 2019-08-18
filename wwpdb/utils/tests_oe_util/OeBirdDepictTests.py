@@ -23,6 +23,7 @@ __version__ = "V0.01"
 import sys
 import unittest
 import traceback
+import platform
 import sys
 import time
 import os
@@ -47,6 +48,9 @@ class OeBirdDepictTests(unittest.TestCase):
     def setUp(self):
         self.__lfh = sys.stderr
         self.__verbose = True
+        self.__here = os.path.abspath(os.path.dirname(__file__))
+        self.__testoutput = os.path.join(self.__here, 'test-output',
+                                         platform.python_version())
 
     def tearDown(self):
         pass
@@ -60,7 +64,9 @@ class OeBirdDepictTests(unittest.TestCase):
                                                  sys._getframe().f_code.co_name))
         fD = {}
         try:
-            bI = PdbxBirdIndex(indexPath="bird-index.pic", verbose=self.__verbose, log=self.__lfh)
+            bI = PdbxBirdIndex(indexPath=os.path.join(self.__testoutput,
+                                                      "bird-index.pic"),
+                               verbose=self.__verbose, log=self.__lfh)
             familyIdL = bI.getFamilyList()
             for familyId in familyIdL:
                 prdIdList = bI.getPrdIdList(familyId)
@@ -132,7 +138,7 @@ class OeBirdDepictTests(unittest.TestCase):
         """
         self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name))
         tS = time.strftime("%Y %m %d %H:%M:%S", time.localtime())
-        ofh = open("index.html", 'w')
+        ofh = open(os.path.join(self.__testoutput, "index.html"), 'w')
         ofh.write("<html>\n")
         ofh.write("<body>\n")
         ofh.write("<h4>Index of family chemical diagrams produced on: %s</h4>\n" % tS)
