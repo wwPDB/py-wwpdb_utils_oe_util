@@ -23,7 +23,10 @@ import os
 import traceback
 import shelve
 import shutil
-import cPickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
 
 from mmcif_utils.persist.LockFile import LockFile
@@ -139,7 +142,7 @@ class OePersist(object):
             self.__lockObj = LockFile(dbFileName, timeoutSeconds=self.__timeoutSeconds, retrySeconds=self.__retrySeconds,
                                       verbose=self.__verbose, log=self.__lfh)
             self.__lockObj.acquire()
-            self.__db = shelve.open(dbFileName, flag=flag, protocol=cPickle.HIGHEST_PROTOCOL)
+            self.__db = shelve.open(dbFileName, flag=flag, protocol=pickle.HIGHEST_PROTOCOL)
             return True
         except:
             if self.__lockObj is not None:
@@ -247,7 +250,7 @@ class OePersist(object):
         try:
             if (self.__isExpired):
                 self.__reIndex()
-            db = shelve.open(dbFileName, flag='c', protocol=cPickle.HIGHEST_PROTOCOL)
+            db = shelve.open(dbFileName, flag='c', protocol=pickle.HIGHEST_PROTOCOL)
             db['__index__'] = self.__moleculeNameList
             if (self.__debug):
                 self.__lfh.write("+OePersist.__storeShelve() - Molecule list length  %d\n" % len(self.__moleculeList))
@@ -268,7 +271,7 @@ class OePersist(object):
         """
         try:
             indexD = {}
-            db = shelve.open(dbFileName, flag='r', protocol=cPickle.HIGHEST_PROTOCOL)
+            db = shelve.open(dbFileName, flag='r', protocol=pickle.HIGHEST_PROTOCOL)
             self.__moleculeNameList = db['__index__']
             db.close()
             self.__isExpired = False
@@ -286,7 +289,7 @@ class OePersist(object):
         """
         try:
             self.__moleculeList = []
-            db = shelve.open(dbFileName, flag='r', protocol=cPickle.HIGHEST_PROTOCOL)
+            db = shelve.open(dbFileName, flag='r', protocol=pickle.HIGHEST_PROTOCOL)
             self.__moleculeNameList = db['__index__']
             if (self.__debug):
                 self.__lfh.write("+OePersist.__recoverShelve() - Molecule name list %r\n" % self.__moleculeNameList)
@@ -309,7 +312,7 @@ class OePersist(object):
         """
         try:
             #
-            db = shelve.open(dbFileName, flag='r', protocol=cPickle.HIGHEST_PROTOCOL)
+            db = shelve.open(dbFileName, flag='r', protocol=pickle.HIGHEST_PROTOCOL)
             ky = moleculeName
             molecule = db[ky]
             db.close()
@@ -349,7 +352,7 @@ class OePersist(object):
             #
             moleculeName = inputMolecule['name']
             #
-            db = shelve.open(dbFileName, flag='w', protocol=cPickle.HIGHEST_PROTOCOL)
+            db = shelve.open(dbFileName, flag='w', protocol=pickle.HIGHEST_PROTOCOL)
             #
             # get molecule index -
             #
@@ -386,7 +389,7 @@ class OePersist(object):
         """ Update/append the contents of the input molecule list into an existing persistent store.
         """
         try:
-            db = shelve.open(dbFileName, flag='w', protocol=cPickle.HIGHEST_PROTOCOL)
+            db = shelve.open(dbFileName, flag='w', protocol=pickle.HIGHEST_PROTOCOL)
             #
             # get molecule index -
             #
