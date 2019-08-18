@@ -25,6 +25,7 @@ __version__ = "V0.01"
 import sys
 import unittest
 import traceback
+import platform
 import os
 
 try:
@@ -41,9 +42,15 @@ class OeAlignDepictTests(unittest.TestCase):
         self.__lfh = sys.stderr
         self.__verbose = True
         #
+        self.__here = os.path.abspath(os.path.dirname(__file__))
+        self.__examples = os.path.join(self.__here, 'examples')
+        self.__testoutput = os.path.join(self.__here, 'test-output', platform.python_version())
+        self.__datadir = os.path.join(self.__here, 'data')
+        if not os.path.exists(self.__testoutput):
+            os.makedirs(self.__testoutput)
         # Chemical component repository path -
-        self.__topCachePath = "../../../../../reference/components/ligand-dict-v3"
-        self.__rnaPairFile = './examples/rna-linking-components.txt'
+        self.__topCachePath = os.path.join(self.__here, "ligand-dict-v3")
+        self.__rnaPairFile = os.path.join(self.__examples, 'rna-linking-components.txt')
         #
         self.__refId = 'C'
         #
@@ -163,7 +170,8 @@ class OeAlignDepictTests(unittest.TestCase):
         self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name))
         try:
             # self.__extPairTup=('../data/ATP.sdf','ATP')
-            self.__extPairTup = ('../data/ATP.sdf', '../data/ATP.cif')
+            self.__extPairTup = (os.path.join(self.__datadir, 'ATP.sdf'),
+                                 os.path.join(self.__datadir, 'ATP.cif'))
             refPath = self.__extPairTup[0]
             fitId = self.__extPairTup[1]
             fitPath = self.__extPairTup[1]
