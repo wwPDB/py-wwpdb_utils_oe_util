@@ -79,7 +79,8 @@ class OeAlignDepictTests(unittest.TestCase):
             oed.setRefId(self.__refId, cachePath=self.__topCachePath)
             for fitId in self.__idList:
                 oed.setFitId(fitId, cachePath=self.__topCachePath)
-                fName = "ref-" + self.__refId + "-trg-" + fitId + ".png"
+                fName = os.path.join(self.__testoutput,
+                                     "ref-" + self.__refId + "-trg-" + fitId + ".png")
                 aML = oed.alignPair(imagePath=fName)
                 if len(aML) > 0:
                     for (rCC, rAt, tCC, tAt) in aML:
@@ -97,7 +98,7 @@ class OeAlignDepictTests(unittest.TestCase):
             oed = OeDepictMCSAlign(verbose=self.__verbose, log=self.__lfh)
             oed.setRefId(self.__refId, cachePath=self.__topCachePath)
             oed.setFitIdList(self.__idList, cachePath=self.__topCachePath)
-            imageFile = "list-example-mcs-alignment.pdf"
+            imageFile = os.path.join(self.__testoutput, "list-example-mcs-alignment.pdf")
             aML = oed.alignPairList(imagePath=imageFile)
             if len(aML) > 0:
                 for (rCC, rAt, tCC, tAt) in aML:
@@ -115,7 +116,8 @@ class OeAlignDepictTests(unittest.TestCase):
         try:
             oed = OeDepictMCSAlign(verbose=self.__verbose, log=self.__lfh)
             oed.setPairIdList(self.__pairIdList, cachePath=self.__topCachePath)
-            imageFile = "pair-list-example-mcs-alignment.pdf"
+            imageFile = os.path.join(self.__testoutput,
+                                     "pair-list-example-mcs-alignment.pdf")
             aML = oed.alignPairList(imagePath=imageFile)
             if len(aML) > 0:
                 for (rCC, rAt, tCC, tAt) in aML:
@@ -134,7 +136,8 @@ class OeAlignDepictTests(unittest.TestCase):
             pairIdList = self.__readPairList(fn=self.__rnaPairFile)
             oed = OeDepictMCSAlign(verbose=self.__verbose, log=self.__lfh)
             oed.setPairIdList(pairIdList, cachePath=self.__topCachePath)
-            imageFile = "rna-modified-pair-alignment.pdf"
+            imageFile = os.path.join(self.__testoutput,
+                                     "rna-modified-pair-alignment.pdf")
             aML = oed.alignPairList(imagePath=imageFile)
             if len(aML) > 0:
                 for (rCC, rAt, tCC, tAt) in aML:
@@ -201,9 +204,13 @@ class OeAlignDepictTests(unittest.TestCase):
         try:
             oed = OeDepictMCSAlign(verbose=self.__verbose, log=self.__lfh)
             oed.setSearchType(sType='relaxed')
-            oed.setRefPath(ccPath='./examples/PRDCC_000225.cif', title="PRD_000225", suppressHydrogens=False)
-            oed.setFitPath(ccPath='./examples/L_LDI_990_.comp.cif', title='L_LDI_990', suppressHydrogens=False)
-            fName = "relaxed-fit.png"
+            oed.setRefPath(ccPath=os.path.join(self.__examples,
+                                               'PRDCC_000225.cif'),
+                           title="PRD_000225", suppressHydrogens=False)
+            oed.setFitPath(ccPath=os.path.join(self.__examples,
+                                               'L_LDI_990_.comp.cif'),
+                           title='L_LDI_990', suppressHydrogens=False)
+            fName = os.path.join(self.__testoutput, "relaxed-fit.png")
             aML = oed.alignPair(imagePath=fName)
             if len(aML) > 0:
                 for (rCC, rAt, tCC, tAt) in aML:

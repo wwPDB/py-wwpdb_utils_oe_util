@@ -281,7 +281,7 @@ class OeDepictTests(unittest.TestCase):
             oed.setMolTitleList(oeMolTitleList)
             oed.setDisplayOptions(labelAtomName=True, labelAtomCIPStereo=True, labelAtomIndex=False, labelBondIndex=False, bondDisplayWidth=0.5)
             oed.prepare()
-            oed.write("myErrortest.pdf")
+            oed.write(os.path.join(self.__testoutput, "myErrortest.pdf"))
         except:
             traceback.print_exc(file=self.__lfh)
             self.fail()

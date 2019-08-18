@@ -30,6 +30,7 @@ import unittest
 import traceback
 import fnmatch
 import time
+import platform
 import os
 import os.path
 import string
@@ -56,16 +57,23 @@ class OeShapeSearchtests(unittest.TestCase):
         self.__lfh = sys.stdout
         self.__verbose = True
         self.__debug = False
+        #
+        self.__here = os.path.abspath(os.path.dirname(__file__))
+        self.__examples = os.path.join(self.__here, 'examples')
+        self.__datadir = os.path.join(self.__here, 'data')
+        self.__testoutput = os.path.join(self.__here, 'test-output', platform.python_version())
+        if not os.path.exists(self.__testoutput):
+            os.makedirs(self.__testoutput)
         ##
         # Set these as appropriate to checked out versions of the CC and PRDCC CVS repositories
         ##
-        self.__pathChemCompCVS = "/data/components/ligand-dict-v3"
-        self.__pathPrdChemCompCVS = "/data/components/prdcc-v3"
+        self.__pathChemCompCVS = os.path.join(self.__here, 'ligand-dict-v3')
+        self.__pathPrdChemCompCVS = os.path.join(self.__here, "prdcc-v3")
         ##
         # file names for persistent stores -
-        self.__persistStorePathCC = "chemcomp-store.db"
-        self.__indexPathCC = "chemcomp-index.pic"
-        self.__storePath = "oe-store.db"
+        self.__persistStorePathCC = os.path.join(self.__testoutput, "chemcomp-store.db")
+        self.__indexPathCC = os.path.join(self.__testoutput, "chemcomp-index.pic")
+        self.__storePath = os.path.join(self.__testoutput, "oe-store.db")
         #
         # Test list of PRD molecule ids  -- In future check the convention on the identifiers
         #
@@ -96,7 +104,7 @@ class OeShapeSearchtests(unittest.TestCase):
 
         # expand pattern
         pattern = pattern or '*'
-        patternList = string.splitfields(pattern, ';')
+        patternList = str.split(pattern, ';')
 
         for name in names:
             fullname = os.path.normpath(os.path.join(topPath, name))
@@ -245,6 +253,7 @@ class OeShapeSearchtests(unittest.TestCase):
                                                                      time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
                                                                      endTime - startTime))
 
+    @unittest.skip("APIs have changed")
     def testBoundedFormulaShapeSearch(self):
         """Test case -  for the set of PRD tests cases, perform a bounded formula search on the index file
            and then extract the candidate matching molecules from the OE persistent store.
@@ -347,7 +356,7 @@ class OeShapeSearchtests(unittest.TestCase):
             #
             # Initialize the shape search and set the reference molecule
             #
-            oeMolRef = self.__getOEMol(ccPath=ccPathList[255])
+            oeMolRef = self.__getOEMol(ccPath=ccPathList[5])
             oeShape = OeShapeSearch(verbose=self.__verbose, log=self.__lfh)
             oeShape.setRefMol(oeMolRef)
             retList = []

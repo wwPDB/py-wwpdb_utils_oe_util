@@ -53,7 +53,9 @@ class OeBirdDepictTests(unittest.TestCase):
         afD={}
         pD={}
         try:
-            bI=PdbxBirdIndex(indexPath="bird-index.pic",verbose=self.__verbose,log=self.__lfh)
+            bI=PdbxBirdIndex(indexPath=os.path.join(self.__testoutput,
+                                                    "bird-index.pic"),
+                             verbose=self.__verbose,log=self.__lfh)
             familyIdL=bI.getFamilyList()
             for familyId in familyIdL:
                 prdIdList=bI.getPrdIdList(familyId)

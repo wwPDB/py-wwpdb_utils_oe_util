@@ -21,6 +21,8 @@ __version__ = "V0.01"
 
 import sys
 import unittest
+import platform
+import os
 import traceback
 import time
 
@@ -39,8 +41,16 @@ class OePersistTests(unittest.TestCase):
     def setUp(self):
         self.__lfh = sys.stdout
         self.__verbose = True
-        self.__pathList = ['../data/ATP.cif', '../data/GTP.cif', '../data/ARG.cif']
-        self.__storePath = 'oe-store.db'
+        self.__here = os.path.abspath(os.path.dirname(__file__))
+        self.__examples = os.path.join(self.__here, 'examples')
+        self.__datadir = os.path.join(self.__here, 'data')
+        self.__testoutput = os.path.join(self.__here, 'test-output', platform.python_version())
+        if not os.path.exists(self.__testoutput):
+            os.makedirs(self.__testoutput)
+        self.__pathList = [os.path.join(self.__datadir, 'ATP.cif'),
+                           os.path.join(self.__datadir, 'GTP.cif'),
+                           os.path.join(self.__datadir, 'ARG.cif')]
+        self.__storePath = os.path.join(self.__testoutput, 'oe-store.db')
 
     def tearDown(self):
         pass

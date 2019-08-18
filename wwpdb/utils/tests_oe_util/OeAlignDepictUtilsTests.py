@@ -105,7 +105,8 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
             oed.setRefId(self.__refId, cachePath=self.__topCachePath)
             for fitId in self.__idList:
                 oed.setFitId(fitId, cachePath=self.__topCachePath)
-                fName = "ref-" + self.__refId + "-trg-" + fitId + ".svg"
+                fName = os.path.join(self.__testoutput, "ref-" +
+                                     self.__refId + "-trg-" + fitId + ".svg")
                 aML = oed.alignPair(imagePath=fName)
                 if len(aML) > 0:
                     for (rCC, rAt, tCC, tAt) in aML:
@@ -127,7 +128,8 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
                                   labelAtomIndex=False, labelBondIndex=False,
                                   highlightStyleFit='ballAndStickInverse',
                                   gridRows=3, gridCols=3, bondDisplayWidth=0.5)
-            imageFile = "list-example-mcs-alignment.pdf"
+            imageFile = os.path.join(self.__testoutput,
+                                     "list-example-mcs-alignment.pdf")
             aML = oed.alignOneWithListMulti(imagePath=imageFile)
             if len(aML) > 0:
                 for (rCC, rAt, tCC, tAt) in aML:
@@ -151,7 +153,8 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
                                   pageOrientation='portrait',
                                   gridRows=4, bondDisplayWidth=0.5)
 
-            imageFile = "pair-list-example-mcs-alignment-portrait.pdf"
+            imageFile = os.path.join(self.__testoutput,
+                                     "pair-list-example-mcs-alignment-portrait.pdf")
             aML = oed.alignPairListMulti(imagePath=imageFile)
             if len(aML) > 0:
                 for (rCC, rAt, tCC, tAt) in aML:
@@ -173,7 +176,7 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
                                   highlightStyleFit='ballAndStickInverse',
                                   bondDisplayWidth=0.5)
 
-            imageFile = "rna-modified-pair-alignment.pdf"
+            imageFile = os.path.join(self.__testoutput, "rna-modified-pair-alignment.pdf")
             aML = oed.alignPairListMulti(imagePath=imageFile)
             if len(aML) > 0:
                 for (rCC, rAt, tCC, tAt) in aML:
@@ -210,10 +213,17 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
         try:
             oed = OeDepictMCSAlign(verbose=self.__verbose, log=self.__lfh)
             oed.setSearchType(sType='relaxed')
-            oed.setRefPath(refId='PRD_000225', ccPath='./examples/PRDCC_000225.cif', title="PRD_000225", suppressHydrogens=False)
-            oed.setFitPath(fitId='LD_LDI_990', ccPath='./examples/L_LDI_990_.comp.cif', title='L_LDI_990', suppressHydrogens=False)
-            fName = "relaxed-fit.svg"
-            oed.setDisplayOptions(imageSizeX=2000, imageSizeY=1000, labelAtomName=True, labelAtomCIPStereo=True,
+            oed.setRefPath(refId='PRD_000225',
+                           ccPath=os.path.join(self.__examples,
+                                               'PRDCC_000225.cif'),
+                           title="PRD_000225", suppressHydrogens=False)
+            oed.setFitPath(fitId='LD_LDI_990',
+                           ccPath=os.path.join(self.__examples,
+                                               'L_LDI_990_.comp.cif'),
+                           title='L_LDI_990', suppressHydrogens=False)
+            fName = os.path.join(self.__testoutput, "relaxed-fit.svg")
+            oed.setDisplayOptions(imageSizeX=2000, imageSizeY=1000,
+                                  labelAtomName=True, labelAtomCIPStereo=True,
                                   labelAtomIndex=False, labelBondIndex=False,
                                   highlightStyleFit='ballAndStickInverse',
                                   bondDisplayWidth=1.0)
@@ -237,7 +247,8 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
                                   highlightStyleFit='ballAndStickInverse',
                                   gridRows=3, gridCols=3, bondDisplayWidth=0.5)
             oed.setPairIdList(self.__pairIdList, cachePath=self.__topCachePath)
-            imageFile = "mcs-align-with-list-multi.pdf"
+            imageFile = os.path.join(self.__testoutput,
+                                     "mcs-align-with-list-multi.pdf")
             aML = oed.alignOneWithListMulti(imagePath=imageFile)
             if len(aML) > 0:
                 for (rCC, rAt, tCC, tAt) in aML:
@@ -259,7 +270,8 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
                                   highlightStyleFit='ballAndStickInverse',
                                   gridRows=3, gridCols=3, bondDisplayWidth=1.0)
             oed.setPairIdList(self.__pairIdList, cachePath=self.__topCachePath)
-            imageFile = "mcs-align-with-list-single.svg"
+            imageFile = os.path.join(self.__testoutput,
+                                     "mcs-align-with-list-single.svg")
             aML = oed.alignOneWithList(imagePath=imageFile)
             if len(aML) > 0:
                 for (rCC, rAt, tCC, tAt) in aML:
