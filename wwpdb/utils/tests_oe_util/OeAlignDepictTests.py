@@ -43,7 +43,7 @@ class OeAlignDepictTests(unittest.TestCase):
 
     def setUp(self):
         self.__lfh = sys.stderr
-        self.__verbose = True
+        self.__verbose = False
         #
 
         self.__here = os.path.abspath(os.path.dirname(__file__))

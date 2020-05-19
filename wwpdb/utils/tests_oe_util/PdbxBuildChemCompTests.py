@@ -38,7 +38,9 @@ class PdbxBuildChemCompTests(unittest.TestCase):
     def setUp(self):
         self.__lfh = sys.stdout
         self.__verbose = True
-        self.__topCachePath = "../../../../../reference/components/ligand-dict-v3"
+        self.__here = os.path.abspath(os.path.dirname(__file__))
+        self.__topCachePath = os.path.join(self.__here, "ligand-dict-v3")
+
         self.__pathList = ['../data/ATP.cif', '../data/GTP.cif', '../data/ARG.cif']
         self.__idList = ['MSE', 'GTP', 'TRP']
 
