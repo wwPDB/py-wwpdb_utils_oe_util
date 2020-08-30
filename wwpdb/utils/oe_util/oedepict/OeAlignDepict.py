@@ -21,21 +21,32 @@ __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.01"
 
 
-import sys
-import unittest
-import traceback
-import sys
-import time
 import os
 import os.path
-import shutil
+import sys
+import traceback
 
-
+from openeye.oechem import (OEAddExplicitHydrogens, OEBlueTint,
+                            OEExprOpts_AtomicNumber, OEExprOpts_DefaultAtoms,
+                            OEExprOpts_DefaultBonds, OEExprOpts_ExactAtoms,
+                            OEExprOpts_ExactBonds, OEFloatArray, OEGreenTint,
+                            OEIsAtomMember, OEIsBondMember, OEMCSMaxAtoms,
+                            OEMCSSearch, OEMCSType_Approximate, OENotAtom,
+                            OENotBond, OEPinkTint)
+from openeye.oedepict import (OE2DMolDisplay, OE2DMolDisplayOptions,
+                              OEAddHighlighting, OEAtomStereoStyle_Display_All,
+                              OEGetMoleculeScale,
+                              OEHighlightStyle_BallAndStick,
+                              OEHighlightStyle_Stick, OEImage, OEImageGrid,
+                              OEMultiPageImageFile,
+                              OEPageOrientation_Landscape,
+                              OEPageOrientation_Portrait, OEPageSize_US_Letter,
+                              OEPrepareAlignedDepiction, OEPrepareDepiction,
+                              OERenderMolecule, OEScale_AutoScale,
+                              OEWriteImage, OEWriteMultiPageImage)
+from wwpdb.utils.cc_dict_util.timeout.TimeoutMultiProc import timeout
 from wwpdb.utils.oe_util.build.OeBuildMol import OeBuildMol
-from wwpdb.utils.cc_dict_util.timeout.TimeoutMultiProc import timeout, TimeoutException
 
-from openeye.oechem import *
-from openeye.oedepict import *
 
 class OeDepictMCSAlign(object):
 
@@ -292,7 +303,7 @@ class OeDepictMCSAlign(object):
                     self.__lfh.write("OeAlignDepict.__getMiscFile - atom  %d %s %s %s %s %r\n" % (ii, atm.GetIdx(), atm.GetAtomicNum(), atm.GetName(), atm.GetType(), xyzL))
 
             return (ccId, tMol, fD)
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -312,7 +323,7 @@ class OeDepictMCSAlign(object):
             bondexpr = 0
         elif (self.__searchType == 'exact'):
             self.__mcss = OEMCSSearch(OEMCSType_Approximate)
-            #self.__mcss = OEMCSSearch(OEMCSType_Exhaustive)
+            # self.__mcss = OEMCSSearch(OEMCSType_Exhaustive)
             atomexpr = OEExprOpts_ExactAtoms
             bondexpr = OEExprOpts_ExactBonds
             OEAddExplicitHydrogens(refmol)
@@ -321,11 +332,11 @@ class OeDepictMCSAlign(object):
             atomexpr = OEExprOpts_DefaultAtoms
             bondexpr = OEExprOpts_DefaultBonds
         #
-        #atomexpr = OEExprOpts_AtomicNumber|OEExprOpts_EqAromatic
-        #bondexpr = 0
+        # atomexpr = OEExprOpts_AtomicNumber|OEExprOpts_EqAromatic
+        # bondexpr = 0
         #
-        #atomexpr = OEExprOpts_AtomicNumber|OEExprOpts_Aromaticity
-        #bondexpr = OEExprOpts_BondOrder|OEExprOpts_EqNotAromatic
+        # atomexpr = OEExprOpts_AtomicNumber|OEExprOpts_Aromaticity
+        # bondexpr = OEExprOpts_BondOrder|OEExprOpts_EqNotAromatic
         #
 
         self.__mcss.Init(refmol, atomexpr, bondexpr)
@@ -349,7 +360,7 @@ class OeDepictMCSAlign(object):
         nAtomsRef = self.__refmol.NumAtoms()
         nAtomsFit = self.__fitmol.NumAtoms()
         minAtoms = int(min(nAtomsRef, nAtomsFit) * minFrac)
-        #self.__mcss.SetMinAtoms( int(minAtoms*self.__minAtomMatchFraction) )
+        # self.__mcss.SetMinAtoms( int(minAtoms*self.__minAtomMatchFraction) )
         #
         # -------
         self.__mcss.SetMCSFunc(OEMCSMaxAtoms())
@@ -361,7 +372,7 @@ class OeDepictMCSAlign(object):
         if miter.IsValid():
             match = miter.Target()
             for mAt in match.GetAtoms():
-                #atomMap.append( (self.__refId,mAt.pattern.GetName(),self.__fitId,mAt.target.GetName() ))
+                # atomMap.append( (self.__refId,mAt.pattern.GetName(),self.__fitId,mAt.target.GetName() ))
                 atomMap.append((self.__refId, mAt.pattern.GetIdx(), mAt.pattern.GetType(), mAt.pattern.GetName(), self.__fitId, mAt.target.GetIdx(), mAt.target.GetName()))
 
         return atomMap
@@ -376,7 +387,7 @@ class OeDepictMCSAlign(object):
         nAtomsRef = self.__refmol.NumAtoms()
         nAtomsFit = self.__fitmol.NumAtoms()
         minAtoms = int(min(nAtomsRef, nAtomsFit) * minFrac)
-        #self.__mcss.SetMinAtoms( int(minAtoms*self.__minAtomMatchFraction) )
+        # self.__mcss.SetMinAtoms( int(minAtoms*self.__minAtomMatchFraction) )
         #
         # -------
         self.__mcss.SetMCSFunc(OEMCSMaxAtoms())
@@ -388,7 +399,7 @@ class OeDepictMCSAlign(object):
         if miter.IsValid():
             match = miter.Target()
             for mAt in match.GetAtoms():
-                #atomMap.append( (self.__refId,mAt.pattern.GetName(),self.__fitId,mAt.target.GetName() ))
+                # atomMap.append( (self.__refId,mAt.pattern.GetName(),self.__fitId,mAt.target.GetName() ))
                 atomMap.append((self.__refId, mAt.pattern.GetIdx(), mAt.pattern.GetType(), mAt.pattern.GetName(), self.__fitId, mAt.target.GetIdx(), mAt.target.GetName()))
 
         return (nAtomsRef, self.__refFD['SMILES_STEREO'], nAtomsFit, self.__fitFD['SMILES_STEREO'], atomMap)
@@ -403,7 +414,7 @@ class OeDepictMCSAlign(object):
         nAtomsRef = self.__refmol.NumAtoms()
         nAtomsFit = self.__fitmol.NumAtoms()
         minAtoms = int(min(nAtomsRef, nAtomsFit) * minFrac)
-        #self.__mcss.SetMinAtoms( int(minAtoms*self.__minAtomMatchFraction) )
+        # self.__mcss.SetMinAtoms( int(minAtoms*self.__minAtomMatchFraction) )
         #
         # -------
         self.__mcss.SetMCSFunc(OEMCSMaxAtoms())
@@ -445,8 +456,8 @@ class OeDepictMCSAlign(object):
         else:
             self.__multi = OEMultiPageImageFile(OEPageOrientation_Portrait, OEPageSize_US_Letter)
 
-        #self.__image = self.__multi.NewPage()
-        #self.__opts = OE2DMolDisplayOptions()
+        # self.__image = self.__multi.NewPage()
+        # self.__opts = OE2DMolDisplayOptions()
         self.__newPage()
 
     def __newPage(self):
@@ -485,7 +496,7 @@ class OeDepictMCSAlign(object):
         OEPrepareDepiction(self.__fitmol)
 
         #
-        #opts = OE2DMolDisplayOptions(self.__grid.GetCellWidth(), self.__grid.GetCellHeight(), OEScale_AutoScale)
+        # opts = OE2DMolDisplayOptions(self.__grid.GetCellWidth(), self.__grid.GetCellHeight(), OEScale_AutoScale)
         #
         refcell = self.__grid.GetCell(1, 1)
         fitcell = self.__grid.GetCell(1, 2)

@@ -33,13 +33,12 @@ import time
 import platform
 import os
 import os.path
-import string
 
 from wwpdb.utils.cc_dict_util.persist.PdbxChemCompDictUtil import PdbxChemCompDictUtil
 from wwpdb.utils.cc_dict_util.persist.PdbxChemCompDictIndex import PdbxChemCompDictIndex
 
 try:
-    from openeye.oechem import OEFloatArray
+    from openeye.oechem import OEFloatArray  # noqa: F401
     skiptests = False
 except ImportError:
     skiptests = True
@@ -139,7 +138,7 @@ class OeShapeSearchtests(unittest.TestCase):
                 self.__lfh.write("Pathlist length is %d\n" % len(ccPathList))
             dUtil = PdbxChemCompDictUtil(verbose=self.__verbose, log=self.__lfh)
             dUtil.makeStoreFromPathList(pathList=ccPathList, storePath=self.__persistStorePathCC)
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -166,7 +165,7 @@ class OeShapeSearchtests(unittest.TestCase):
             dUtil = PdbxChemCompDictUtil(verbose=self.__verbose, log=self.__lfh)
             dUtil.updateStoreByFile(pathList=ccPathList, storePath=self.__persistStorePathCC)
             #
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -186,7 +185,7 @@ class OeShapeSearchtests(unittest.TestCase):
         try:
             dIndx = PdbxChemCompDictIndex(verbose=self.__verbose, log=self.__lfh)
             dIndx.makeIndex(storePath=self.__persistStorePathCC, indexPath=self.__indexPathCC)
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -211,7 +210,7 @@ class OeShapeSearchtests(unittest.TestCase):
         try:
             # Get handle for
             myPersist = PdbxPersist(self.__verbose, self.__lfh)
-            indexD = myPersist.getIndex(dbFileName=self.__persistStorePathCC)
+            indexD = myPersist.getIndex(dbFileName=self.__persistStorePathCC)  # noqa: F841
             myPersist.open(dbFileName=self.__persistStorePathCC)
             containerNameList = myPersist.getStoreContainerIndex()
             oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
@@ -246,7 +245,7 @@ class OeShapeSearchtests(unittest.TestCase):
             if (self.__debug):
                 self.__lfh.write("OePersistTests(testCreateStore) molecule list %r\n" % mL)
 
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -297,10 +296,10 @@ class OeShapeSearchtests(unittest.TestCase):
                 # Recover the reference molecule -
                 #
                 refMolD = myPersist.fetchOneMolecule(dbFileName=self.__storePath, moleculeName=prdId)
-                refName = refMolD['name']
+                # refName = refMolD['name']
                 ok = oemRef.deserialize(refMolD['oeb'])
                 if not ok:
-                    self.__lfh.write("Deserialized status for ref molecule %s = %d\n" % (ccId, ok))
+                    self.__lfh.write("Deserialized status for ref molecule %s = %d\n" % (prdId, ok))
                     continue
                 #
                 # Initialize the shape search and set the reference molecule
@@ -314,7 +313,7 @@ class OeShapeSearchtests(unittest.TestCase):
                 #
                 for ccId in mL:
                     fitMolD = myPersist.fetchOneMolecule(dbFileName=self.__storePath, moleculeName=ccId)
-                    name = fitMolD['name']
+                    # name = fitMolD['name']
                     ok = oemFit.deserialize(fitMolD['oeb'])
                     if not ok:
                         self.__lfh.write("Deserialized status %s = %d\n" % (ccId, ok))
@@ -331,7 +330,7 @@ class OeShapeSearchtests(unittest.TestCase):
                 # Output the ordered list of shape scores -- for this PRD reference molecule
                 for r in retList:
                     self.__lfh.write("Target %s match %r\n" % (prdId, r.items()))
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -375,7 +374,7 @@ class OeShapeSearchtests(unittest.TestCase):
             # Output the list of shape scores --
             for r in retList:
                 self.__lfh.write("Reference %s match %r\n" % (oeMolRef.GetTitle(), r.items()))
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -394,7 +393,7 @@ class OeShapeSearchtests(unittest.TestCase):
         try:
             oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
             myReader = PdbxIoAdapter(self.__verbose, self.__lfh)
-            ok = myReader.read(pdbxFilePath=ccPath)
+            ok = myReader.read(pdbxFilePath=ccPath)  # noqa: F841
             #
             # myReader.write(pdbxFilePath="TMP.cif")
             #
@@ -410,7 +409,7 @@ class OeShapeSearchtests(unittest.TestCase):
 
             return oem.getMol()
 
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -444,6 +443,7 @@ def suiteSearchSimple():
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(OeShapeSearchtests("testSimpleShapeSearch"))
     return suiteSelect
+
 
 if __name__ == '__main__':
     #

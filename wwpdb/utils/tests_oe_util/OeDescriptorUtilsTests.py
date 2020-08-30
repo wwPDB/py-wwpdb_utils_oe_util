@@ -18,23 +18,24 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.01"
 
-import sys
-import os
 import time
 import unittest
 
 try:
+    from openeye.oechem import OEFloatArray  # noqa: F401
+    skiptests = False
+except ImportError:
+    skiptests = True
+
+if not skiptests:
     from wwpdb.utils.oe_util.build.OeDescriptorUtils import OeDescriptorUtils
-    skiptest = False
-except ImportError as e:
-    skiptest = True
-    
-    
+
 import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
-@unittest.skipIf(skiptest, "Requires openeye library")
+
+@unittest.skipIf(skiptests, "Requires openeye library")
 class OeDescriptorUtilsTests(unittest.TestCase):
 
     def setUp(self):

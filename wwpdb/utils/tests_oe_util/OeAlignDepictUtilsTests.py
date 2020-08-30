@@ -25,14 +25,11 @@ import sys
 import unittest
 import traceback
 import platform
-import sys
-import time
 import os
 import os.path
-import shutil
 
 try:
-    from openeye.oechem import OEFloatArray
+    from openeye.oechem import OEFloatArray  # noqa: F401
     skiptests = False
 except ImportError:
     skiptests = True
@@ -108,13 +105,13 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
             oed.setRefId(self.__refId, cachePath=self.__topCachePath)
             for fitId in self.__idList:
                 oed.setFitId(fitId, cachePath=self.__topCachePath)
-                fName = os.path.join(self.__testoutput, "ref-" +
-                                     self.__refId + "-trg-" + fitId + ".svg")
+                fName = os.path.join(self.__testoutput, "ref-"
+                                     + self.__refId + "-trg-" + fitId + ".svg")
                 aML = oed.alignPair(imagePath=fName)
                 if len(aML) > 0:
                     for (rCC, rAt, tCC, tAt) in aML:
                         self.__lfh.write("%5s %-5s %5s %-5s\n" % (rCC, rAt, tCC, tAt))
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -138,7 +135,7 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
                 for (rCC, rAt, tCC, tAt) in aML:
                     self.__lfh.write("%5s %-5s %5s %-5s\n" % (rCC, rAt, tCC, tAt))
 
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -162,7 +159,7 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
             if len(aML) > 0:
                 for (rCC, rAt, tCC, tAt) in aML:
                     self.__lfh.write("%5s %-5s %5s %-5s\n" % (rCC, rAt, tCC, tAt))
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -184,7 +181,7 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
             if len(aML) > 0:
                 for (rCC, rAt, tCC, tAt) in aML:
                     self.__lfh.write("%5s %-5s %5s %-5s\n" % (rCC, rAt, tCC, tAt))
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -204,7 +201,7 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
                     self.__lfh.write("Match length %3d for: %s %s\n" % (len(aML), refId, fitId))
                 else:
                     self.__lfh.write("Match failed for: %s %s\n" % (refId, fitId))
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -234,7 +231,7 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
             if len(aML) > 0:
                 for (rCC, rAt, tCC, tAt) in aML:
                     self.__lfh.write("%5s %-5s %5s %-5s\n" % (rCC, rAt, tCC, tAt))
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -257,7 +254,7 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
                 for (rCC, rAt, tCC, tAt) in aML:
                     self.__lfh.write("%5s %-5s %5s %-5s\n" % (rCC, rAt, tCC, tAt))
 
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -280,7 +277,7 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
                 for (rCC, rAt, tCC, tAt) in aML:
                     self.__lfh.write("%5s %-5s %5s %-5s\n" % (rCC, rAt, tCC, tAt))
 
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -303,7 +300,7 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
                 for (rCC, rAt, tCC, tAt) in aML:
                     self.__lfh.write("%5s %-5s %5s %-5s\n" % (rCC, rAt, tCC, tAt))
 
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -350,7 +347,7 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
                 for (rCC, rAt, tCC, tAt) in aML:
                     self.__lfh.write("%5s %-5s %5s %-5s\n" % (rCC, rAt, tCC, tAt))
 
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 

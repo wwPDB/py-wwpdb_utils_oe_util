@@ -22,17 +22,20 @@ __version__ = "V0.01"
 import sys
 import unittest
 import traceback
-import time
 import os
 
 try:
+    from openeye.oechem import OEFloatArray  # noqa: F401
+    skiptests = False
+except ImportError:
+    skiptests = True
+
+if not skiptests:
     from wwpdb.utils.oe_util.build.PdbxBuildChemComp import PdbxBuildChemComp
     from wwpdb.utils.oe_util.build.OeChemCompIoUtils import OeChemCompIoUtils
-    skiptest = False
-except ImportError as e:
-    skiptest = True
 
-@unittest.skipIf(skiptest, "Requires openeye library")
+
+@unittest.skipIf(skiptests, "Requires openeye library")
 class PdbxBuildChemCompTests(unittest.TestCase):
 
     def setUp(self):
@@ -63,7 +66,6 @@ class PdbxBuildChemCompTests(unittest.TestCase):
             #
         self.__lfh.write("Unique InChiKeys =  %d\n" % (len(inKyD)))
 
-
     def testBuildFromFiles(self):
         """Test case -  create OE molecules from the input chem comp definition path list.
         """
@@ -81,7 +83,7 @@ class PdbxBuildChemCompTests(unittest.TestCase):
                 ccB = PdbxBuildChemComp(verbose=self.__verbose, log=self.__lfh)
                 ccB.setOeMol(oem.getMol(), ccId, name=ccId)
                 ccB.write(filePath=fp)
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -101,7 +103,7 @@ class PdbxBuildChemCompTests(unittest.TestCase):
                 ccB = PdbxBuildChemComp(verbose=self.__verbose, log=self.__lfh)
                 ccB.setOeMol(oem.getMol(), ccId, name=ccId)
                 ccB.write(filePath=fp)
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -111,6 +113,7 @@ def suiteBuildTests():
     suiteSelect.addTest(PdbxBuildChemCompTests("testBuildFromIds"))
     suiteSelect.addTest(PdbxBuildChemCompTests("testBuildFromFiles"))
     return suiteSelect
+
 
 if __name__ == '__main__':
     #

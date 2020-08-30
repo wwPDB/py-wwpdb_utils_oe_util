@@ -29,10 +29,9 @@ import fnmatch
 import time
 import os
 import os.path
-import string
 
 try:
-    from openeye.oechem import OEFloatArray
+    from openeye.oechem import OEFloatArray  # noqa: F401
     skiptests = False
 except ImportError:
     skiptests = True
@@ -49,7 +48,7 @@ if not skiptests:
 import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
-    
+
 
 @unittest.skipIf(skiptests, "Cannot import openeye.oechem for tests")
 class OePersistFullDictTests(unittest.TestCase):
@@ -140,7 +139,7 @@ class OePersistFullDictTests(unittest.TestCase):
             dUtil = PdbxChemCompDictUtil(verbose=self.__verbose, log=self.__lfh)
             ret = dUtil.makeStoreFromPathList(pathList=ccPathList, storePath=self.__persistStorePathCC)
             self.assertTrue(ret, "makeStoreFromPathList failed")
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -167,7 +166,7 @@ class OePersistFullDictTests(unittest.TestCase):
             dUtil = PdbxChemCompDictUtil(verbose=self.__verbose, log=self.__lfh)
             dUtil.updateStoreByFile(pathList=ccPathList, storePath=self.__persistStorePathCC)
             #
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -188,7 +187,7 @@ class OePersistFullDictTests(unittest.TestCase):
             dIndx = PdbxChemCompDictIndex(verbose=self.__verbose, log=self.__lfh)
             ret = dIndx.makeIndex(storePath=self.__persistStorePathCC, indexPath=self.__indexPathCC)
             self.assertTrue(len(ret) != 0, "Index failed")
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -208,7 +207,7 @@ class OePersistFullDictTests(unittest.TestCase):
                                                        time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
         try:
             myPersist = PdbxPersist(self.__verbose, self.__lfh)
-            indexD = myPersist.getIndex(dbFileName=self.__persistStorePathCC)
+            indexD = myPersist.getIndex(dbFileName=self.__persistStorePathCC)  # noqa: F841
             myPersist.open(dbFileName=self.__persistStorePathCC)
             containerNameList = myPersist.getStoreContainerIndex()
 
@@ -241,7 +240,7 @@ class OePersistFullDictTests(unittest.TestCase):
             if (self.__debug):
                 self.__lfh.write("OePersistTests(testCreateStore) molecule list %r\n" % mL)
 
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -266,7 +265,7 @@ class OePersistFullDictTests(unittest.TestCase):
             oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
             for ccId in moleculeNameList:
                 molD = myPersist.fetchMolecule(moleculeName=ccId)
-                name = molD['name']
+                # name = molD['name']
                 ok = oem.deserialize(molD['oeb'])
                 if not ok:
                     self.__lfh.write("Deserialized status %s = %d\n" % (ccId, ok))
@@ -277,7 +276,7 @@ class OePersistFullDictTests(unittest.TestCase):
 
             myPersist.close()
 
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -302,7 +301,7 @@ class OePersistFullDictTests(unittest.TestCase):
             oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
             for ccId in moleculeNameList:
                 molD = myPersist.fetchOneMolecule(dbFileName=self.__storePath, moleculeName=ccId)
-                name = molD['name']
+                # name = molD['name']
                 ok = oem.deserialize(molD['oeb'])
                 if not ok:
                     self.__lfh.write("Deserialized status %s = %d\n" % (ccId, ok))
@@ -312,7 +311,7 @@ class OePersistFullDictTests(unittest.TestCase):
                     self.__lfh.write("Deserialized SMILES (canonical) = %s\n" % oem.getCanSMILES())
                     self.__lfh.write("Deserialized SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
 
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -350,7 +349,7 @@ class OePersistFullDictTests(unittest.TestCase):
                     self.__lfh.write("Formula filter count for %s = %d\n" % (prdId, len(mL)))
                     for ccId in mL:
                         molD = myPersist.fetchOneMolecule(dbFileName=self.__storePath, moleculeName=ccId)
-                        name = molD['name']
+                        # name = molD['name']
                         ok = oem.deserialize(molD['oeb'])
                         if not ok:
                             self.__lfh.write("Deserialized status %s = %d\n" % (ccId, ok))
@@ -361,7 +360,7 @@ class OePersistFullDictTests(unittest.TestCase):
                 else:
                     self.__lfh.write("+WARNING - Index %s missing id %s \n" % (self.__indexPathCC, prdId))
 
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -401,6 +400,7 @@ def suiteSearchStoreOE():
     suiteSelect.addTest(OePersistFullDictTests("testBoundedFormulaSearch"))
     return suiteSelect
 
+
 if __name__ == '__main__':
     here = os.path.abspath(os.path.dirname(__file__))
     testoutput = os.path.join(here, 'test-output', platform.python_version())
@@ -417,5 +417,5 @@ if __name__ == '__main__':
         mySuite = suiteCreateStoreOE()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
 
-    #mySuite = suiteSearchStoreOE()
-    #unittest.TextTestRunner(verbosity=2).run(mySuite)
+    mySuite = suiteSearchStoreOE()
+    unittest.TextTestRunner(verbosity=2).run(mySuite)

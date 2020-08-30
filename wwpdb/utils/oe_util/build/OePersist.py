@@ -17,17 +17,15 @@ __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.01"
 
 
-import sys
-import time
-import os
-import traceback
 import shelve
 import shutil
+import sys
+import traceback
+
 try:
     import cPickle as pickle
 except ImportError:
     import pickle
-
 
 from mmcif_utils.persist.LockFile import LockFile
 
@@ -71,7 +69,7 @@ class OePersist(object):
             if (self.__isExpired):
                 self.__reIndex()
             return self.__moleculeNameList.index(name)
-        except:
+        except:  # noqa: E722
             return None
 
     def setMoleculeList(self, moleculeList=None):
@@ -83,9 +81,9 @@ class OePersist(object):
             if (self.__debug):
                 self.__lfh.write("+OePersist.setMoleculeList() - Container list length %d\n" % len(self.__moleculeList))
             return True
-        except:
+        except Exception as e:
             if (self.__verbose):
-                self.__lfh.write("+ERROR- OePersist.setMoleculeList() initialization failed\n")
+                self.__lfh.write("+ERROR- OePersist.setMoleculeList() initialization failed %s\n" % str(e))
             if (self.__debug):
                 traceback.print_exc(file=self.__lfh)
             return False
@@ -99,9 +97,9 @@ class OePersist(object):
             if (self.__debug):
                 self.__lfh.write("+OePersist.appendMoleculeList() - Container list length %d\n" % len(self.__moleculeList))
             return True
-        except:
+        except Exception as e:
             if (self.__verbose):
-                self.__lfh.write("+ERROR- OePersist.appendMoleculeList() initialization failed\n")
+                self.__lfh.write("+ERROR- OePersist.appendMoleculeList() initialization failed %s\n" % str(e))
             if (self.__debug):
                 traceback.print_exc(file=self.__lfh)
             return False
@@ -144,11 +142,11 @@ class OePersist(object):
             self.__lockObj.acquire()
             self.__db = shelve.open(dbFileName, flag=flag, protocol=pickle.HIGHEST_PROTOCOL)
             return True
-        except:
+        except Exception as e:
             if self.__lockObj is not None:
                 self.__lockObj.release()
             if (self.__verbose):
-                self.__lfh.write("+ERROR- OePersist.open() write failed for file %s\n" % dbFileName)
+                self.__lfh.write("+ERROR- OePersist.open() write failed for file %s %s\n" % (dbFileName, str(e)))
             if (self.__debug):
                 traceback.print_exc(file=self.__lfh)
             return False
@@ -156,18 +154,18 @@ class OePersist(object):
     def getStoreMoleculeIndex(self):
         try:
             return self.__db['__index__']
-        except:
+        except:  # noqa: E722
             return []
 
     def close(self):
         """ Close the persistent store
         """
         try:
-            Self.__db.shelve.close()
+            self.__db.shelve.close()
             if self.__lockObj is not None:
                 self.__lockObj.release()
             return True
-        except:
+        except:  # noqa: E722
             if self.__lockObj is not None:
                 self.__lockObj.release()
             return False
@@ -177,42 +175,42 @@ class OePersist(object):
 
             No locking is performed on the source file.
         """
-        with LockFile(dstDbFilePath, timeoutSeconds=self.__timeoutSeconds, retrySeconds=self.__retrySeconds, verbose=self.__verbose, log=self.__lfh) as lf:
+        with LockFile(dstDbFilePath, timeoutSeconds=self.__timeoutSeconds, retrySeconds=self.__retrySeconds, verbose=self.__verbose, log=self.__lfh) as lf:  # noqa: F841
             retVal = self.__moveStore(srcDbFilePath, dstDbFilePath)
         return retVal
 
     def store(self, dbFileName="my.db"):
         """ Store the current molecule list in persistent database.
         """
-        with LockFile(dbFileName, timeoutSeconds=self.__timeoutSeconds, retrySeconds=self.__retrySeconds, verbose=self.__verbose, log=self.__lfh) as lf:
+        with LockFile(dbFileName, timeoutSeconds=self.__timeoutSeconds, retrySeconds=self.__retrySeconds, verbose=self.__verbose, log=self.__lfh) as lf:  # noqa: F841
             retVal = self.__storeShelve(dbFileName)
         return retVal
 
     def recover(self, dbFileName="my.db"):
         """ Recover the stored state to the current in-memory molecule representation.
         """
-        with LockFile(dbFileName, timeoutSeconds=self.__timeoutSeconds, retrySeconds=self.__retrySeconds, verbose=self.__verbose, log=self.__lfh) as lf:
+        with LockFile(dbFileName, timeoutSeconds=self.__timeoutSeconds, retrySeconds=self.__retrySeconds, verbose=self.__verbose, log=self.__lfh) as lf:  # noqa: F841
             retVal = self.__recoverShelve(dbFileName)
         return retVal
 
     def getIndex(self, dbFileName="my.db"):
         """ Recover the index of the persistent store.
         """
-        with LockFile(dbFileName, timeoutSeconds=self.__timeoutSeconds, retrySeconds=self.__retrySeconds, verbose=self.__verbose, log=self.__lfh) as lf:
+        with LockFile(dbFileName, timeoutSeconds=self.__timeoutSeconds, retrySeconds=self.__retrySeconds, verbose=self.__verbose, log=self.__lfh) as lf:  # noqa: F841
             retVal = self.__indexShelve(dbFileName)
         return retVal
 
     def updateOneMolecule(self, inputMolecule, dbFileName="my.db"):
         """ Update or append a molecule to an existing store.
         """
-        with LockFile(dbFileName, timeoutSeconds=self.__timeoutSeconds, retrySeconds=self.__retrySeconds, verbose=self.__verbose, log=self.__lfh) as lf:
+        with LockFile(dbFileName, timeoutSeconds=self.__timeoutSeconds, retrySeconds=self.__retrySeconds, verbose=self.__verbose, log=self.__lfh) as lf:  # noqa: F841
             retVal = self.__updateMoleculeShelve(dbFileName=dbFileName, inputMolecule=inputMolecule)
         return retVal
 
     def updateMoleculeList(self, dbFileName="my.db", moleculeList=None):
         """ Update or append the contents of the input molecule list to an existing store.
         """
-        with LockFile(dbFileName, timeoutSeconds=self.__timeoutSeconds, retrySeconds=self.__retrySeconds, verbose=self.__verbose, log=self.__lfh) as lf:
+        with LockFile(dbFileName, timeoutSeconds=self.__timeoutSeconds, retrySeconds=self.__retrySeconds, verbose=self.__verbose, log=self.__lfh) as lf:  # noqa: F841
             retVal = self.__updateMoleculeListShelve(dbFileName=dbFileName, updateMoleculeList=moleculeList)
         return retVal
 
@@ -220,7 +218,7 @@ class OePersist(object):
     def fetchOneMolecule(self, dbFileName="my.db", moleculeName=None):
         """  Fetch a single object from a named molecule.  This is atomic operation with respect to the store.
         """
-        with LockFile(dbFileName, timeoutSeconds=self.__timeoutSeconds, retrySeconds=self.__retrySeconds, verbose=self.__verbose, log=self.__lfh) as lf:
+        with LockFile(dbFileName, timeoutSeconds=self.__timeoutSeconds, retrySeconds=self.__retrySeconds, verbose=self.__verbose, log=self.__lfh) as lf:  # noqa: F841
             retVal = self.__fetchOneMoleculeShelve(dbFileName, moleculeName)
         return retVal
 
@@ -237,9 +235,9 @@ class OePersist(object):
         try:
             shutil.move(src, dst)
             return True
-        except:
+        except Exception as e:
             if (self.__verbose):
-                self.__lfh.write("+ERROR- OePersist.__moveStore() move failed for file %s\n" % src)
+                self.__lfh.write("+ERROR- OePersist.__moveStore() move failed for file %s %s\n" % (src, str(e)))
             if (self.__debug):
                 traceback.print_exc(file=self.__lfh)
             return False
@@ -259,9 +257,9 @@ class OePersist(object):
                 db[ky] = molecule
             db.close()
             return True
-        except:
+        except Exception as e:
             if (self.__verbose):
-                self.__lfh.write("+ERROR- OePersist.__storeShelve() shelve store failed for file %s\n" % dbFileName)
+                self.__lfh.write("+ERROR- OePersist.__storeShelve() shelve store failed for file %s %s\n" % (dbFileName, str(e)))
             if (self.__debug):
                 traceback.print_exc(file=self.__lfh)
             return False
@@ -270,16 +268,15 @@ class OePersist(object):
         """  Recover the index of molecules in the persistent store.
         """
         try:
-            indexD = {}
             db = shelve.open(dbFileName, flag='r', protocol=pickle.HIGHEST_PROTOCOL)
             self.__moleculeNameList = db['__index__']
             db.close()
             self.__isExpired = False
             return self.__moleculeNameList
 
-        except:
+        except Exception as e:
             if (self.__verbose):
-                self.__lfh.write("+ERROR- OePersist.__indexShelve() shelve index failed for file %s\n" % dbFileName)
+                self.__lfh.write("+ERROR- OePersist.__indexShelve() shelve index failed for file %s %s\n" % (dbFileName, str(e)))
             if (self.__debug):
                 traceback.print_exc(file=self.__lfh)
             return {}
@@ -295,13 +292,13 @@ class OePersist(object):
                 self.__lfh.write("+OePersist.__recoverShelve() - Molecule name list %r\n" % self.__moleculeNameList)
 
             for moleculeName in self.__moleculeNameList:
-                self.moleculeList.append(db[ky])
+                self.moleculeList.append(db[moleculeName])
 
             db.close()
             return True
-        except:
+        except Exception as e:
             if (self.__verbose):
-                self.__lfh.write("+ERROR- OePersist.__recoverShelve() shelve recover failed for file %s\n" % dbFileName)
+                self.__lfh.write("+ERROR- OePersist.__recoverShelve() shelve recover failed for file %s %s\n" % (dbFileName, str(e)))
             if (self.__debug):
                 traceback.print_exc(file=self.__lfh)
             return False
@@ -317,10 +314,10 @@ class OePersist(object):
             molecule = db[ky]
             db.close()
             return molecule
-        except:
+        except Exception as e:
             if (self.__verbose):
-                self.__lfh.write("+ERROR- OePersist.__fetchOneMoleculeShelve() shelve fetch failed for file %s %s\n"
-                                 % (dbFileName, moleculeName))
+                self.__lfh.write("+ERROR- OePersist.__fetchOneMoleculeShelve() shelve fetch failed for file %s %s %s\n"
+                                 % (dbFileName, moleculeName, str(e)))
             if (self.__debug):
                 traceback.print_exc(file=self.__lfh)
             return None
@@ -336,10 +333,10 @@ class OePersist(object):
             ky = moleculeName
             molecule = self.__db[ky]
             return molecule
-        except:
+        except Exception as e:
             if (self.__debug):
-                self.__lfh.write("+ERROR- OePersist.__fetchObjectShelve() shelve fetch failed %s\n"
-                                 % moleculeName)
+                self.__lfh.write("+ERROR- OePersist.__fetchObjectShelve() shelve fetch failed %s %s\n"
+                                 % (moleculeName, str(e)))
             if (self.__debug):
                 traceback.print_exc(file=self.__lfh)
             #
@@ -360,11 +357,10 @@ class OePersist(object):
             #
             # Modify or append input molecule --
             #
-            cExists = True
             if moleculeName in moleculeNameList:
-                idx = moleculeNameList.index(moleculeName)
+                # idx = moleculeNameList.index(moleculeName)
+                pass
             else:
-                cExists = False
                 moleculeNameList.append(moleculeName)
             #
             # store updated molecule index lists -
@@ -378,9 +374,9 @@ class OePersist(object):
             db[ky] = inputMolecule
             db.close()
             return True
-        except:
+        except Exception as e:
             if (self.__verbose):
-                self.__lfh.write("+ERROR- OePersist.__updateObjectShelve() update failed for file %s %s \n" % (dbFileName, moleculeName))
+                self.__lfh.write("+ERROR- OePersist.__updateObjectShelve() update failed for file %s %s %s\n" % (dbFileName, moleculeName, str(e)))
             if (self.__debug):
                 traceback.print_exc(file=self.__lfh)
             return False
@@ -401,11 +397,10 @@ class OePersist(object):
                 #
                 # Modify or append input molecule --
                 #
-                cExists = True
                 if updateMoleculeName in moleculeNameList:
-                    idx = moleculeNameList.index(updateMoleculeName)
+                    # idx = moleculeNameList.index(updateMoleculeName)
+                    pass
                 else:
-                    cExists = False
                     moleculeNameList.append(updateMoleculeName)
                 #
                 # Store updated molecule index lists -
@@ -417,9 +412,9 @@ class OePersist(object):
             #
             db.close()
             return True
-        except:
+        except Exception as e:
             if (self.__verbose):
-                self.__lfh.write("+ERROR- OePersist.__updateMoleculeListShelve() update failed for store %s\n" % dbFileName)
+                self.__lfh.write("+ERROR- OePersist.__updateMoleculeListShelve() update failed for store %s %s\n" % (dbFileName, str(e)))
             if (self.__debug):
                 traceback.print_exc(file=self.__lfh)
             return False

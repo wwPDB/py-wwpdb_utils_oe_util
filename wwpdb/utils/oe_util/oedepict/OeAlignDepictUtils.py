@@ -20,23 +20,34 @@ __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.01"
 
 
-import sys
-import unittest
-import traceback
-import sys
-import time
 import os
 import os.path
-import shutil
+import sys
+import traceback
 
-
+from openeye.oechem import (OEBlueTint, OEExprOpts_AtomicNumber,
+                            OEExprOpts_DefaultAtoms, OEExprOpts_DefaultBonds,
+                            OEExprOpts_ExactAtoms, OEExprOpts_ExactBonds,
+                            OEGetMCSExhaustiveSearchTruncationLimit,
+                            OEGreenTint, OEIsAtomMember, OEIsBondMember,
+                            OEMCSMaxAtoms, OEMCSSearch, OEMCSType_Approximate,
+                            OENotAtom, OENotBond, OEPinkTint)
+from openeye.oedepict import (OE2DMolDisplay, OE2DMolDisplayOptions,
+                              OEAddHighlighting, OEBlackPen, OEDrawBorder,
+                              OEGetMoleculeScale,
+                              OEHighlightStyle_BallAndStick,
+                              OEHighlightStyle_Stick, OEImage, OEImageGrid,
+                              OEMultiPageImageFile,
+                              OEPageOrientation_Landscape,
+                              OEPageOrientation_Portrait, OEPageSize_US_Letter,
+                              OEPen, OEPrepareAlignedDepiction,
+                              OEPrepareDepiction, OERenderMolecule,
+                              OEScale_AutoScale, OEWriteImage,
+                              OEWriteMultiPageImage)
+from wwpdb.utils.cc_dict_util.timeout.TimeoutMultiProc import (
+    TimeoutException, timeout)
 from wwpdb.utils.oe_util.build.OeChemCompIoUtils import OeChemCompIoUtils
 from wwpdb.utils.oe_util.oedepict.OeDepict import OeDepictBase
-
-from wwpdb.utils.cc_dict_util.timeout.TimeoutMultiProc import timeout, TimeoutException
-
-from openeye.oechem import *
-from openeye.oedepict import *
 
 
 class OeDepictAlignBase(object):
@@ -83,7 +94,7 @@ class OeDepictAlignBase(object):
             #
             self._refImagePath = imagePath if imagePath is not None else self._refId + '.svg'
             return True
-        except:
+        except:  # noqa: E722
             if (self.__verbose):
                 traceback.print_exc(file=self.__lfh)
         return False
@@ -117,7 +128,7 @@ class OeDepictAlignBase(object):
             #
             self._refImagePath = imagePath if imagePath is not None else self._refId + '.svg'
             return True
-        except:
+        except:  # noqa: E722
             if (self.__verbose):
                 traceback.print_exc(file=self.__lfh)
         return False
@@ -146,7 +157,7 @@ class OeDepictAlignBase(object):
 
             self._refImagePath = imagePath if imagePath is not None else self._refId + '.svg'
             return True
-        except:
+        except:  # noqa: E722
             if (self.__verbose):
                 traceback.print_exc(file=self.__lfh)
         return False
@@ -165,7 +176,7 @@ class OeDepictAlignBase(object):
             #
             self._fitImagePath = imagePath if imagePath is not None else self._fitId + '.svg'
             return True
-        except:
+        except:  # noqa: E722
             if (self.__verbose):
                 traceback.print_exc(file=self.__lfh)
         return False
@@ -195,7 +206,7 @@ class OeDepictAlignBase(object):
                 self._fitTitle = ''
             self._fitImagePath = imagePath if imagePath is not None else self._fitId + '.svg'
             return True
-        except:
+        except:  # noqa: E722
             if (self.__verbose):
                 traceback.print_exc(file=self.__lfh)
         return False
@@ -218,7 +229,7 @@ class OeDepictAlignBase(object):
                 self._fitTitle = None
             self._fitImagePath = imagePath if imagePath is not None else self._fitId + '.svg'
             return True
-        except:
+        except:  # noqa: E722
             if (self.__verbose):
                 traceback.print_exc(file=self.__lfh)
         return False
@@ -246,7 +257,7 @@ class OeDepictAlignBase(object):
                 fitImagePath = os.path.join(imageDirPath, ccIdU + '.svg')
                 self._pairMolList.append((refId, refMol, refTitle, refImagePath, fitId, fitMol, fitTitle, fitImagePath))
             return True
-        except:
+        except:  # noqa: E722
             if (self.__verbose):
                 traceback.print_exc(file=self.__lfh)
         return False
@@ -269,14 +280,14 @@ class OeDepictAlignBase(object):
                 fitTitle = title
             else:
                 fitMol.SetTitle(fitId)
-                fitTitle = fitId + "/" + refId
+                fitTitle = fitId + "/" + self._refId
 
             fitImagePath = imagePath if imagePath is not None else fitId + '.svg'
 
             self._pairMolList.append((self._refId, self._refMol, self._refTitle, self._refImagePath, fitId, fitMol, fitTitle, fitImagePath))
 
             return True
-        except:
+        except:  # noqa: E722
             if (self.__verbose):
                 traceback.print_exc(file=self.__lfh)
         return False
@@ -308,7 +319,7 @@ class OeDepictAlignBase(object):
 
                 self._pairMolList.append((refId, refMol, refTitle, refImagePath, fitId, fitMol, fitTitle, fitImagePath))
             return True
-        except:
+        except:  # noqa: E722
             if (self.__verbose):
                 traceback.print_exc(file=self.__lfh)
         return False
@@ -331,14 +342,14 @@ class OeDepictAlignBase(object):
                     fitTitle = title
                 else:
                     fitMol.SetTitle(fitId)
-                    fitTitle = fitId + "/" + refId
+                    fitTitle = fitId + "/" + self._refId
 
                 fitImagePath = imagePath if imagePath is not None else fitId + '.svg'
 
                 self._pairMolList.append((self._refId, self._refMol, self._refTitle, self._refImagePath, fitId, fitMol, fitTitle, fitImagePath))
 
             return True
-        except:
+        except:  # noqa: E722
             if (self.__verbose):
                 traceback.print_exc(file=self.__lfh)
         return False
@@ -361,7 +372,7 @@ class OeDepictAlignBase(object):
                 return (ccId, oem.getGraphMolSuppressH(), isoSmiles)
             else:
                 return (ccId, oem.getMol(), isoSmiles)
-        except:
+        except:  # noqa: E722
             if (self.__verbose):
                 traceback.print_exc(file=self.__lfh)
         return (None, None, None)
@@ -391,11 +402,11 @@ class OeDepictAlignBase(object):
             atomexpr = OEExprOpts_DefaultAtoms
             bondexpr = OEExprOpts_DefaultBonds
         #
-        #atomexpr = OEExprOpts_AtomicNumber|OEExprOpts_EqAromatic
-        #bondexpr = 0
+        # atomexpr = OEExprOpts_AtomicNumber|OEExprOpts_EqAromatic
+        # bondexpr = 0
         #
-        #atomexpr = OEExprOpts_AtomicNumber|OEExprOpts_Aromaticity
-        #bondexpr = OEExprOpts_BondOrder|OEExprOpts_EqNotAromatic
+        # atomexpr = OEExprOpts_AtomicNumber|OEExprOpts_Aromaticity
+        # bondexpr = OEExprOpts_BondOrder|OEExprOpts_EqNotAromatic
         #
         self._mcss.Init(refmol, atomexpr, bondexpr)
         #
@@ -488,8 +499,8 @@ class OeDepictAlignBase(object):
             myHighLightNotMatchColor = OEBlueTint
 
         #
-        #matchedatoms = OEIsAtomMember(matchObj.GetPatternAtoms())
-        #matchedbonds = OEIsBondMember(matchObj.GetPatternBonds())
+        # matchedatoms = OEIsAtomMember(matchObj.GetPatternAtoms())
+        # matchedbonds = OEIsBondMember(matchObj.GetPatternBonds())
         matchedatoms = OEIsAtomMember(matchObj.GetTargetAtoms())
         matchedbonds = OEIsBondMember(matchObj.GetTargetBonds())
 
@@ -526,8 +537,8 @@ class OeDepictMCSAlignMulti(OeDepictAlignBase, OeDepictBase):
             self.__lfh.write("+%s.%s timeout exception\n" % (self.__class__.__name__, sys._getframe().f_code.co_name))
             # self.__lfh.write("+%s.%s timeout exception %r\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, sys.exc_info()[:2]))
             self.__lfh.write("+%s.%s no output written to %r\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, imagePath))
-        except:
-            self.__lfh.write("+%s.%s general exception\n" % (self.__class__.__name__, sys._getframe().f_code.co_name))
+        except Exception as e:
+            self.__lfh.write("+%s.%s general exception %s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, str(e)))
             # self.__lfh.write("+%s.%s exception  %r\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, sys.exc_info()[:2]))
             if (self.__verbose):
                 traceback.print_exc(file=self.__lfh)
@@ -541,8 +552,8 @@ class OeDepictMCSAlignMulti(OeDepictAlignBase, OeDepictBase):
             self.__lfh.write("+%s.%s timeout exception\n" % (self.__class__.__name__, sys._getframe().f_code.co_name))
             # self.__lfh.write("+%s.%s timeout exception %r\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, sys.exc_info()[:2]))
             self.__lfh.write("+%s.%s no output written to %r\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, imagePath))
-        except:
-            self.__lfh.write("+%s.%s general exception here\n" % (self.__class__.__name__, sys._getframe().f_code.co_name))
+        except Exception as e:
+            self.__lfh.write("+%s.%s general exception here %s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, str(e)))
             # self.__lfh.write("+%s.%s exception  %r\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, sys.exc_info()[:2]))
             if (self.__verbose):
                 traceback.print_exc(file=self.__lfh)
@@ -714,7 +725,7 @@ class OeDepictMCSAlign(OeDepictAlignBase, OeDepictBase):
     def alignOneWithList(self, imagePath='single-list.png'):
         return self.__alignListWorker(imagePath=imagePath, layout='list')
 
-    #@timeout(15)
+    # @timeout(15)
     def __alignListWorker(self, imagePath='single.pdf', layout='pairs'):
         """ Working method comparing a reference molecule with a list of fit molecules.
 
@@ -827,57 +838,6 @@ class OeDepictMCSAlignSingle(OeDepictAlignBase, OeDepictBase):
         return self.__alignListWorker()
 
     @timeout(15)
-    def __XalignWorker(self):
-        """ Working method comparing a reference molecule with a list of fit molecules.
-
-            Map of corresponding atoms is returned.
-
-            Output image is a single-page with grid layout.
-        """
-        #
-        self.__setupImage()
-        #
-        atomMap = []
-        OEPrepareDepiction(self._refMol)
-
-        self._setupMCSS(self._refMol)
-        #
-        OEPrepareDepiction(self._fitMol)
-        #
-        #
-        nAtomsRef = refMol.NumAtoms()
-        nAtomsFit = fitMol.NumAtoms()
-        minAtoms = min(nAtomsRef, nAtomsFit)
-        self._mcss.SetMinAtoms(int(minAtoms * self._minAtomMatchFraction))
-
-        # scaling
-        refscale = OEGetMoleculeScale(self._refMol, self._opts)
-        fitscale = OEGetMoleculeScale(self._refMol, self._opts)
-        self._opts.SetScale(min(refscale, fitscale))
-
-        unique = True
-        self._miter = self._mcss.Match(self._fitMol, unique)
-
-        if self._miter.IsValid():
-
-            match = self._miter.Target()
-            OEPrepareAlignedDepiction(self._fitMol, self._mcss.GetPattern(), match)
-
-            refdisp = self._setHighlightStyleRef(matchObj=match, refMol=self._mcss.GetPattern())
-            OERenderMolecule(self.__imageRef, refdisp)
-            OEWriteImage(self._refImagePath, self.__imageRef)
-
-            # Depict fit molecule with MCS highlighting
-            fitdisp = self._setHighlightStyleFit(matchObj=match, fitMol=fitMol)
-            OERenderMolecule(self.__imageFit, fitdisp)
-            OEWriteImage(self._fitImagePath, self.__imageFit)
-
-            for mAt in match.GetAtoms():
-                atomMap.append((refId, mAt.pattern.GetName(), fitId, mAt.target.GetName()))
-
-        return atomMap
-
-    @timeout(15)
     def __alignListWorker(self):
         """ Working method comparing a reference molecule with a list of fit molecules.
 
@@ -974,7 +934,7 @@ class OeTestMCSAlign(OeDepictAlignBase):
         try:
             for ii, atom in enumerate(oeMol.GetAtoms()):
                 atD[atom.GetName().strip()] = ii
-        except:
+        except:  # noqa: E722
             pass
         return atD
 
@@ -983,7 +943,7 @@ class OeTestMCSAlign(OeDepictAlignBase):
         try:
             for ii, atom in enumerate(oeMol.GetAtoms()):
                 atD[atom.GetName().strip()] = atom.GetFormalCharge()
-        except:
+        except:  # noqa: E722
             pass
         return atD
 
@@ -997,7 +957,7 @@ class OeTestMCSAlign(OeDepictAlignBase):
                     for nbr in atom.GetAtoms():
                         tL.append(nbr.GetName())
                         nL.append((aN, tL))
-        except:
+        except:  # noqa: E722
             pass
         return nL
 

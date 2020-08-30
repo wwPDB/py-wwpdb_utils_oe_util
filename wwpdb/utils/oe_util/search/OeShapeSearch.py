@@ -20,9 +20,10 @@ __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.01"
 
 import sys
-import os
-from openeye.oechem import *
-from openeye.oeshape import *
+
+from openeye.oeshape import (OEBestOverlay, OEBestOverlayScoreIter,
+                             OECalcVolume, OEColorFFType_ImplicitMillsDean,
+                             OEHighestTanimotoCombo, OESortOverlayScores)
 
 
 class OeShapeSearch(object):

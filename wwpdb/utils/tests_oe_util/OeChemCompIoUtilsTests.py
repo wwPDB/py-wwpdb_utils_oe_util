@@ -23,18 +23,17 @@ import sys
 import unittest
 import traceback
 import platform
-import time
 import os
 
 try:
-    from openeye.oechem import OEFloatArray
+    from openeye.oechem import OEFloatArray  # noqa: F401
     skiptests = False
 except ImportError:
     skiptests = True
 
 if not skiptests:
     from wwpdb.utils.oe_util.build.OeChemCompIoUtils import OeChemCompIoUtils
-    
+
 
 @unittest.skipIf(skiptests, 'Could not import openeye')
 class OeChemCompIoUtilsTests(unittest.TestCase):
@@ -70,7 +69,7 @@ class OeChemCompIoUtilsTests(unittest.TestCase):
                 self.__lfh.write("Title              = %s\n" % oem.getTitle())
                 self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
                 self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -87,7 +86,7 @@ class OeChemCompIoUtilsTests(unittest.TestCase):
                 self.__lfh.write("Title              = %s\n" % oem.getTitle())
                 self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
                 self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -97,6 +96,7 @@ def suite1():
     suiteSelect.addTest(OeChemCompIoUtilsTests("testMakeFromFiles"))
     suiteSelect.addTest(OeChemCompIoUtilsTests("testMakeFromIds"))
     return suiteSelect
+
 
 if __name__ == '__main__':
     #

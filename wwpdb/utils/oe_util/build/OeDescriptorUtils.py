@@ -18,9 +18,10 @@ __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.01"
 
 import logging
-logger = logging.getLogger(__name__)
 
 from openeye import oechem
+
+logger = logging.getLogger(__name__)
 
 
 class OeDescriptorUtils(object):

@@ -24,14 +24,12 @@ import sys
 import unittest
 import platform
 import traceback
-import time
 import os
 import os.path
 import fnmatch
-import string
 
 try:
-    from openeye.oechem import OEFloatArray
+    from openeye.oechem import OEFloatArray  # noqa: F401
     skiptests = False
 except ImportError:
     skiptests = True
@@ -69,7 +67,7 @@ class OeDepictTests(unittest.TestCase):
             os.path.join(self.__topCachePath, 'A/ATP/ATP.cif'),
             os.path.join(self.__topCachePath, 'D/DG/DG.cif'),
             os.path.join(self.__topCachePath, 'A/A/A.cif')]
-                         
+
         self.__pathList2 = ['../data/PRD_000027.cif']
         self.__pathPrdChemCompCVS = os.path.join(self.__here, "prdcc-v3")
         self.__pathChemCompCVS = self.__topCachePath
@@ -102,7 +100,7 @@ class OeDepictTests(unittest.TestCase):
                 self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
                 self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
             return zip(idList, oemList, pathList)
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -120,7 +118,7 @@ class OeDepictTests(unittest.TestCase):
                 self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
                 self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
             return zip(idList, oemList, idList)
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -161,7 +159,7 @@ class OeDepictTests(unittest.TestCase):
         self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
                                                  sys._getframe().f_code.co_name))
         try:
-            #idList = self.__getIdsFromFile('IDLIST.list')
+            # idList = self.__getIdsFromFile('IDLIST.list')
             idList = self.__idList
             oeMolTitleZip = self.__testMakeFromIds(idList)
             oeMolTitleList = list(oeMolTitleZip)
@@ -179,7 +177,7 @@ class OeDepictTests(unittest.TestCase):
                 oed.setGridOptions(rows=1, cols=1)
                 oed.prepare()
                 oed.write(imagePath)
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -204,7 +202,7 @@ class OeDepictTests(unittest.TestCase):
                 oed.setGridOptions(rows=1, cols=1)
                 oed.prepare()
                 oed.write(imagePath)
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -222,7 +220,7 @@ class OeDepictTests(unittest.TestCase):
             oed.setGridOptions(rows=2, cols=2)
             oed.prepare()
             oed.write(os.path.join(self.__testoutput, "myIdListtest.png"))
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -239,7 +237,7 @@ class OeDepictTests(unittest.TestCase):
             oed.setGridOptions(rows=3, cols=3)
             oed.prepare()
             oed.write(os.path.join(self.__testoutput, "pathListtest.png"))
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -254,7 +252,7 @@ class OeDepictTests(unittest.TestCase):
             oed.setMolTitleList(oeMolTitleList)
             oed.prepare()
             oed.write(os.path.join(self.__testoutput, "mulitIdListtest.pdf"))
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -270,7 +268,7 @@ class OeDepictTests(unittest.TestCase):
             oed.setGridOptions(rows=2, cols=1)
             oed.prepare()
             oed.write(os.path.join(self.__testoutput, "multiPathListtest.pdf"))
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -285,7 +283,7 @@ class OeDepictTests(unittest.TestCase):
             oed.setDisplayOptions(labelAtomName=True, labelAtomCIPStereo=True, labelAtomIndex=False, labelBondIndex=False, bondDisplayWidth=0.5)
             oed.prepare()
             oed.write(os.path.join(self.__testoutput, "myErrortest.pdf"))
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -306,7 +304,7 @@ class OeDepictTests(unittest.TestCase):
             oed.setGridOptions(rows=1, cols=1)
             oed.prepare()
             oed.write(imagePath)
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -319,6 +317,7 @@ class OeDepictTests(unittest.TestCase):
             imagePath = os.path.join(self.__testoutput, "benzene.svg")
             oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
             ok = oem.importSmiles("c1ccccc1")
+            self.assertTrue(ok)
 
             oed = OeDepict(verbose=self.__verbose, log=self.__lfh)
             oed.setMolTitleList([('benzene', oem, 'Title for benzene')])
@@ -326,7 +325,7 @@ class OeDepictTests(unittest.TestCase):
             oed.setGridOptions(rows=1, cols=1)
             oed.prepare()
             oed.write(imagePath)
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 

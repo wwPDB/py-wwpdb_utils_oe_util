@@ -21,9 +21,19 @@ __version__ = "V0.01"
 import sys
 import time
 import traceback
-from mmcif_utils.style.PdbxStyleIoUtil import PdbxStyleIoUtil
+
 from mmcif_utils.style.ChemCompCategoryStyle import ChemCompCategoryStyle
-from openeye.oechem import *
+from mmcif_utils.style.PdbxStyleIoUtil import PdbxStyleIoUtil
+from openeye.oechem import (OECalculateMolecularWeight,
+                            OECIPAtomStereo_NotStereo, OECIPAtomStereo_R,
+                            OECIPAtomStereo_S, OECIPAtomStereo_UnspecStereo,
+                            OECIPBondStereo_E, OECIPBondStereo_NotStereo,
+                            OECIPBondStereo_UnspecStereo, OECIPBondStereo_Z,
+                            OECreateCanSmiString, OECreateInChI,
+                            OECreateInChIKey, OECreateIsoSmiString,
+                            OEGetAtomicSymbol, OEMol, OEMolecularFormula,
+                            OEPerceiveCIPStereo, OEWriteConstMolecule,
+                            OEWriteMolecule, oemolostream)
 
 
 class PdbxBuildChemComp(PdbxStyleIoUtil):
@@ -117,8 +127,8 @@ class PdbxBuildChemComp(PdbxStyleIoUtil):
             else:
                 OEWriteMolecule(ofs, myMol)
             return True
-        except:
-            self.__lfh.write("+%s.%s FAILING\n" % (self.__class__.__name__, sys._getframe().f_code.co_name))
+        except Exception as e:
+            self.__lfh.write("+%s.%s FAILING %s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, str(e)))
             traceback.print_exc(file=self.__lfh)
         return False
 
@@ -160,7 +170,7 @@ class PdbxBuildChemComp(PdbxStyleIoUtil):
             _pdbx_chem_comp_descriptor.program
             _pdbx_chem_comp_descriptor.program_version
             _pdbx_chem_comp_descriptor.descriptor
-            ARG SMILES           ACDLabs              10.04 "O=C(O)C(N)CCCN\C(=[NH2+])N"
+            ARG SMILES           ACDLabs              10.04 "O=C(O)C(N)CCCN\\C(=[NH2+])N"
             ARG SMILES_CANONICAL CACTVS               3.341 "N[C@@H](CCCNC(N)=[NH2+])C(O)=O"
             ARG SMILES           CACTVS               3.341 "N[CH](CCCNC(N)=[NH2+])C(O)=O"
             ARG SMILES_CANONICAL "OpenEye OEToolkits" 1.5.0 "C(C[C@@H](C(=O)O)N)CNC(=[NH2+])N"
@@ -368,7 +378,7 @@ class PdbxBuildChemComp(PdbxStyleIoUtil):
                         self.__eD[atNo] = 1
                     else:
                         self.__eD[atNo] += 1
-            except:
+            except:  # noqa: E722
                 pass
 
         return self.__eD

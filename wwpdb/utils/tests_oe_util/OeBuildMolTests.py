@@ -26,11 +26,10 @@ import sys
 import unittest
 import traceback
 import platform
-import time
 import os
 
 try:
-    from openeye.oechem import OEFloatArray
+    from openeye.oechem import OEFloatArray  # noqa: F401
     skiptests = False
 except ImportError:
     skiptests = True
@@ -72,7 +71,7 @@ class OeBuildMolTests(unittest.TestCase):
                 self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
             else:
                 self.__lfh.write("SDF read failed for %s\n" % self.__sdfFilePath)
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -85,7 +84,7 @@ class OeBuildMolTests(unittest.TestCase):
             oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
             for pth in self.__pathList:
                 myReader = PdbxIoAdapter(self.__verbose, self.__lfh)
-                ok = myReader.read(pdbxFilePath=pth)
+                ok = myReader.read(pdbxFilePath=pth)  # noqa: F841
                 # myReader.write(pdbxFilePath="TMP.cif")
                 for container in myReader.getContainerList():
                     oem.set(container.getName(),
@@ -96,7 +95,7 @@ class OeBuildMolTests(unittest.TestCase):
                     self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
                     self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
 
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -132,7 +131,7 @@ class OeBuildMolTests(unittest.TestCase):
                     self.__lfh.write("Deserialized SMILES (canonical) = %s\n" % oemD.getCanSMILES())
                     self.__lfh.write("Deserialized SMILES (isomeric)  = %s\n" % oemD.getIsoSMILES())
 
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -168,7 +167,7 @@ class OeBuildMolTests(unittest.TestCase):
                     self.__lfh.write("Deserialized SMILES (canonical) = %s\n" % oemD.getCanSMILES())
                     self.__lfh.write("Deserialized SMILES (isomeric)  = %s\n" % oemD.getIsoSMILES())
 
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 

@@ -21,10 +21,19 @@ __version__ = "V0.01"
 
 
 import sys
-import time
 
-from openeye.oechem import *
-from openeye.oedepict import *
+from openeye.oechem import OEBlack, OEDarkBlue, OEDarkGreen
+from openeye.oedepict import (OE2DMolDisplay, OE2DMolDisplayOptions,
+                              OEAtomStereoStyle_Display_All, OEBlackPen,
+                              OEDisplayAtomIdx, OEDisplayAtomPropBase,
+                              OEDisplayBondIdx, OEDrawBorder, OEFill_On,
+                              OEFont, OEImage, OEImageGrid,
+                              OEMultiPageImageFile,
+                              OEPageOrientation_Landscape,
+                              OEPageOrientation_Portrait, OEPageSize_US_Letter,
+                              OEPen, OEPrepareDepiction, OERenderMolecule,
+                              OEScale_AutoScale, OEWriteImage,
+                              OEWriteMultiPageImage)
 
 
 class LabelAtoms(OEDisplayAtomPropBase):

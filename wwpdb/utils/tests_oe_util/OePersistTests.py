@@ -27,7 +27,7 @@ import traceback
 import time
 
 try:
-    from openeye.oechem import OEFloatArray
+    from openeye.oechem import OEFloatArray  # noqa: F401
     skiptests = False
 except ImportError:
     skiptests = True
@@ -70,6 +70,7 @@ class OePersistTests(unittest.TestCase):
             for pth in self.__pathList:
                 myReader = PdbxIoAdapter(self.__verbose, self.__lfh)
                 ok = myReader.read(pdbxFilePath=pth)
+                self.assertTrue(ok)
                 for container in myReader.getContainerList():
                     name = container.getName()
                     oem.set(name,
@@ -89,7 +90,7 @@ class OePersistTests(unittest.TestCase):
             mL = myPersist.getIndex(dbFileName=self.__storePath)
             self.__lfh.write("OePersistTests(testCreateStore) molecule list %r\n" % mL)
 
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -108,7 +109,7 @@ class OePersistTests(unittest.TestCase):
             oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
             for ccId in moleculeNameList:
                 molD = myPersist.fetchMolecule(moleculeName=ccId)
-                name = molD['name']
+                # name = molD['name']
                 ok = oem.deserialize(molD['oeb'])
                 self.__lfh.write("Deserialized status = %d\n" % ok)
                 self.__lfh.write("Deserialized SMILES (canonical) = %s\n" % oem.getCanSMILES())
@@ -116,7 +117,7 @@ class OePersistTests(unittest.TestCase):
 
             myPersist.close()
 
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -140,7 +141,7 @@ class OePersistTests(unittest.TestCase):
             oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
             for ccId in moleculeNameList:
                 molD = myPersist.fetchOneMolecule(dbFileName=self.__storePath, moleculeName=ccId)
-                name = molD['name']
+                # name = molD['name']
                 ok = oem.deserialize(molD['oeb'])
                 self.__lfh.write("Deserialized status = %d\n" % ok)
                 self.__lfh.write("Deserialized SMILES (canonical) = %s\n" % oem.getCanSMILES())
@@ -148,7 +149,7 @@ class OePersistTests(unittest.TestCase):
 
             myPersist.close()
 
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -164,12 +165,12 @@ class OePersistTests(unittest.TestCase):
         self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
                                                  sys._getframe().f_code.co_name))
         try:
-            molList = []
             myPersist = OePersist(self.__verbose, self.__lfh)
             oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
             for pth in self.__pathList:
                 myReader = PdbxIoAdapter(self.__verbose, self.__lfh)
                 ok = myReader.read(pdbxFilePath=pth)
+                self.assertTrue(ok)
                 for container in myReader.getContainerList():
                     name = container.getName()
                     oem.set(name,
@@ -187,7 +188,7 @@ class OePersistTests(unittest.TestCase):
             mL = myPersist.getIndex(dbFileName=self.__storePath)
             self.__lfh.write("OePersistTests(testCreateStore) molecule list %r\n" % mL)
 
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -200,6 +201,7 @@ def suite1():
     suiteSelect.addTest(OePersistTests("testFetchOne"))
 
     return suiteSelect
+
 
 if __name__ == '__main__':
     #

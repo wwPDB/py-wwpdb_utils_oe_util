@@ -21,7 +21,6 @@ __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.01"
 
 
-import sys
 import unittest
 import traceback
 import sys
@@ -30,7 +29,7 @@ import os
 import os.path
 
 try:
-    from openeye.oechem import OEFloatArray
+    from openeye.oechem import OEFloatArray  # noqa: F401
     skiptests = False
 except ImportError:
     skiptests = True
@@ -90,7 +89,7 @@ class OeAlignDepictTests(unittest.TestCase):
                 if len(aML) > 0:
                     for (rCC, rAt, tCC, tAt) in aML:
                         self.__lfh.write("%5s %-5s %5s %-5s\n" % (rCC, rAt, tCC, tAt))
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -109,7 +108,7 @@ class OeAlignDepictTests(unittest.TestCase):
                 for (rCC, rAt, tCC, tAt) in aML:
                     self.__lfh.write("%5s %-5s %5s %-5s\n" % (rCC, rAt, tCC, tAt))
 
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -127,7 +126,7 @@ class OeAlignDepictTests(unittest.TestCase):
                 for (rCC, rAt, tCC, tAt) in aML:
                     self.__lfh.write("%5s %-5s %5s %-5s\n" % (rCC, rAt, tCC, tAt))
 
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -146,7 +145,7 @@ class OeAlignDepictTests(unittest.TestCase):
                 for (rCC, rAt, tCC, tAt) in aML:
                     self.__lfh.write("%5s %-5s %5s %-5s\n" % (rCC, rAt, tCC, tAt))
 
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -166,7 +165,7 @@ class OeAlignDepictTests(unittest.TestCase):
                     self.__lfh.write("Match suceeded for: %s %s\n" % (refId, fitId))
                 else:
                     self.__lfh.write("Match failed for: %s %s\n" % (refId, fitId))
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -176,7 +175,7 @@ class OeAlignDepictTests(unittest.TestCase):
         self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name))
         try:
             # self.__extPairTup=('../data/ATP.sdf','ATP')
-            self.__extPairTup = (os.path.join(self.__datadir, 'ATP.sdf'), 
+            self.__extPairTup = (os.path.join(self.__datadir, 'ATP.sdf'),
                                  os.path.join(self.__datadir, 'ATP.cif'))
             refPath = self.__extPairTup[0]
             fitId = self.__extPairTup[1]
@@ -195,7 +194,7 @@ class OeAlignDepictTests(unittest.TestCase):
                     self.__lfh.write("Mapping: %4d %s\n" % (ii, aM))
             else:
                 self.__lfh.write("Match failed for: %s %s\n" % (refPath, fitId))
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -207,16 +206,16 @@ class OeAlignDepictTests(unittest.TestCase):
         try:
             oed = OeDepictMCSAlign(verbose=self.__verbose, log=self.__lfh)
             oed.setSearchType(sType='relaxed')
-            oed.setRefPath(ccPath=os.path.join(self.__examples, 'PRDCC_000225.cif'), 
+            oed.setRefPath(ccPath=os.path.join(self.__examples, 'PRDCC_000225.cif'),
                            title="PRD_000225", suppressHydrogens=False)
-            oed.setFitPath(ccPath=os.path.join(self.__examples, 'L_LDI_990_.comp.cif'), 
+            oed.setFitPath(ccPath=os.path.join(self.__examples, 'L_LDI_990_.comp.cif'),
                            title='L_LDI_990', suppressHydrogens=False)
             fName = os.path.join(self.__testoutput, "relaxed-fit.png")
             aML = oed.alignPair(imagePath=fName)
             if len(aML) > 0:
                 for (rCC, rAt, tCC, tAt) in aML:
                     self.__lfh.write("%5s %-5s %5s %-5s\n" % (rCC, rAt, tCC, tAt))
-        except Exception as e:
+        except Exception as e:  # noqa: F841
             traceback.print_exc(file=self.__lfh)
             self.fail()
 

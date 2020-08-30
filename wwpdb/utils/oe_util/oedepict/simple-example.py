@@ -19,13 +19,11 @@ __version__ = "V0.01"
 
 
 import sys
-import unittest
 import traceback
-import os
+import unittest
 
-
-from oe_util.oedepict.OeDepict import OeDepict
 from oe_util.build.OeChemCompIoUtils import OeChemCompIoUtils
+from oe_util.oedepict.OeDepict import OeDepict
 
 
 class OeDepictTests(unittest.TestCase):
@@ -64,7 +62,7 @@ class OeDepictTests(unittest.TestCase):
                 oed.setGridOptions(rows=1, cols=1)
                 oed.prepare()
                 oed.write(imagePath)
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -82,7 +80,7 @@ class OeDepictTests(unittest.TestCase):
                 self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
                 self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
             return zip(idList, oemList, idList)
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 

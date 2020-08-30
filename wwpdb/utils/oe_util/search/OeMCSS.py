@@ -17,17 +17,17 @@ __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.01"
 
 
+import os.path
 import sys
 import traceback
-import os
-import os.path
 
-
-from openeye.oechem import *
-from openeye.oedepict import *
-
-from wwpdb.utils.oe_util.build.OeBuildMol import OeBuildMol
+from openeye.oechem import (OEAddExplicitHydrogens, OEExprOpts_AtomicNumber,
+                            OEExprOpts_DefaultAtoms, OEExprOpts_DefaultBonds,
+                            OEExprOpts_ExactAtoms, OEExprOpts_ExactBonds,
+                            OEFloatArray, OEMCSMaxAtoms, OEMCSSearch,
+                            OEMCSType_Approximate)
 from wwpdb.utils.cc_dict_util.timeout.TimeoutMultiProc import timeout
+from wwpdb.utils.oe_util.build.OeBuildMol import OeBuildMol
 
 
 class OeMCSS(object):
@@ -272,7 +272,7 @@ class OeMCSS(object):
 
             fD['OEMOL'] = tMol
             return (ccId, tMol, fD)
-        except:
+        except Exception as e:  # noqa: F841
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -292,7 +292,7 @@ class OeMCSS(object):
             bondexpr = 0
         elif (self.__searchType == 'exact'):
             self.__mcss = OEMCSSearch(OEMCSType_Approximate)
-            #self.__mcss = OEMCSSearch(OEMCSType_Exhaustive)
+            # self.__mcss = OEMCSSearch(OEMCSType_Exhaustive)
             atomexpr = OEExprOpts_ExactAtoms
             bondexpr = OEExprOpts_ExactBonds
             OEAddExplicitHydrogens(refmol)
@@ -301,11 +301,11 @@ class OeMCSS(object):
             atomexpr = OEExprOpts_DefaultAtoms
             bondexpr = OEExprOpts_DefaultBonds
         #
-        #atomexpr = OEExprOpts_AtomicNumber|OEExprOpts_EqAromatic
-        #bondexpr = 0
+        # atomexpr = OEExprOpts_AtomicNumber|OEExprOpts_EqAromatic
+        # bondexpr = 0
         #
-        #atomexpr = OEExprOpts_AtomicNumber|OEExprOpts_Aromaticity
-        #bondexpr = OEExprOpts_BondOrder|OEExprOpts_EqNotAromatic
+        # atomexpr = OEExprOpts_AtomicNumber|OEExprOpts_Aromaticity
+        # bondexpr = OEExprOpts_BondOrder|OEExprOpts_EqNotAromatic
         #
 
         self.__mcss.Init(refmol, atomexpr, bondexpr)
@@ -329,7 +329,7 @@ class OeMCSS(object):
         nAtomsRef = self.__refmol.NumAtoms()
         nAtomsFit = self.__fitmol.NumAtoms()
         minAtoms = int(min(nAtomsRef, nAtomsFit) * minFrac)
-        #self.__mcss.SetMinAtoms( int(minAtoms*self.__minAtomMatchFraction) )
+        # self.__mcss.SetMinAtoms( int(minAtoms*self.__minAtomMatchFraction) )
         #
         # -------
         self.__mcss.SetMCSFunc(OEMCSMaxAtoms())

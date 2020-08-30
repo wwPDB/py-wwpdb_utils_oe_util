@@ -18,20 +18,22 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.01"
 
-import sys
-import traceback
-import time
+import fnmatch
 import os
 import os.path
-
+import sys
+import traceback
 
 from wwpdb.utils.oe_util.build.OeBuildMol import OeBuildMol
+
 #
 #  Storage adapater can be changed here --
 if sys.platform in ['darwin']:
-    from mmcif_utils.persist.PdbxPyIoAdapter import PdbxPyIoAdapter as PdbxIoAdapter
+    from mmcif_utils.persist.PdbxPyIoAdapter import \
+        PdbxPyIoAdapter as PdbxIoAdapter
 else:
-    from mmcif_utils.persist.PdbxPyIoAdapter import PdbxPyIoAdapter as PdbxIoAdapter
+    from mmcif_utils.persist.PdbxPyIoAdapter import \
+        PdbxPyIoAdapter as PdbxIoAdapter
 
 
 class OeChemCompIoUtils(object):
@@ -53,7 +55,7 @@ class OeChemCompIoUtils(object):
         try:
             for pth in pathList:
                 myReader = PdbxIoAdapter(self.__verbose, self.__lfh)
-                ok = myReader.read(pdbxFilePath=pth)
+                ok = myReader.read(pdbxFilePath=pth)  # noqa: F841
                 for container in myReader.getContainerList():
                     oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
                     oem.setDebug(self.__debug)
@@ -71,9 +73,9 @@ class OeChemCompIoUtils(object):
                         self.__lfh.write("+OeChemCompIoUtils.getOeMols() Title              = %s\n" % oem.getTitle())
                         self.__lfh.write("+OeChemCompIoUtils.getOeMols() SMILES (canonical) = %s\n" % oem.getCanSMILES())
                         self.__lfh.write("+OeChemCompIoUtils.getOeMols() SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
-        except:
+        except Exception as e:
             if self.__verbose:
-                self.__lfh.write("+OeChemCompIoUtils.getOeMols() Failed \n")
+                self.__lfh.write("+OeChemCompIoUtils.getOeMols() Failed %s\n" % str(e))
                 traceback.print_exc(file=self.__lfh)
         return oemList
 
@@ -108,7 +110,7 @@ class OeChemCompIoUtils(object):
 
         # expand pattern
         pattern = pattern or '*'
-        patternList = string.splitfields(pattern, ';')
+        patternList = pattern.splitfields(';')
 
         for name in names:
             fullname = os.path.normpath(os.path.join(topPath, name))

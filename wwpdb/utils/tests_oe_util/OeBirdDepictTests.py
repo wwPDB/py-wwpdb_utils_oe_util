@@ -24,16 +24,12 @@ import sys
 import unittest
 import traceback
 import platform
-import sys
 import time
 import os
 import os.path
-import shutil
-import fnmatch
-import string
 
 try:
-    from openeye.oechem import OEFloatArray
+    from openeye.oechem import OEFloatArray  # noqa: F401
     skiptests = False
 except ImportError:
     skiptests = True
@@ -41,9 +37,9 @@ except ImportError:
 if not skiptests:
     from mmcif_utils.bird.PdbxBirdIndex import PdbxBirdIndex
     from wwpdb.utils.oe_util.build.OeChemCompIoUtils import OeChemCompIoUtils
-    from wwpdb.utils.oe_util.oedepict.OeAlignDepictUtils import OeDepictMCSAlign, OeDepictMCSAlignMulti, OeDepictMCSAlignSingle, OeTestMCSAlign
-    from wwpdb.utils.oe_util.oedepict.OeDepict import OeDepict, OeDepictMultiPage
-    
+    from wwpdb.utils.oe_util.oedepict.OeAlignDepictUtils import OeDepictMCSAlignMulti
+    from wwpdb.utils.oe_util.oedepict.OeDepict import OeDepictMultiPage
+
 
 @unittest.skipIf(skiptests, 'Could not import openeye')
 class OeBirdDepictTests(unittest.TestCase):
@@ -73,7 +69,7 @@ class OeBirdDepictTests(unittest.TestCase):
             familyIdL = bI.getFamilyList()
             for familyId in familyIdL:
                 prdIdList = bI.getPrdIdList(familyId)
-                prdPathList = bI.getPrdPathList(familyId)
+                prdPathList = bI.getPrdPathList(familyId)  # noqa: F841
                 for prdId in prdIdList:
                     ccId = bI.getChemCompId(prdId)
                     ccPath = bI.getChemCompPath(prdId)
@@ -82,7 +78,7 @@ class OeBirdDepictTests(unittest.TestCase):
                         fD[familyId] = []
                     if ((prdId is not None) and (ccId is not None) and (ccPath is not None)):
                         fD[familyId].append((familyId, prdId, ccId, ccPath))
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -132,7 +128,7 @@ class OeBirdDepictTests(unittest.TestCase):
                                           bondDisplayWidth=0.5)
                     oed.prepare()
                     oed.write(imageFileName)
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -161,8 +157,8 @@ class OeBirdDepictTests(unittest.TestCase):
             ofh.write("</body>\n")
             ofh.write("</html>\n")
             ofh.close()
-            
-        except:
+
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -177,6 +173,7 @@ def suiteHTMLIndexFamily():
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(OeBirdDepictTests("testFamilyDepictionHTMLIndex"))
     return suiteSelect
+
 
 if __name__ == '__main__':
     if (True):

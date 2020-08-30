@@ -24,16 +24,17 @@ import unittest
 import traceback
 
 try:
-    from openeye.oechem import OEFloatArray
+    from openeye.oechem import OEFloatArray  # noqa: F401
     skiptests = False
 except ImportError:
     skiptests = True
 
 if not skiptests:
     from wwpdb.utils.oe_util.build.OeBuildModelMol import OeBuildModelMol
-    
+
 from mmcif_utils.chemcomp.PdbxChemCompModelIo import PdbxChemCompModelIo
 from mmcif_utils.chemcomp.PdbxChemCompModel import PdbxChemCompModelDescriptor
+
 
 @unittest.skipIf(skiptests, "Requires oe library")
 class OeBuildModelMolTests(unittest.TestCase):
@@ -77,7 +78,7 @@ class OeBuildModelMolTests(unittest.TestCase):
                         self.__lfh.write("+testBuildFromModel. SMILES MISMATCH for %s\n" % modelId)
                         self.__lfh.write("+testBuildFromModel. SMILES (model)               %s\n" % sm)
                         self.__lfh.write("+testBuildFromModel. SMILES (reconstructed model) %s\n" % oem.getIsoSMILES())
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -105,7 +106,7 @@ class OeBuildModelMolTests(unittest.TestCase):
                 self.__lfh.write("Deserialized status = %d\n" % ok)
                 self.__lfh.write("Deserialized SMILES (canonical) = %s\n" % oemD.getCanSMILES())
                 self.__lfh.write("Deserialized SMILES (isomeric)  = %s\n" % oemD.getIsoSMILES())
-        except:
+        except:  # noqa: E722
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -115,6 +116,7 @@ def suiteOeModelBuild():
     suiteSelect.addTest(OeBuildModelMolTests("testBuildFromModel"))
     suiteSelect.addTest(OeBuildModelMolTests("testSerialize3D"))
     return suiteSelect
+
 
 if __name__ == '__main__':
     if (True):
