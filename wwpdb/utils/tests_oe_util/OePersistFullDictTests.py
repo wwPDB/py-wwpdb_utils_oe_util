@@ -32,6 +32,12 @@ import os.path
 import string
 
 try:
+    from openeye.oechem import OEFloatArray
+    skiptests = False
+except ImportError:
+    skiptests = True
+
+if not skiptests:
     from wwpdb.utils.cc_dict_util.persist.PdbxChemCompDictUtil import PdbxChemCompDictUtil
     from wwpdb.utils.cc_dict_util.persist.PdbxChemCompDictIndex import PdbxChemCompDictIndex
 
@@ -39,9 +45,6 @@ try:
     from wwpdb.utils.oe_util.build.OeBuildMol import OeBuildMol
 
     from mmcif_utils.persist.PdbxPersist import PdbxPersist
-    skiptests = False
-except ImportError:
-    skiptests = True
 
 import logging
 logging.basicConfig(level=logging.INFO)

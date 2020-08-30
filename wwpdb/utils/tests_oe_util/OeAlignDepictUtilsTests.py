@@ -32,10 +32,13 @@ import os.path
 import shutil
 
 try:
-    from wwpdb.utils.oe_util.oedepict.OeAlignDepictUtils import OeDepictMCSAlign, OeDepictMCSAlignMulti, OeDepictMCSAlignSingle, OeTestMCSAlign
+    from openeye.oechem import OEFloatArray
     skiptests = False
 except ImportError:
     skiptests = True
+
+if not skiptests:
+    from wwpdb.utils.oe_util.oedepict.OeAlignDepictUtils import OeDepictMCSAlign, OeDepictMCSAlignMulti, OeDepictMCSAlignSingle, OeTestMCSAlign
 
 
 @unittest.skipIf(skiptests, "Could not import openeye")

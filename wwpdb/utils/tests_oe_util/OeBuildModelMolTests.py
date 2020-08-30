@@ -23,12 +23,14 @@ import sys
 import unittest
 import traceback
 
-
 try:
-    from wwpdb.utils.oe_util.build.OeBuildModelMol import OeBuildModelMol
+    from openeye.oechem import OEFloatArray
     skiptests = False
-except ImportError as e:
+except ImportError:
     skiptests = True
+
+if not skiptests:
+    from wwpdb.utils.oe_util.build.OeBuildModelMol import OeBuildModelMol
     
 from mmcif_utils.chemcomp.PdbxChemCompModelIo import PdbxChemCompModelIo
 from mmcif_utils.chemcomp.PdbxChemCompModel import PdbxChemCompModelDescriptor

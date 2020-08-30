@@ -26,16 +26,17 @@ import unittest
 import traceback
 import sys
 import platform
-import time
 import os
 import os.path
-import shutil
 
 try:
-    from wwpdb.utils.oe_util.oedepict.OeAlignDepict import OeDepictMCSAlign
+    from openeye.oechem import OEFloatArray
     skiptests = False
 except ImportError:
     skiptests = True
+
+if not skiptests:
+    from wwpdb.utils.oe_util.oedepict.OeAlignDepict import OeDepictMCSAlign
 
 
 @unittest.skipIf(skiptests, "Could not import openeye")
@@ -215,7 +216,7 @@ class OeAlignDepictTests(unittest.TestCase):
             if len(aML) > 0:
                 for (rCC, rAt, tCC, tAt) in aML:
                     self.__lfh.write("%5s %-5s %5s %-5s\n" % (rCC, rAt, tCC, tAt))
-        except:
+        except Exception as e:
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -244,6 +245,7 @@ def suiteAlignPair():
 
 def suite():
     return unittest.makeSuite(OeAlignDepictTests, 'test')
+
 
 if __name__ == '__main__':
     # unittest.main()

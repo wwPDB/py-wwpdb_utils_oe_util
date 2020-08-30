@@ -29,10 +29,13 @@ import platform
 import os
 
 try:
-    from wwpdb.utils.oe_util.oedepict.OeAlignDepict import OeDepictMCSAlign
+    from openeye.oechem import OEFloatArray
     skiptests = False
 except ImportError:
     skiptests = True
+
+if not skiptests:
+    from wwpdb.utils.oe_util.oedepict.OeAlignDepict import OeDepictMCSAlign
     
 
 @unittest.skipIf(skiptests, 'Could not import openeye')

@@ -27,10 +27,13 @@ import time
 import os
 
 try:
-    from wwpdb.utils.oe_util.build.OeChemCompIoUtils import OeChemCompIoUtils
+    from openeye.oechem import OEFloatArray
     skiptests = False
 except ImportError:
     skiptests = True
+
+if not skiptests:
+    from wwpdb.utils.oe_util.build.OeChemCompIoUtils import OeChemCompIoUtils
     
 
 @unittest.skipIf(skiptests, 'Could not import openeye')

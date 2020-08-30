@@ -27,12 +27,15 @@ import traceback
 import time
 
 try:
-    from wwpdb.utils.oe_util.build.OePersist import OePersist
-    from wwpdb.utils.oe_util.build.OeBuildMol import OeBuildMol
-    from mmcif_utils.persist.PdbxPyIoAdapter import PdbxPyIoAdapter as PdbxIoAdapter
+    from openeye.oechem import OEFloatArray
     skiptests = False
 except ImportError:
     skiptests = True
+
+if not skiptests:
+    from wwpdb.utils.oe_util.build.OePersist import OePersist
+    from wwpdb.utils.oe_util.build.OeBuildMol import OeBuildMol
+    from mmcif_utils.persist.PdbxPyIoAdapter import PdbxPyIoAdapter as PdbxIoAdapter
 
 
 @unittest.skipIf(skiptests, "Cannot import openeye.oechem for tests")

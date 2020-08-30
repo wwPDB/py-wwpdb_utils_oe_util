@@ -31,12 +31,15 @@ import fnmatch
 import string
 
 try:
-    from wwpdb.utils.oe_util.oedepict.OeDepict import OeDepict, OeDepictMultiPage
-    from wwpdb.utils.oe_util.build.OeChemCompIoUtils import OeChemCompIoUtils
-    from wwpdb.utils.oe_util.build.OeBuildMol import OeBuildMol
+    from openeye.oechem import OEFloatArray
     skiptests = False
 except ImportError:
     skiptests = True
+
+if not skiptests:
+    from wwpdb.utils.oe_util.oedepict.OeDepict import OeDepict, OeDepictMultiPage
+    from wwpdb.utils.oe_util.build.OeChemCompIoUtils import OeChemCompIoUtils
+    from wwpdb.utils.oe_util.build.OeBuildMol import OeBuildMol
 
 
 @unittest.skipIf(skiptests, "Cannot import openeye.oechem for tests")
