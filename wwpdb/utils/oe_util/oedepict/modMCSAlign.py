@@ -1,17 +1,34 @@
 #!/usr/bin/env python
 # @ <SNIPPET-MCS-ALIGN>
-from openeye.oechem import (OEExprOpts_DefaultAtoms, OEExprOpts_DefaultBonds,
-                            OEGraphMol, OEIsAtomMember, OEIsBondMember,
-                            OEMCSMaxBondsCompleteCycles, OEMCSSearch,
-                            OEMCSType_Approximate, OENotAtom, OENotBond,
-                            OEParseSmiles, OEPinkTint)
-from openeye.oedepict import (OE2DMolDisplay, OE2DMolDisplayOptions,
-                              OEAddHighlighting, OEGetMoleculeScale,
-                              OEHighlightStyle_BallAndStick, OEImage,
-                              OEImageGrid, OEPrepareAlignedDepiction,
-                              OEPrepareDepiction, OERenderMolecule,
-                              OEScale_AutoScale, OETitleLocation_Hidden,
-                              OEWriteImage)
+from openeye.oechem import (
+    OEExprOpts_DefaultAtoms,
+    OEExprOpts_DefaultBonds,
+    OEGraphMol,
+    OEIsAtomMember,
+    OEIsBondMember,
+    OEMCSMaxBondsCompleteCycles,
+    OEMCSSearch,
+    OEMCSType_Approximate,
+    OENotAtom,
+    OENotBond,
+    OEParseSmiles,
+    OEPinkTint,
+)
+from openeye.oedepict import (
+    OE2DMolDisplay,
+    OE2DMolDisplayOptions,
+    OEAddHighlighting,
+    OEGetMoleculeScale,
+    OEHighlightStyle_BallAndStick,
+    OEImage,
+    OEImageGrid,
+    OEPrepareAlignedDepiction,
+    OEPrepareDepiction,
+    OERenderMolecule,
+    OEScale_AutoScale,
+    OETitleLocation_Hidden,
+    OEWriteImage,
+)
 
 refmol = OEGraphMol()
 OEParseSmiles(refmol, "c1cc(c2cc(cnc2c1)CCCO)C(=O)CCO")

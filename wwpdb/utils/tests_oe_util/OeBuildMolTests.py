@@ -30,6 +30,7 @@ import os
 
 try:
     from openeye.oechem import OEFloatArray  # noqa: F401 pylint: disable=unused-import
+
     skiptests = False
 except ImportError:
     skiptests = True
@@ -41,30 +42,26 @@ if not skiptests:
 
 @unittest.skipIf(skiptests, "Cannot import openeye.oechem for tests")
 class OeBuildMolTests(unittest.TestCase):
-
     def setUp(self):
         self.__lfh = sys.stderr
         self.__verbose = True
         self.__here = os.path.abspath(os.path.dirname(__file__))
-        self.__testoutput = os.path.join(self.__here, 'test-output', platform.python_version())
+        self.__testoutput = os.path.join(self.__here, "test-output", platform.python_version())
         if not os.path.exists(self.__testoutput):
             os.makedirs(self.__testoutput)
-        self.__datadir = os.path.join(self.__here, 'data')
-        self.__sdfFilePath = os.path.join(self.__datadir, 'ATP.sdf')
-        self.__pathList = [os.path.join(self.__datadir, 'ATP.cif'),
-                           os.path.join(self.__datadir, 'GTP.cif'),
-                           os.path.join(self.__datadir, 'ARG.cif')]
+        self.__datadir = os.path.join(self.__here, "data")
+        self.__sdfFilePath = os.path.join(self.__datadir, "ATP.sdf")
+        self.__pathList = [os.path.join(self.__datadir, "ATP.cif"), os.path.join(self.__datadir, "GTP.cif"), os.path.join(self.__datadir, "ARG.cif")]
 
     def tearDown(self):
         pass
 
     def testBuildMolFromSDF(self):
-        """Test case -  read a test SDF file and build the corresponding OEGraphMol
-        """
+        """Test case -  read a test SDF file and build the corresponding OEGraphMol"""
         self.__lfh.write("\nStarting OeBuildMolTests testBuildolFromSDF\n")
         try:
             oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
-            if oem.importFile(self.__sdfFilePath, type='3D'):
+            if oem.importFile(self.__sdfFilePath, type="3D"):
                 self.__lfh.write("Title              = %s\n" % oem.getTitle())
                 self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
                 self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
@@ -75,8 +72,7 @@ class OeBuildMolTests(unittest.TestCase):
             self.fail()
 
     def testBuildFromFiles(self):
-        """Test case -  build OE molecule from definition file source data.
-        """
+        """Test case -  build OE molecule from definition file source data."""
         self.__lfh.write("\nStarting OeBuildMolTests testBuildFromFiles\n")
         try:
             oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
@@ -86,9 +82,7 @@ class OeBuildMolTests(unittest.TestCase):
                 self.assertTrue(ok)
                 # myReader.write(pdbxFilePath="TMP.cif")
                 for container in myReader.getContainerList():
-                    oem.set(container.getName(),
-                            dcChemCompAtom=container.getObj("chem_comp_atom"),
-                            dcChemCompBond=container.getObj("chem_comp_bond"))
+                    oem.set(container.getName(), dcChemCompAtom=container.getObj("chem_comp_atom"), dcChemCompBond=container.getObj("chem_comp_bond"))
                     oem.build3D(coordType="model")
                     self.__lfh.write("Title              = %s\n" % oem.getTitle())
                     self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
@@ -100,7 +94,7 @@ class OeBuildMolTests(unittest.TestCase):
 
     def testSerialize2D(self):
         """Test case -  build OE molecule using 2D data in the definition source data file
-                        then serialize and deserialize this molecule.
+        then serialize and deserialize this molecule.
         """
         self.__lfh.write("\nStarting OeBuildMolTests testSerialize2D\n")
         try:
@@ -109,12 +103,9 @@ class OeBuildMolTests(unittest.TestCase):
             for pth in self.__pathList:
                 myReader = PdbxIoAdapter(self.__verbose, self.__lfh)
                 ok = myReader.read(pdbxFilePath=pth)
-                myReader.write(pdbxFilePath=os.path.join(self.__testoutput,
-                                                         "TMP.cif"))
+                myReader.write(pdbxFilePath=os.path.join(self.__testoutput, "TMP.cif"))
                 for container in myReader.getContainerList():
-                    oem.set(container.getName(),
-                            dcChemCompAtom=container.getObj("chem_comp_atom"),
-                            dcChemCompBond=container.getObj("chem_comp_bond"))
+                    oem.set(container.getName(), dcChemCompAtom=container.getObj("chem_comp_atom"), dcChemCompBond=container.getObj("chem_comp_bond"))
                     oem.build2D()
                     self.__lfh.write("Title              = %s\n" % oem.getTitle())
                     self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
@@ -135,7 +126,7 @@ class OeBuildMolTests(unittest.TestCase):
 
     def testSerialize3D(self):
         """Test case -  build OE molecule using 3D data in the definition source data file
-                        then serialize and deserialize this molecule.
+        then serialize and deserialize this molecule.
 
         """
         self.__lfh.write("\nStarting OeBuildMolTests testSerialize3D\n")
@@ -144,12 +135,9 @@ class OeBuildMolTests(unittest.TestCase):
             for pth in self.__pathList:
                 myReader = PdbxIoAdapter(self.__verbose, self.__lfh)
                 ok = myReader.read(pdbxFilePath=pth)
-                myReader.write(pdbxFilePath=os.path.join(self.__testoutput,
-                                                         "TMP.cif"))
+                myReader.write(pdbxFilePath=os.path.join(self.__testoutput, "TMP.cif"))
                 for container in myReader.getContainerList():
-                    oem.set(container.getName(),
-                            dcChemCompAtom=container.getObj("chem_comp_atom"),
-                            dcChemCompBond=container.getObj("chem_comp_bond"))
+                    oem.set(container.getName(), dcChemCompAtom=container.getObj("chem_comp_atom"), dcChemCompBond=container.getObj("chem_comp_bond"))
                     oem.build3D(coordType="model")
                     self.__lfh.write("Title              = %s\n" % oem.getTitle())
                     self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
@@ -183,7 +171,7 @@ def suiteOeBuildFromOther():
     return suiteSelect
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mySuite = suiteOeBuild()
     unittest.TextTestRunner(verbosity=2).run(mySuite)
 

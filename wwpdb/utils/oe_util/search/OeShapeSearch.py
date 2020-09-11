@@ -21,13 +21,10 @@ __version__ = "V0.01"
 
 import sys
 
-from openeye.oeshape import (OEBestOverlay, OEBestOverlayScoreIter,
-                             OECalcVolume, OEColorFFType_ImplicitMillsDean,
-                             OEHighestTanimotoCombo, OESortOverlayScores)
+from openeye.oeshape import OEBestOverlay, OEBestOverlayScoreIter, OECalcVolume, OEColorFFType_ImplicitMillsDean, OEHighestTanimotoCombo, OESortOverlayScores
 
 
 class OeShapeSearch(object):
-
     def __init__(self, verbose=False, log=sys.stderr):
         self.__verbose = verbose
         self.__lfh = log
@@ -51,11 +48,11 @@ class OeShapeSearch(object):
         rL = []
         for score in self.__scoreiter:
             sD = {}
-            sD['tanimotoCombo'] = score.GetTanimotoCombo()
-            sD['tanimoto'] = score.GetShapeTanimoto()
-            sD['tanimotoColor'] = score.GetColorTanimoto()
-            sD['fitVolume'] = OECalcVolume(self.__fitMol, False)
-            sD['refVolume'] = OECalcVolume(self.__refMol, False)
+            sD["tanimotoCombo"] = score.GetTanimotoCombo()
+            sD["tanimoto"] = score.GetShapeTanimoto()
+            sD["tanimotoColor"] = score.GetColorTanimoto()
+            sD["fitVolume"] = OECalcVolume(self.__fitMol, False)
+            sD["refVolume"] = OECalcVolume(self.__refMol, False)
             rL.append(sD)
         retD[fitMol.GetTitle()] = rL
         #

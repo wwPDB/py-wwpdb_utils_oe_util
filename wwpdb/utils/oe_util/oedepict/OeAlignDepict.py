@@ -26,35 +26,57 @@ import os.path
 import sys
 import traceback
 
-from openeye.oechem import (OEAddExplicitHydrogens, OEBlueTint,
-                            OEExprOpts_AtomicNumber, OEExprOpts_DefaultAtoms,
-                            OEExprOpts_DefaultBonds, OEExprOpts_ExactAtoms,
-                            OEExprOpts_ExactBonds, OEFloatArray, OEGreenTint,
-                            OEIsAtomMember, OEIsBondMember, OEMCSMaxAtoms,
-                            OEMCSSearch, OEMCSType_Approximate, OENotAtom,
-                            OENotBond, OEPinkTint)
-from openeye.oedepict import (OE2DMolDisplay, OE2DMolDisplayOptions,
-                              OEAddHighlighting, OEAtomStereoStyle_Display_All,
-                              OEGetMoleculeScale,
-                              OEHighlightStyle_BallAndStick,
-                              OEHighlightStyle_Stick, OEImage, OEImageGrid,
-                              OEMultiPageImageFile,
-                              OEPageOrientation_Landscape,
-                              OEPageOrientation_Portrait, OEPageSize_US_Letter,
-                              OEPrepareAlignedDepiction, OEPrepareDepiction,
-                              OERenderMolecule, OEScale_AutoScale,
-                              OEWriteImage, OEWriteMultiPageImage)
+from openeye.oechem import (
+    OEAddExplicitHydrogens,
+    OEBlueTint,
+    OEExprOpts_AtomicNumber,
+    OEExprOpts_DefaultAtoms,
+    OEExprOpts_DefaultBonds,
+    OEExprOpts_ExactAtoms,
+    OEExprOpts_ExactBonds,
+    OEFloatArray,
+    OEGreenTint,
+    OEIsAtomMember,
+    OEIsBondMember,
+    OEMCSMaxAtoms,
+    OEMCSSearch,
+    OEMCSType_Approximate,
+    OENotAtom,
+    OENotBond,
+    OEPinkTint,
+)
+from openeye.oedepict import (
+    OE2DMolDisplay,
+    OE2DMolDisplayOptions,
+    OEAddHighlighting,
+    OEAtomStereoStyle_Display_All,
+    OEGetMoleculeScale,
+    OEHighlightStyle_BallAndStick,
+    OEHighlightStyle_Stick,
+    OEImage,
+    OEImageGrid,
+    OEMultiPageImageFile,
+    OEPageOrientation_Landscape,
+    OEPageOrientation_Portrait,
+    OEPageSize_US_Letter,
+    OEPrepareAlignedDepiction,
+    OEPrepareDepiction,
+    OERenderMolecule,
+    OEScale_AutoScale,
+    OEWriteImage,
+    OEWriteMultiPageImage,
+)
 from wwpdb.utils.cc_dict_util.timeout.TimeoutMultiProc import timeout
 from wwpdb.utils.oe_util.build.OeBuildMol import OeBuildMol
 
 
 class OeDepictMCSAlign(object):
 
-    ''' Create 2D depictions of MCSS alignments.  Targets can be chemical component identifiers
-        or paths to chemical component definition files.  Inputs can be in the the form of pairs,
-        lists, and pair lists of chemical component definitions.
+    """Create 2D depictions of MCSS alignments.  Targets can be chemical component identifiers
+    or paths to chemical component definition files.  Inputs can be in the the form of pairs,
+    lists, and pair lists of chemical component definitions.
 
-    '''
+    """
 
     def __init__(self, verbose=True, log=sys.stderr):
         #
@@ -73,9 +95,9 @@ class OeDepictMCSAlign(object):
         self.__pairTupleList = []
         #
         self.__minAtomMatchFraction = 0.50
-        self.__pageOrientation = 'portrait'
+        self.__pageOrientation = "portrait"
         #
-        self.__searchType = 'default'
+        self.__searchType = "default"
         #
         self.__refFD = {}
         self.__fitFD = {}
@@ -91,24 +113,24 @@ class OeDepictMCSAlign(object):
         self.__gridCols = None
         self.__multi = None
 
-    def setSearchType(self, sType='default'):
+    def setSearchType(self, sType="default"):
         self.__searchType = sType
         return self.__searchType
 
-    def setRefId(self, ccId, title=None, suppressHydrogens=False, cachePath='/data/components/ligand-dict-v3'):
-        """ Set the query molecule for MCSS comparison using the input chemical component ID.
-            It is assumed that the definition for this ID can be obtained from the chemical component
-            repository.
+    def setRefId(self, ccId, title=None, suppressHydrogens=False, cachePath="/data/components/ligand-dict-v3"):
+        """Set the query molecule for MCSS comparison using the input chemical component ID.
+        It is assumed that the definition for this ID can be obtained from the chemical component
+        repository.
 
-            Once the reference molecule is built, the MCSS calculation is initialized.
+        Once the reference molecule is built, the MCSS calculation is initialized.
 
-            A title is optionally provided otherwise the component Id will be used.
+        A title is optionally provided otherwise the component Id will be used.
 
-            The hydrogen flag can be used to perform the MCSS using only heavy atoms.
+        The hydrogen flag can be used to perform the MCSS using only heavy atoms.
         """
         self.__refId = ccId
         ccIdU = ccId.upper()
-        self.__refPath = os.path.join(cachePath, ccIdU[0], ccIdU, ccIdU + '.cif')
+        self.__refPath = os.path.join(cachePath, ccIdU[0], ccIdU, ccIdU + ".cif")
 
         _id, self.__refmol, self.__refFD = self.__getCCDefFile(self.__refPath, suppressHydrogens=suppressHydrogens)
         #
@@ -124,27 +146,27 @@ class OeDepictMCSAlign(object):
         OEPrepareDepiction(self.__refmol)
         self.__setupMCSS(self.__refmol)
 
-    def setRefPath(self, ccPath, title=None, suppressHydrogens=False, type='CC', importType='2D'):  # pylint: disable=redefined-builtin
-        """ Set the query molecule for MCSS comparison using the input file path.
+    def setRefPath(self, ccPath, title=None, suppressHydrogens=False, type="CC", importType="2D"):  # pylint: disable=redefined-builtin
+        """Set the query molecule for MCSS comparison using the input file path.
 
-            The file type is either ['CC'] for a chemical component definition or another file type
-            supported by OE toolkit assumed to have a conventional file extension for this type.
+        The file type is either ['CC'] for a chemical component definition or another file type
+        supported by OE toolkit assumed to have a conventional file extension for this type.
 
-            Once the reference molecule is built, the MCSS calculation is initialized.
+        Once the reference molecule is built, the MCSS calculation is initialized.
 
-            A title is optionally provided otherwise the component Id will be used.
+        A title is optionally provided otherwise the component Id will be used.
 
-            The hydrogen flag can be used to perform the MCSS using only heavy atoms.
+        The hydrogen flag can be used to perform the MCSS using only heavy atoms.
         """
         self.__refPath = ccPath
-        if type in ['CC']:
+        if type in ["CC"]:
             (self.__refId, self.__refmol, self.__refFD) = self.__getCCDefFile(ccPath, suppressHydrogens=suppressHydrogens)
         else:
             (self.__refId, self.__refmol, self.__refFD) = self.__getMiscFile(ccPath, suppressHydrogens=suppressHydrogens, importType=importType)
 
         if self.__verbose:
             self.__lfh.write("Derived ref ID     = %s\n" % self.__refId)
-            self.__lfh.write("SMILES (stereo)  = %s\n" % self.__refFD['SMILES_STEREO'])
+            self.__lfh.write("SMILES (stereo)  = %s\n" % self.__refFD["SMILES_STEREO"])
         #
         # Insert title here -
         if title is not None:
@@ -157,16 +179,15 @@ class OeDepictMCSAlign(object):
         OEPrepareDepiction(self.__refmol)
         self.__setupMCSS(self.__refmol)
 
-    def setFitId(self, ccId, title=None, suppressHydrogens=False, cachePath='/data/components/ligand-dict-v3'):
-        """ Set the ID of the target/library molecule for MCSS comparison.
-        """
+    def setFitId(self, ccId, title=None, suppressHydrogens=False, cachePath="/data/components/ligand-dict-v3"):
+        """Set the ID of the target/library molecule for MCSS comparison."""
         self.__fitId = ccId
         ccIdU = ccId.upper()
-        self.__fitPath = os.path.join(cachePath, ccIdU[0], ccIdU, ccIdU + '.cif')
+        self.__fitPath = os.path.join(cachePath, ccIdU[0], ccIdU, ccIdU + ".cif")
         self.__fitId, self.__fitmol, self.__fitFD = self.__getCCDefFile(self.__fitPath, suppressHydrogens=suppressHydrogens)
         if self.__verbose:
             self.__lfh.write("Fit ID             = %s\n" % self.__fitId)
-            self.__lfh.write("SMILES (isomeric)  = %s\n" % self.__fitFD['SMILES_STEREO'])
+            self.__lfh.write("SMILES (isomeric)  = %s\n" % self.__fitFD["SMILES_STEREO"])
         if title is not None:
             self.__fitmol.SetTitle(title)
             self.__fitTitle = title
@@ -175,8 +196,7 @@ class OeDepictMCSAlign(object):
             self.__fitTitle = None
 
     def setFitPath(self, ccPath, title=None, suppressHydrogens=False):
-        """ Set the path of the target/library molecule for MCSS comparison.
-        """
+        """Set the path of the target/library molecule for MCSS comparison."""
         (self.__fitId, self.__fitmol, self.__fitFD) = self.__getCCDefFile(ccPath, suppressHydrogens=suppressHydrogens)
         if title is not None:
             self.__fitmol.SetTitle(title)
@@ -185,11 +205,11 @@ class OeDepictMCSAlign(object):
             self.__fitmol.SetTitle(self.__fitId)
             self.__fitTitle = None
 
-    def setFitIdList(self, ccIdList, cachePath='/data/components/ligand-dict-v3', suppressHydrogens=False):  # pylint: disable=unused-argument
+    def setFitIdList(self, ccIdList, cachePath="/data/components/ligand-dict-v3", suppressHydrogens=False):  # pylint: disable=unused-argument
         """Set the list of IDs to be compared with reference molecule by MCSS.
 
-           From the input ID list build the internal pair list of
-           tuples  [(refId,refPath,refTitle,fitId,fitPath,fitTitle),(),...]
+        From the input ID list build the internal pair list of
+        tuples  [(refId,refPath,refTitle,fitId,fitPath,fitTitle),(),...]
         """
         self.__pairTupleList = []
         for ccId in ccIdList:
@@ -198,7 +218,7 @@ class OeDepictMCSAlign(object):
             #
             fitId = ccId
             ccIdU = ccId.upper()
-            fitPath = os.path.join(cachePath, ccIdU[0], ccIdU, ccIdU + '.cif')
+            fitPath = os.path.join(cachePath, ccIdU[0], ccIdU, ccIdU + ".cif")
             #
             refTitle = refId + "/" + fitId
             fitTitle = fitId + "/" + refId
@@ -207,8 +227,8 @@ class OeDepictMCSAlign(object):
     def setFitPathList(self, fitPathTupList, suppressHydrogens=False):  # pylint: disable=unused-argument
         """Set the list of paths for the target/library molecules to be compared with reference molecule by MCSS.
 
-           From the input path tuple list build the internal pair list of
-           tuples  [(fitId,fitPath,fitTitle),(),...]
+        From the input path tuple list build the internal pair list of
+        tuples  [(fitId,fitPath,fitTitle),(),...]
         """
         self.__pairTupleList = []
         for fitId, fitPath, fitTitle in fitPathTupList:
@@ -219,28 +239,28 @@ class OeDepictMCSAlign(object):
             fitTitle = fitId + "/" + refId
             self.__pairTupleList.append((refId, refPath, refTitle, fitId, fitPath, fitTitle))
 
-    def setPairIdList(self, pairIdList, cachePath='/data/components/ligand-dict-v3', suppressHydrogens=False):  # pylint: disable=unused-argument
+    def setPairIdList(self, pairIdList, cachePath="/data/components/ligand-dict-v3", suppressHydrogens=False):  # pylint: disable=unused-argument
         """Set the list of ID pais to be aligned by MCSS.
 
-           From the input ID list build the internal pair list of
-           tuples  [(refId,refPath,refTitle,fitId,fitPath,fitTitle),(),...]
+        From the input ID list build the internal pair list of
+        tuples  [(refId,refPath,refTitle,fitId,fitPath,fitTitle),(),...]
         """
 
         self.__pairTupleList = []
         for refId, fitId in pairIdList:
             ccIdU = refId.upper()
-            refPath = os.path.join(cachePath, ccIdU[0], ccIdU, ccIdU + '.cif')
+            refPath = os.path.join(cachePath, ccIdU[0], ccIdU, ccIdU + ".cif")
             #
             ccIdU = fitId.upper()
-            fitPath = os.path.join(cachePath, ccIdU[0], ccIdU, ccIdU + '.cif')
+            fitPath = os.path.join(cachePath, ccIdU[0], ccIdU, ccIdU + ".cif")
             #
             refTitle = refId + "/" + fitId
             fitTitle = fitId + "/" + refId
             self.__pairTupleList.append((refId, refPath, refTitle, fitId, fitPath, fitTitle))
 
     def __getCCDefFile(self, ccPath, suppressHydrogens=False):
-        """  Fetch the molecule definition (ccPath) and build OE molecules
-             for comparison and depiction.
+        """Fetch the molecule definition (ccPath) and build OE molecules
+        for comparison and depiction.
 
         """
         #
@@ -248,7 +268,7 @@ class OeDepictMCSAlign(object):
         ccId = oem.setChemCompPath(ccPath)
         oem.build2D()
 
-        if (self.__verbose):
+        if self.__verbose:
             self.__lfh.write("+OEAlignDepilsct.__getCCDefFile() for %s\n" % ccId)
             self.__lfh.write("  Title              = %s\n" % oem.getTitle())
             self.__lfh.write("  SMILES             = %s\n" % oem.getCanSMILES())
@@ -258,22 +278,22 @@ class OeDepictMCSAlign(object):
             self.__lfh.write("  InChI              = %s\n" % oem.getInChI())
 
         fD = {}
-        fD = {'Formula': oem.getFormula(), 'SMILES': oem.getCanSMILES(), 'SMILES_STEREO': oem.getIsoSMILES(), 'InChI': oem.getInChI(), 'InChIKey': oem.getInChIKey()}
+        fD = {"Formula": oem.getFormula(), "SMILES": oem.getCanSMILES(), "SMILES_STEREO": oem.getIsoSMILES(), "InChI": oem.getInChI(), "InChIKey": oem.getInChIKey()}
 
         if suppressHydrogens:
             return (ccId, oem.getGraphMolSuppressH(), fD)
         else:
             return (ccId, oem.getMol(), fD)
 
-    def __getMiscFile(self, ccPath, suppressHydrogens=False, importType='2D'):
-        """  Fetch a miscellaneous chemical file (ccPath) and build OE molecules
-             for comparison and depiction.
+    def __getMiscFile(self, ccPath, suppressHydrogens=False, importType="2D"):
+        """Fetch a miscellaneous chemical file (ccPath) and build OE molecules
+        for comparison and depiction.
 
         """
         try:
             oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
             if oem.importFile(ccPath, type=importType):
-                if (self.__verbose):
+                if self.__verbose:
                     self.__lfh.write("+OEAlignDepilsct.__getMiscFile()\n")
                     self.__lfh.write("  Title              = %s\n" % oem.getTitle())
                     self.__lfh.write("  SMILES             = %s\n" % oem.getCanSMILES())
@@ -293,19 +313,20 @@ class OeDepictMCSAlign(object):
                 tMol = oem.getMol()
 
             molXyzL = []
-            if importType == '3D':
+            if importType == "3D":
                 for ii, atm in enumerate(tMol.GetAtoms()):
                     xyzL = OEFloatArray(3)
                     tMol.GetCoords(atm, xyzL)
                     molXyzL.append((ii, atm.GetIdx(), atm.GetAtomicNum(), atm.GetName(), atm.GetType(), "%.3f" % xyzL[0], "%.3f" % xyzL[1], "%.3f" % xyzL[2]))
             fD = {}
             fD = {
-                'Formula': oem.getFormula(),
-                'SMILES': oem.getCanSMILES(),
-                'SMILES_STEREO': oem.getIsoSMILES(),
-                'InChI': oem.getInChI(),
-                'InChIKey': oem.getInChIKey(),
-                'xyz': molXyzL}
+                "Formula": oem.getFormula(),
+                "SMILES": oem.getCanSMILES(),
+                "SMILES_STEREO": oem.getIsoSMILES(),
+                "InChI": oem.getInChI(),
+                "InChIKey": oem.getInChIKey(),
+                "xyz": molXyzL,
+            }
 
             for ii, atm in enumerate(tMol.GetAtoms()):
                 xyzL = OEFloatArray(3)
@@ -321,18 +342,17 @@ class OeDepictMCSAlign(object):
         return None, None, None
 
     def __setupMCSS(self, refmol):
-        """ Internal initialization for the MCSS comparison.
-        """
+        """Internal initialization for the MCSS comparison."""
         #
-        if (self.__searchType == 'default'):
+        if self.__searchType == "default":
             self.__mcss = OEMCSSearch(OEMCSType_Approximate)
             atomexpr = OEExprOpts_DefaultAtoms
             bondexpr = OEExprOpts_DefaultBonds
-        elif (self.__searchType == 'relaxed'):
+        elif self.__searchType == "relaxed":
             self.__mcss = OEMCSSearch(OEMCSType_Approximate)
             atomexpr = OEExprOpts_AtomicNumber
             bondexpr = 0
-        elif (self.__searchType == 'exact'):
+        elif self.__searchType == "exact":
             self.__mcss = OEMCSSearch(OEMCSType_Approximate)
             # self.__mcss = OEMCSSearch(OEMCSType_Exhaustive)
             atomexpr = OEExprOpts_ExactAtoms
@@ -363,8 +383,8 @@ class OeDepictMCSAlign(object):
 
     @timeout(15)
     def testAlign(self, suppressHydrogens=False, unique=True, minFrac=1.0):  # pylint: disable=unused-argument
-        """ Test the MCSS comparison between current reference and fit molecules -
-            Return list of corresponding atoms on success or an empty list otherwise.
+        """Test the MCSS comparison between current reference and fit molecules -
+        Return list of corresponding atoms on success or an empty list otherwise.
         """
         atomMap = []
         #
@@ -390,8 +410,8 @@ class OeDepictMCSAlign(object):
 
     @timeout(30)
     def doAlign(self, suppressHydrogens=False, unique=True, minFrac=1.0):  # pylint: disable=unused-argument
-        """ Test the MCSS comparison between current reference and fit molecules -
-            Return list of corresponding atoms on success or an empty list otherwise.
+        """Test the MCSS comparison between current reference and fit molecules -
+        Return list of corresponding atoms on success or an empty list otherwise.
         """
         atomMap = []
         #
@@ -413,12 +433,12 @@ class OeDepictMCSAlign(object):
                 # atomMap.append( (self.__refId,mAt.pattern.GetName(),self.__fitId,mAt.target.GetName() ))
                 atomMap.append((self.__refId, mAt.pattern.GetIdx(), mAt.pattern.GetType(), mAt.pattern.GetName(), self.__fitId, mAt.target.GetIdx(), mAt.target.GetName()))
 
-        return (nAtomsRef, self.__refFD['SMILES_STEREO'], nAtomsFit, self.__fitFD['SMILES_STEREO'], atomMap)
+        return (nAtomsRef, self.__refFD["SMILES_STEREO"], nAtomsFit, self.__fitFD["SMILES_STEREO"], atomMap)
 
     @timeout(30)
     def doAlignAlt(self, suppressHydrogens=False, unique=True, minFrac=1.0):  # pylint: disable=unused-argument
-        """ Test the MCSS comparison between current reference and fit molecules -
-            Return list of corresponding atoms on success or an empty list otherwise.
+        """Test the MCSS comparison between current reference and fit molecules -
+        Return list of corresponding atoms on success or an empty list otherwise.
         """
         atomMap = []
         #
@@ -438,31 +458,39 @@ class OeDepictMCSAlign(object):
         if miter.IsValid():
             match = miter.Target()
             for mAt in match.GetAtoms():
-                atomMap.append((self.__refId, mAt.pattern.GetIdx(), mAt.pattern.GetAtomicNum(), mAt.pattern.GetName(),
-                                self.__fitId, mAt.target.GetIdx(), mAt.target.GetAtomicNum(), mAt.target.GetName()))
+                atomMap.append(
+                    (
+                        self.__refId,
+                        mAt.pattern.GetIdx(),
+                        mAt.pattern.GetAtomicNum(),
+                        mAt.pattern.GetName(),
+                        self.__fitId,
+                        mAt.target.GetIdx(),
+                        mAt.target.GetAtomicNum(),
+                        mAt.target.GetName(),
+                    )
+                )
         return (nAtomsRef, self.__refFD, nAtomsFit, self.__fitFD, atomMap)
 
     def __setupImage(self, imageX=400, imageY=400):
-        """ Internal method to configure a single pair alignment image.
-        """
+        """Internal method to configure a single pair alignment image."""
         #
         self.__image = OEImage(imageX, imageY)
         rows = 1
         cols = 2
         self.__grid = OEImageGrid(self.__image, rows, cols)
-        if (self.__debug):
+        if self.__debug:
             self.__lfh.write("Num columns %d\n" % self.__grid.NumCols())
             self.__lfh.write("Num rows    %d\n" % self.__grid.NumRows())
         self.__opts = OE2DMolDisplayOptions(self.__grid.GetCellWidth(), self.__grid.GetCellHeight(), OEScale_AutoScale)
 
     def __setupImageMulti(self, gridRows=2, gridCols=2):
-        """ Internal method to configure a multipage image.
-        """
+        """Internal method to configure a multipage image."""
         #
         self.__gridRows = gridRows
         self.__gridCols = gridCols
         #
-        if self.__pageOrientation == 'landscape':
+        if self.__pageOrientation == "landscape":
             self.__multi = OEMultiPageImageFile(OEPageOrientation_Landscape, OEPageSize_US_Letter)
         else:
             self.__multi = OEMultiPageImageFile(OEPageOrientation_Portrait, OEPageSize_US_Letter)
@@ -472,25 +500,24 @@ class OeDepictMCSAlign(object):
         self.__newPage()
 
     def __newPage(self):
-        """ Internal method to advance to a new page in a multipage configuration.
-        """
+        """Internal method to advance to a new page in a multipage configuration."""
         rows = self.__gridRows
         cols = self.__gridCols
         self.__image = self.__multi.NewPage()
         self.__grid = OEImageGrid(self.__image, rows, cols)
         self.__grid.SetCellGap(20)
         self.__grid.SetMargins(20)
-        if (self.__debug):
+        if self.__debug:
             self.__lfh.write("Num columns %d\n" % self.__grid.NumCols())
             self.__lfh.write("Num rows    %d\n" % self.__grid.NumRows())
         self.__opts = OE2DMolDisplayOptions(self.__grid.GetCellWidth(), self.__grid.GetCellHeight(), OEScale_AutoScale)
 
     def alignPair(self, imagePath="mcs-match.svg", imageX=400, imageY=400):
-        """ Compare current reference and fit molecules by MCSS.
+        """Compare current reference and fit molecules by MCSS.
 
-            Map of corresponding atoms is returned.
+        Map of corresponding atoms is returned.
 
-            imagePath is the path of the output image.
+        imagePath is the path of the output image.
         """
         atomMap = []
         self.__setupImage(imageX=imageX, imageY=imageY)
@@ -551,15 +578,24 @@ class OeDepictMCSAlign(object):
         OEWriteImage(imagePath, self.__image)
         return atomMap
 
-    def alignPairList(self, imagePath='multi.pdf', suppressHydrogens=False, gridRows=2, gridCols=2, optInverseFit=True,
-                      highLightStyle="stick", highLightMatchColor="green", highLightNotMatchColor="pink"):
-        """ Compare molecule pairs in the current __pairTupleList.
+    def alignPairList(
+        self,
+        imagePath="multi.pdf",
+        suppressHydrogens=False,
+        gridRows=2,
+        gridCols=2,
+        optInverseFit=True,
+        highLightStyle="stick",
+        highLightMatchColor="green",
+        highLightNotMatchColor="pink",
+    ):
+        """Compare molecule pairs in the current __pairTupleList.
 
-            pairTupleList = (refId,refPath,refTitle,fitId,fitPath,fitTitle)
+        pairTupleList = (refId,refPath,refTitle,fitId,fitPath,fitTitle)
 
-            Map of corresponding atoms is returned.
+        Map of corresponding atoms is returned.
 
-            Image Output is in multipage layout.
+        Image Output is in multipage layout.
         """
         #
         self.__setupImageMulti(gridRows=gridRows, gridCols=gridCols)
@@ -586,7 +622,7 @@ class OeDepictMCSAlign(object):
 
             OEPrepareDepiction(fitmol)
             rowIdx += 1
-            if (rowIdx > numRows):
+            if rowIdx > numRows:
                 self.__newPage()
                 rowIdx = 1
             refcell = self.__grid.GetCell(rowIdx, 1)
@@ -626,8 +662,7 @@ class OeDepictMCSAlign(object):
 
             optInverseFit = True
 
-            self.__lfh.write("+OeAlignDepict.alignPairList refId %s fitId %s nAtomsRef %d nAtomsFit %s mcssMinAtoms %d\n" % (refId, fitId, nAtomsRef,
-                                                                                                                             nAtomsFit, mcssMinAtoms))
+            self.__lfh.write("+OeAlignDepict.alignPairList refId %s fitId %s nAtomsRef %d nAtomsFit %s mcssMinAtoms %d\n" % (refId, fitId, nAtomsRef, nAtomsFit, mcssMinAtoms))
             unique = True
 
             miter = self.__mcss.Match(fitmol, unique)
@@ -645,7 +680,7 @@ class OeDepictMCSAlign(object):
                 OERenderMolecule(refcell, refdisp)
 
                 # Depict fit molecule with MCS highlighting
-                if (optInverseFit):
+                if optInverseFit:
                     fitdisp = OE2DMolDisplay(fitmol, self.__opts)
                     tatoms = OEIsAtomMember(match.GetTargetAtoms())
                     OEAddHighlighting(fitdisp, myHighLightNotMatchColor, hstyle, OENotAtom(tatoms))

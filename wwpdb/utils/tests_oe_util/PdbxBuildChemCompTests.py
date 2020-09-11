@@ -26,6 +26,7 @@ import os
 
 try:
     from openeye.oechem import OEFloatArray  # noqa: F401 pylint: disable=unused-import
+
     skiptests = False
 except ImportError:
     skiptests = True
@@ -37,15 +38,14 @@ if not skiptests:
 
 @unittest.skipIf(skiptests, "Requires openeye library")
 class PdbxBuildChemCompTests(unittest.TestCase):
-
     def setUp(self):
         self.__lfh = sys.stdout
         self.__verbose = True
         self.__here = os.path.abspath(os.path.dirname(__file__))
         self.__topCachePath = os.path.join(self.__here, "ligand-dict-v3")
 
-        self.__pathList = ['../data/ATP.cif', '../data/GTP.cif', '../data/ARG.cif']
-        self.__idList = ['MSE', 'GTP', 'TRP']
+        self.__pathList = ["../data/ATP.cif", "../data/GTP.cif", "../data/ARG.cif"]
+        self.__idList = ["MSE", "GTP", "TRP"]
 
     def tearDown(self):
         pass
@@ -67,14 +67,13 @@ class PdbxBuildChemCompTests(unittest.TestCase):
         self.__lfh.write("Unique InChiKeys =  %d\n" % (len(inKyD)))
 
     def testBuildFromFiles(self):
-        """Test case -  create OE molecules from the input chem comp definition path list.
-        """
+        """Test case -  create OE molecules from the input chem comp definition path list."""
         self.__lfh.write("\nStarting PdbxBuildChemCompTests testBuildFromFiles\n")
         try:
             oemList = []
 
             oeU = OeChemCompIoUtils(topCachePath=self.__topCachePath, verbose=self.__verbose, log=self.__lfh)
-            oemList = oeU.getFromPathList(self.__pathList, use3D=True, coordType='model')
+            oemList = oeU.getFromPathList(self.__pathList, use3D=True, coordType="model")
             self.__molListPrint(oemList)
             for oem in oemList:
                 ccId = oem.getCcId()
@@ -87,13 +86,12 @@ class PdbxBuildChemCompTests(unittest.TestCase):
             self.fail()
 
     def testBuildFromIds(self):
-        """Test case -  create OE molecules from the input chem comp definition path list.
-        """
+        """Test case -  create OE molecules from the input chem comp definition path list."""
         self.__lfh.write("\nStarting PdbxBuildChemCompTests testBuildFroIds\n")
         try:
             oemList = []
             oeU = OeChemCompIoUtils(topCachePath=self.__topCachePath, verbose=self.__verbose, log=self.__lfh)
-            oemList = oeU.getFromIdList(self.__idList, use3D=True, coordType='model')
+            oemList = oeU.getFromIdList(self.__idList, use3D=True, coordType="model")
             self.__molListPrint(oemList)
             for oem in oemList:
                 ccId = oem.getCcId()
@@ -113,6 +111,6 @@ def suiteBuildTests():
     return suiteSelect
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mySuite = suiteBuildTests()
     unittest.TextTestRunner(verbosity=2).run(mySuite)

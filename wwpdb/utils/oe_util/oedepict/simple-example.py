@@ -27,37 +27,34 @@ from wwpdb.utils.oe_util.oedepict.OeDepict import OeDepict
 
 
 class OeDepictTests(unittest.TestCase):
-
     def setUp(self):
         self.__lfh = sys.stderr
         self.__verbose = True
         # ---------------------------------------------------------------------------------
         # The following needs to be set to the path of a checked out copy of the CVS ligand repository.
         ###
-        self.__topCachePath = '/data/components/ligand-dict-v3'
+        self.__topCachePath = "/data/components/ligand-dict-v3"
         ##
         # example list of 3-letter-codes -
         ##
-        self.__idList = ['atp', 'gtp', 'A', 'C', 'G', 'DG']
+        self.__idList = ["atp", "gtp", "A", "C", "G", "DG"]
 
     def tearDown(self):
         pass
 
     def testDepictIdList(self):
-        """Test case -  get, read, build OE molecule, and depict the molecule.
-        """
+        """Test case -  get, read, build OE molecule, and depict the molecule."""
         self.__lfh.write("\nStarting OeDepictTests testDepictIDList\n")
         try:
             oeMolTitleList = self.__makeFromIdList(idList=self.__idList)
-            if (self.__verbose):
+            if self.__verbose:
                 self.__lfh.write("molTitleList length is %d\n" % len(oeMolTitleList))
             #
             for ccId, mol, title in oeMolTitleList:
                 imagePath = ccId + ".svg"
                 oed = OeDepict(verbose=self.__verbose, log=self.__lfh)
                 oed.setMolTitleList([(ccId, mol, title)])
-                oed.setDisplayOptions(imageX=250, imageY=250, labelAtomName=True, labelAtomCIPStereo=True, labelAtomIndex=False,
-                                      labelBondIndex=False, bondDisplayWidth=0.5)
+                oed.setDisplayOptions(imageX=250, imageY=250, labelAtomName=True, labelAtomCIPStereo=True, labelAtomIndex=False, labelBondIndex=False, bondDisplayWidth=0.5)
                 oed.setGridOptions(rows=1, cols=1)
                 oed.prepare()
                 oed.write(imagePath)
@@ -66,13 +63,12 @@ class OeDepictTests(unittest.TestCase):
             self.fail()
 
     def __makeFromIdList(self, idList):
-        """ Create OE molecules from the input chemical component definition id list.
-        """
+        """Create OE molecules from the input chemical component definition id list."""
         self.__lfh.write("\nStarting OeDepictTests __makeFromIdList\n")
         try:
             oemList = []
             oeU = OeChemCompIoUtils(topCachePath=self.__topCachePath, verbose=self.__verbose, log=self.__lfh)
-            oemList = oeU.getFromIdList(idList, use3D=True, coordType='model')
+            oemList = oeU.getFromIdList(idList, use3D=True, coordType="model")
             for oem in oemList:
                 self.__lfh.write("Title              = %s\n" % oem.getTitle())
                 self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
@@ -89,7 +85,7 @@ def suiteDepict():
     return suiteSelect
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mySuite2 = suiteDepict()
     unittest.TextTestRunner(verbosity=2).run(mySuite2)
     #

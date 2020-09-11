@@ -39,6 +39,7 @@ from wwpdb.utils.cc_dict_util.persist.PdbxChemCompDictIndex import PdbxChemCompD
 
 try:
     from openeye.oechem import OEFloatArray  # noqa: F401 pylint: disable=unused-import
+
     skiptests = False
 except ImportError:
     skiptests = True
@@ -54,22 +55,21 @@ if not skiptests:
 
 @unittest.skipIf(skiptests, "Cannot import openeye.oechem for tests")
 class OeShapeSearchtests(unittest.TestCase):
-
     def setUp(self):
         self.__lfh = sys.stdout
         self.__verbose = True
         self.__debug = False
         #
         self.__here = os.path.abspath(os.path.dirname(__file__))
-        self.__examples = os.path.join(self.__here, 'examples')
-        self.__datadir = os.path.join(self.__here, 'data')
-        self.__testoutput = os.path.join(self.__here, 'test-output', platform.python_version())
+        self.__examples = os.path.join(self.__here, "examples")
+        self.__datadir = os.path.join(self.__here, "data")
+        self.__testoutput = os.path.join(self.__here, "test-output", platform.python_version())
         if not os.path.exists(self.__testoutput):
             os.makedirs(self.__testoutput)
         ##
         # Set these as appropriate to checked out versions of the CC and PRDCC CVS repositories
         ##
-        self.__pathChemCompCVS = os.path.join(self.__here, 'ligand-dict-v3')
+        self.__pathChemCompCVS = os.path.join(self.__here, "ligand-dict-v3")
         self.__pathPrdChemCompCVS = os.path.join(self.__here, "prdcc-v3")
         ##
         # file names for persistent stores -
@@ -80,22 +80,52 @@ class OeShapeSearchtests(unittest.TestCase):
         # Test list of PRD molecule ids  -- In future check the convention on the identifiers
         #
         #
-        self.__prdIdListO = ['PRDCC_000009', 'PRDCC_000109', 'PRDCC_000159', 'PRDCC_000199', 'PRDCC_000209', 'PRDCC_000219',
-                             'PRDCC_000239', 'PRDCC_000259', 'PRDCC_000289', 'PRDCC_000299', 'PRDCC_000309', 'PRDCC_000319', 'PRDCC_000339',
-                             'PRDCC_000379', 'PRDCC_000409', 'PRDCC_000419']
+        self.__prdIdListO = [
+            "PRDCC_000009",
+            "PRDCC_000109",
+            "PRDCC_000159",
+            "PRDCC_000199",
+            "PRDCC_000209",
+            "PRDCC_000219",
+            "PRDCC_000239",
+            "PRDCC_000259",
+            "PRDCC_000289",
+            "PRDCC_000299",
+            "PRDCC_000309",
+            "PRDCC_000319",
+            "PRDCC_000339",
+            "PRDCC_000379",
+            "PRDCC_000409",
+            "PRDCC_000419",
+        ]
 
         #
-        self.__prdIdList = ['PRD_000009', 'PRD_000109', 'PRD_000159', 'PRD_000199', 'PRD_000209', 'PRD_000219',
-                            'PRD_000239', 'PRD_000259', 'PRD_000289', 'PRD_000299', 'PRD_000309', 'PRD_000319', 'PRD_000339',
-                            'PRD_000379', 'PRD_000409', 'PRD_000419']
+        self.__prdIdList = [
+            "PRD_000009",
+            "PRD_000109",
+            "PRD_000159",
+            "PRD_000199",
+            "PRD_000209",
+            "PRD_000219",
+            "PRD_000239",
+            "PRD_000259",
+            "PRD_000289",
+            "PRD_000299",
+            "PRD_000309",
+            "PRD_000319",
+            "PRD_000339",
+            "PRD_000379",
+            "PRD_000409",
+            "PRD_000419",
+        ]
 
     def tearDown(self):
         pass
 
-    def getPathList(self, topPath, pattern='*', excludeDirs=None, recurse=True):
-        """ Return a list of file paths in the input topPath which satisfy the input search criteria.
+    def getPathList(self, topPath, pattern="*", excludeDirs=None, recurse=True):
+        """Return a list of file paths in the input topPath which satisfy the input search criteria.
 
-            This version does not follow symbolic links.
+        This version does not follow symbolic links.
         """
         pathList = []
         if excludeDirs is None:
@@ -107,8 +137,8 @@ class OeShapeSearchtests(unittest.TestCase):
             return pathList
 
         # expand pattern
-        pattern = pattern or '*'
-        patternList = str.split(pattern, ';')
+        pattern = pattern or "*"
+        patternList = str.split(pattern, ";")
 
         for name in names:
             fullname = os.path.normpath(os.path.join(topPath, name))
@@ -128,13 +158,13 @@ class OeShapeSearchtests(unittest.TestCase):
     def testCreateChemCompStore(self):
         """Test case -  create persistent store from a path list of chemical component defintions.
 
-                        Extract the path list by searching the file system of the CVS repository
+        Extract the path list by searching the file system of the CVS repository
         """
         startTime = time.time()
         self.__lfh.write("\nStarting OeShapeSearchtests testCreateChemStore at %s\n" % time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
         try:
-            ccPathList = self.getPathList(topPath=self.__pathChemCompCVS, pattern="*.cif", excludeDirs=['CVS', 'REMOVED', 'FULL'])
-            if (self.__verbose):
+            ccPathList = self.getPathList(topPath=self.__pathChemCompCVS, pattern="*.cif", excludeDirs=["CVS", "REMOVED", "FULL"])
+            if self.__verbose:
                 self.__lfh.write("Pathlist length is %d\n" % len(ccPathList))
             dUtil = PdbxChemCompDictUtil(verbose=self.__verbose, log=self.__lfh)
             dUtil.makeStoreFromPathList(pathList=ccPathList, storePath=self.__persistStorePathCC)
@@ -143,19 +173,20 @@ class OeShapeSearchtests(unittest.TestCase):
             self.fail()
 
         endTime = time.time()
-        self.__lfh.write("\nCompleted OeShapeSearchtests testCreateChemCompStore at %s (%d seconds)\n" % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                                                          endTime - startTime))
+        self.__lfh.write(
+            "\nCompleted OeShapeSearchtests testCreateChemCompStore at %s (%d seconds)\n" % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime)
+        )
 
     def testUpdateChemCompStoreWithPrd(self):
         """Test case -  update persistent store from a path list of PRD chemical component defintions.
 
-                        Extract the path list from the fie system of the PRD CVS repository.
+        Extract the path list from the fie system of the PRD CVS repository.
         """
         startTime = time.time()
         self.__lfh.write("\nStarting OeShapeSearchtests testUpdateChemCompStorePrd at %s\n" % time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
         try:
-            ccPathList = self.getPathList(topPath=self.__pathPrdChemCompCVS, pattern="*.cif", excludeDirs=['CVS', 'REMOVED', 'FULL'])
-            if (self.__verbose):
+            ccPathList = self.getPathList(topPath=self.__pathPrdChemCompCVS, pattern="*.cif", excludeDirs=["CVS", "REMOVED", "FULL"])
+            if self.__verbose:
                 self.__lfh.write("Pathlist length is %d\n" % len(ccPathList))
             #
             dUtil = PdbxChemCompDictUtil(verbose=self.__verbose, log=self.__lfh)
@@ -166,12 +197,12 @@ class OeShapeSearchtests(unittest.TestCase):
             self.fail()
 
         endTime = time.time()
-        self.__lfh.write("\nCompleted OeShapeSearchtests testUpdateChemCompStoreWithPrd at %s (%d seconds)\n" % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                                                                 endTime - startTime))
+        self.__lfh.write(
+            "\nCompleted OeShapeSearchtests testUpdateChemCompStoreWithPrd at %s (%d seconds)\n" % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime)
+        )
 
     def testCreateChemCompIndex(self):
-        """Test case -  create search index from chemical component persistent store
-        """
+        """Test case -  create search index from chemical component persistent store"""
         startTime = time.time()
         self.__lfh.write("\nStarting OeShapeSearchtests testCreateChemCompIndex at %s\n" % time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
         try:
@@ -182,15 +213,14 @@ class OeShapeSearchtests(unittest.TestCase):
             self.fail()
 
         endTime = time.time()
-        self.__lfh.write("\nCompleted OeShapeSearchteststestCreateChemCompIndex at %s (%d seconds)\n" % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                                                         endTime - startTime))
+        self.__lfh.write("\nCompleted OeShapeSearchteststestCreateChemCompIndex at %s (%d seconds)\n" % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
 
     def testCreateStoreOE(self):
         """Test case -  build persistent store of serialized OE molecules using the contents of the chemical
-                        dictionary persistent store containing all of chemical component defintions.
+        dictionary persistent store containing all of chemical component defintions.
 
-                        ***NOTE - This will display diagnostics from OE toolkit for molecules with
-                           problematic features.  These issues will not impact the shape search.
+        ***NOTE - This will display diagnostics from OE toolkit for molecules with
+           problematic features.  These issues will not impact the shape search.
 
         """
         startTime = time.time()
@@ -204,21 +234,21 @@ class OeShapeSearchtests(unittest.TestCase):
             oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
             molList = []
             for ccId in containerNameList:
-                ccAt = myPersist.fetchObject(containerName=ccId, objectName='chem_comp_atom')
-                ccBnd = myPersist.fetchObject(containerName=ccId, objectName='chem_comp_bond')
+                ccAt = myPersist.fetchObject(containerName=ccId, objectName="chem_comp_atom")
+                ccBnd = myPersist.fetchObject(containerName=ccId, objectName="chem_comp_bond")
                 if ccAt is None or ccBnd is None:
                     continue
                 #
                 oem.set(ccId, dcChemCompAtom=ccAt, dcChemCompBond=ccBnd)
                 ok = oem.build3D()
                 if ok:
-                    if (self.__debug):
+                    if self.__debug:
                         self.__lfh.write("Title              = %s\n" % oem.getTitle())
                         self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
                         self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
                     molD = {}
-                    molD['name'] = ccId
-                    molD['oeb'] = oem.serialize()
+                    molD["name"] = ccId
+                    molD["oeb"] = oem.serialize()
                     molList.append(molD)
                 else:
                     self.__lfh.write("+WARN - failed to build OE molecule for %s\n" % ccId)
@@ -230,7 +260,7 @@ class OeShapeSearchtests(unittest.TestCase):
             oeP.store(dbFileName=self.__storePath)
             mL = oeP.getIndex(dbFileName=self.__storePath)
             #
-            if (self.__debug):
+            if self.__debug:
                 self.__lfh.write("OePersistTests(testCreateStore) molecule list %r\n" % mL)
 
         except:  # noqa: E722 pylint: disable=bare-except
@@ -238,19 +268,16 @@ class OeShapeSearchtests(unittest.TestCase):
             self.fail()
 
         endTime = time.time()
-        self.__lfh.write("\nCompleted OeShapeSearchtests testCreateOEStore at %s (%d seconds)\n" % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                                                    endTime - startTime))
+        self.__lfh.write("\nCompleted OeShapeSearchtests testCreateOEStore at %s (%d seconds)\n" % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
 
     def testSimpleShapeSearch(self):
-        """Test case -  build OE molecule from chemical component definitions and perform shape search
-
-        """
+        """Test case -  build OE molecule from chemical component definitions and perform shape search"""
         startTime = time.time()
         self.__lfh.write("\nStarting OeShapeSearchtests testSimpleShapeSearch at %s\n" % time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
         try:
             #
             # Get the path list of PRD CC  -
-            ccPathList = self.getPathList(topPath=self.__pathPrdChemCompCVS, pattern="*.cif", excludeDirs=['CVS', 'REMOVED', 'FULL'])
+            ccPathList = self.getPathList(topPath=self.__pathPrdChemCompCVS, pattern="*.cif", excludeDirs=["CVS", "REMOVED", "FULL"])
             for ii, ccPath in enumerate(ccPathList):
                 self.__lfh.write(" %d %s\n" % (ii, ccPath))
 
@@ -278,13 +305,10 @@ class OeShapeSearchtests(unittest.TestCase):
             self.fail()
 
         endTime = time.time()
-        self.__lfh.write("\nCompleted OeShapeSearchtests testSimpleShapeSearch at %s (%d seconds)\n" % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                                                        endTime - startTime))
+        self.__lfh.write("\nCompleted OeShapeSearchtests testSimpleShapeSearch at %s (%d seconds)\n" % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
 
     def __getOEMol(self, ccPath):
-        """Test case -  build OE molecule using 3D data in the definition source data
-
-        """
+        """Test case -  build OE molecule using 3D data in the definition source data"""
         self.__lfh.write("\nStarting OeShapeSearchtests __getOEMol\n")
         try:
             oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
@@ -295,9 +319,7 @@ class OeShapeSearchtests(unittest.TestCase):
             # myReader.write(pdbxFilePath="TMP.cif")
             #
             for container in myReader.getContainerList():
-                oem.set(container.getName(),
-                        dcChemCompAtom=container.getObj("chem_comp_atom"),
-                        dcChemCompBond=container.getObj("chem_comp_bond"))
+                oem.set(container.getName(), dcChemCompAtom=container.getObj("chem_comp_atom"), dcChemCompBond=container.getObj("chem_comp_bond"))
                 oem.build3D(coordType="model")
                 if self.__debug:
                     self.__lfh.write("Title              = %s\n" % oem.getTitle())
@@ -342,18 +364,18 @@ def suiteSearchSimple():
     return suiteSelect
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     #
 
-    if (not os.access("chemcomp-store.db", os.F_OK)):
+    if not os.access("chemcomp-store.db", os.F_OK):
         mySuite = suiteCreateStoreCC()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
 
-    if (not os.access("chemcomp-index.pic", os.F_OK)):
+    if not os.access("chemcomp-index.pic", os.F_OK):
         mySuite = suiteCreateIndexCC()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
 
-    if (not os.access("oe-store.db", os.F_OK)):
+    if not os.access("oe-store.db", os.F_OK):
         mySuite = suiteCreateStoreOE()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
 
