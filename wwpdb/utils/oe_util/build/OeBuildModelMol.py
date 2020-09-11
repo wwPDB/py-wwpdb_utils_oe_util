@@ -150,7 +150,7 @@ class OeBuildModelMol(object):
                         self.__eD[atNo] = 1
                     else:
                         self.__eD[atNo] += 1
-            except:  # noqa: E722
+            except:  # noqa: E722 pylint: disable=bare-except
                 pass
 
         return self.__eD
@@ -159,7 +159,7 @@ class OeBuildModelMol(object):
         try:
             self.__build3D()
             return True
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             return False
 
     def __build3D(self):
@@ -224,7 +224,7 @@ class OeBuildModelMol(object):
             if (self.__debug):
                 self.__lfh.write(" %s %d -- %s %d (%d)\n" % (at1, iat1, at2, iat2, iType))
 
-            oeBnd = self.__oeMol.NewBond(aL[iat1], aL[iat2], iType)  # noqa: F841
+            oeBnd = self.__oeMol.NewBond(aL[iat1], aL[iat2], iType)  # noqa: F841 pylint: disable=unused-variable
 
             # oeBnd.SetAromatic(arFlag)
             # if arFlag:

@@ -29,7 +29,7 @@ import os
 import os.path
 
 try:
-    from openeye.oechem import OEFloatArray  # noqa: F401
+    from openeye.oechem import OEFloatArray  # noqa: F401 pylint: disable=unused-import
     skiptests = False
 except ImportError:
     skiptests = True
@@ -77,8 +77,7 @@ class OeAlignDepictTests(unittest.TestCase):
     def testMCSAlignPairDepict(self):
         """Test case -  Simple pairwise MCSS alignment  -  Each aligned pair output to a separate image file
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OeAlignDepictTests tstMCSalignPairDepict\n")
         try:
             oed = OeDepictMCSAlign(verbose=self.__verbose, log=self.__lfh)
             oed.setRefId(self.__refId, cachePath=self.__topCachePath)
@@ -89,15 +88,14 @@ class OeAlignDepictTests(unittest.TestCase):
                 if len(aML) > 0:
                     for (rCC, rAt, tCC, tAt) in aML:
                         self.__lfh.write("%5s %-5s %5s %-5s\n" % (rCC, rAt, tCC, tAt))
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
     def testMCSAlignListDepict(self):
         """Test case -  List view of pairwise MCS alignment - multipage output
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OeAlignDepictTests testMCSAlignListDepict\n")
         try:
             oed = OeDepictMCSAlign(verbose=self.__verbose, log=self.__lfh)
             oed.setRefId(self.__refId, cachePath=self.__topCachePath)
@@ -108,15 +106,14 @@ class OeAlignDepictTests(unittest.TestCase):
                 for (rCC, rAt, tCC, tAt) in aML:
                     self.__lfh.write("%5s %-5s %5s %-5s\n" % (rCC, rAt, tCC, tAt))
 
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
     def testMCSAlignPairListDepict(self):
         """Test case -  List view of  pairwise MCS alignment using pair id list input
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OeAlignDepictTests testMCSAlignPairListDepict\n")
         try:
             oed = OeDepictMCSAlign(verbose=self.__verbose, log=self.__lfh)
             oed.setPairIdList(self.__pairIdList, cachePath=self.__topCachePath)
@@ -126,15 +123,14 @@ class OeAlignDepictTests(unittest.TestCase):
                 for (rCC, rAt, tCC, tAt) in aML:
                     self.__lfh.write("%5s %-5s %5s %-5s\n" % (rCC, rAt, tCC, tAt))
 
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
     def testMCSAlignRnaPairListDepict(self):
         """Test case -  Modified RNA nucleotide alignment with parent nucleotied using pair list input
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OeAlignDepictTests testMCSAlignRnaPairListDepict\n")
         try:
             pairIdList = self.__readPairList(fn=self.__rnaPairFile)
             oed = OeDepictMCSAlign(verbose=self.__verbose, log=self.__lfh)
@@ -145,15 +141,14 @@ class OeAlignDepictTests(unittest.TestCase):
                 for (rCC, rAt, tCC, tAt) in aML:
                     self.__lfh.write("%5s %-5s %5s %-5s\n" % (rCC, rAt, tCC, tAt))
 
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
     def testMCSAlignAtomMap(self):
         """Test case -  match test with return of atom maps
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OeAlignDepictTests testMCSAlignAtomMap\n")
         try:
             pairIdList = self.__readPairList(fn=self.__rnaPairFile)
             oed = OeDepictMCSAlign(verbose=self.__verbose, log=self.__lfh)
@@ -165,21 +160,20 @@ class OeAlignDepictTests(unittest.TestCase):
                     self.__lfh.write("Match suceeded for: %s %s\n" % (refId, fitId))
                 else:
                     self.__lfh.write("Match failed for: %s %s\n" % (refId, fitId))
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
     def testSdfMCSAlignAtomMap(self):
         """Test case -  match test with return of atom maps for foreign SDF with a CC definition
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OeAlignDepictTests testSdfMCSAlignAtomMap\n")
         try:
-            # self.__extPairTup=('../data/ATP.sdf','ATP')
-            self.__extPairTup = (os.path.join(self.__datadir, 'ATP.sdf'),
+            extPairTup = (os.path.join(self.__datadir, 'ATP.sdf'),
                                  os.path.join(self.__datadir, 'ATP.cif'))
-            refPath = self.__extPairTup[0]
-            fitId = self.__extPairTup[1]
-            fitPath = self.__extPairTup[1]
+            refPath = extPairTup[0]
+            fitId = extPairTup[1]
+            fitPath = extPairTup[1]
             oed = OeDepictMCSAlign(verbose=self.__verbose, log=self.__lfh)
             # oed.setSearchType(sType='exact')
             oed.setSearchType(sType='exact')
@@ -194,15 +188,14 @@ class OeAlignDepictTests(unittest.TestCase):
                     self.__lfh.write("Mapping: %4d %s\n" % (ii, aM))
             else:
                 self.__lfh.write("Match failed for: %s %s\n" % (refPath, fitId))
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
     def testMCSRelaxAlignPairDepict(self):
         """ Test case -  Relaxed pairwise MCSS alignment  -
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OeAlignDepictTests testMCSRelaceAlignPairDepict\n")
         try:
             oed = OeDepictMCSAlign(verbose=self.__verbose, log=self.__lfh)
             oed.setSearchType(sType='relaxed')
@@ -215,7 +208,7 @@ class OeAlignDepictTests(unittest.TestCase):
             if len(aML) > 0:
                 for (rCC, rAt, tCC, tAt) in aML:
                     self.__lfh.write("%5s %-5s %5s %-5s\n" % (rCC, rAt, tCC, tAt))
-        except Exception as e:  # noqa: F841
+        except Exception as e:  # noqa: F841 pylint: disable=unused-variable
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -249,13 +242,12 @@ def suite():
 if __name__ == '__main__':
     # unittest.main()
     #
-    if (True):
-        mySuite1 = suiteAlignPair()
-        unittest.TextTestRunner(verbosity=2).run(mySuite1)
-        #
-        mySuite1 = suiteAlignPairRelax()
-        unittest.TextTestRunner(verbosity=2).run(mySuite1)
-        #
+    mySuite1 = suiteAlignPair()
+    unittest.TextTestRunner(verbosity=2).run(mySuite1)
+    #
+    mySuite1 = suiteAlignPairRelax()
+    unittest.TextTestRunner(verbosity=2).run(mySuite1)
+    #
 
-        mySuite1 = suiteAlignExtPairRelax()
-        unittest.TextTestRunner(verbosity=2).run(mySuite1)
+    mySuite1 = suiteAlignExtPairRelax()
+    unittest.TextTestRunner(verbosity=2).run(mySuite1)

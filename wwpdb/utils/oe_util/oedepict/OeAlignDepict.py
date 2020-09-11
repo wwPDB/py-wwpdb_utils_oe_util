@@ -79,6 +79,17 @@ class OeDepictMCSAlign(object):
         #
         self.__refFD = {}
         self.__fitFD = {}
+        #
+        self.__refPath = None
+        self.__fitPath = None
+        self.__mcss = None
+        #
+        self.__image = None
+        self.__grid = None
+        self.__opts = None
+        self.__gridRows = None
+        self.__gridCols = None
+        self.__multi = None
 
     def setSearchType(self, sType='default'):
         self.__searchType = sType
@@ -99,7 +110,7 @@ class OeDepictMCSAlign(object):
         ccIdU = ccId.upper()
         self.__refPath = os.path.join(cachePath, ccIdU[0], ccIdU, ccIdU + '.cif')
 
-        id, self.__refmol, self.__refFD = self.__getCCDefFile(self.__refPath, suppressHydrogens=suppressHydrogens)
+        _id, self.__refmol, self.__refFD = self.__getCCDefFile(self.__refPath, suppressHydrogens=suppressHydrogens)
         #
         # Insert title here -
         if title is not None:
@@ -113,7 +124,7 @@ class OeDepictMCSAlign(object):
         OEPrepareDepiction(self.__refmol)
         self.__setupMCSS(self.__refmol)
 
-    def setRefPath(self, ccPath, title=None, suppressHydrogens=False, type='CC', importType='2D'):
+    def setRefPath(self, ccPath, title=None, suppressHydrogens=False, type='CC', importType='2D'):  # pylint: disable=redefined-builtin
         """ Set the query molecule for MCSS comparison using the input file path.
 
             The file type is either ['CC'] for a chemical component definition or another file type
@@ -174,7 +185,7 @@ class OeDepictMCSAlign(object):
             self.__fitmol.SetTitle(self.__fitId)
             self.__fitTitle = None
 
-    def setFitIdList(self, ccIdList, cachePath='/data/components/ligand-dict-v3', suppressHydrogens=False):
+    def setFitIdList(self, ccIdList, cachePath='/data/components/ligand-dict-v3', suppressHydrogens=False):  # pylint: disable=unused-argument
         """Set the list of IDs to be compared with reference molecule by MCSS.
 
            From the input ID list build the internal pair list of
@@ -193,7 +204,7 @@ class OeDepictMCSAlign(object):
             fitTitle = fitId + "/" + refId
             self.__pairTupleList.append((refId, refPath, refTitle, fitId, fitPath, fitTitle))
 
-    def setFitPathList(self, fitPathTupList, suppressHydrogens=False):
+    def setFitPathList(self, fitPathTupList, suppressHydrogens=False):  # pylint: disable=unused-argument
         """Set the list of paths for the target/library molecules to be compared with reference molecule by MCSS.
 
            From the input path tuple list build the internal pair list of
@@ -208,7 +219,7 @@ class OeDepictMCSAlign(object):
             fitTitle = fitId + "/" + refId
             self.__pairTupleList.append((refId, refPath, refTitle, fitId, fitPath, fitTitle))
 
-    def setPairIdList(self, pairIdList, cachePath='/data/components/ligand-dict-v3', suppressHydrogens=False):
+    def setPairIdList(self, pairIdList, cachePath='/data/components/ligand-dict-v3', suppressHydrogens=False):  # pylint: disable=unused-argument
         """Set the list of ID pais to be aligned by MCSS.
 
            From the input ID list build the internal pair list of
@@ -303,9 +314,9 @@ class OeDepictMCSAlign(object):
                     self.__lfh.write("OeAlignDepict.__getMiscFile - atom  %d %s %s %s %s %r\n" % (ii, atm.GetIdx(), atm.GetAtomicNum(), atm.GetName(), atm.GetType(), xyzL))
 
             return (ccId, tMol, fD)
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
-            self.fail()
+            # self.fail()
 
         return None, None, None
 
@@ -351,7 +362,7 @@ class OeDepictMCSAlign(object):
         # self.__mcss.SetMinAtoms(nAtomsRef/2)
 
     @timeout(15)
-    def testAlign(self, suppressHydrogens=False, unique=True, minFrac=1.0):
+    def testAlign(self, suppressHydrogens=False, unique=True, minFrac=1.0):  # pylint: disable=unused-argument
         """ Test the MCSS comparison between current reference and fit molecules -
             Return list of corresponding atoms on success or an empty list otherwise.
         """
@@ -378,7 +389,7 @@ class OeDepictMCSAlign(object):
         return atomMap
 
     @timeout(30)
-    def doAlign(self, suppressHydrogens=False, unique=True, minFrac=1.0):
+    def doAlign(self, suppressHydrogens=False, unique=True, minFrac=1.0):  # pylint: disable=unused-argument
         """ Test the MCSS comparison between current reference and fit molecules -
             Return list of corresponding atoms on success or an empty list otherwise.
         """
@@ -405,7 +416,7 @@ class OeDepictMCSAlign(object):
         return (nAtomsRef, self.__refFD['SMILES_STEREO'], nAtomsFit, self.__fitFD['SMILES_STEREO'], atomMap)
 
     @timeout(30)
-    def doAlignAlt(self, suppressHydrogens=False, unique=True, minFrac=1.0):
+    def doAlignAlt(self, suppressHydrogens=False, unique=True, minFrac=1.0):  # pylint: disable=unused-argument
         """ Test the MCSS comparison between current reference and fit molecules -
             Return list of corresponding atoms on success or an empty list otherwise.
         """
@@ -562,7 +573,7 @@ class OeDepictMCSAlign(object):
             OEPrepareDepiction(self.__refmol)
 
             #
-            tId, fitmol, fitFD = self.__getCCDefFile(fitPath, suppressHydrogens=suppressHydrogens)
+            _tId, fitmol, _fitFD = self.__getCCDefFile(fitPath, suppressHydrogens=suppressHydrogens)
             fitmol.SetTitle(fitTitle)
             #
             # self.__minAtomMatchFraction %  of the smaller molecule --
@@ -615,8 +626,8 @@ class OeDepictMCSAlign(object):
 
             optInverseFit = True
 
-            self.__lfh.write("+%s.%s refId %s fitId %s nAtomsRef %d nAtomsFit %s mcssMinAtoms %d\n" % (self.__class__.__name__, sys._getframe().f_code.co_name,
-                                                                                                       refId, fitId, nAtomsRef, nAtomsFit, mcssMinAtoms))
+            self.__lfh.write("+OeAlignDepict.alignPairList refId %s fitId %s nAtomsRef %d nAtomsFit %s mcssMinAtoms %d\n" % (refId, fitId, nAtomsRef,
+                                                                                                                             nAtomsFit, mcssMinAtoms))
             unique = True
 
             miter = self.__mcss.Match(fitmol, unique)

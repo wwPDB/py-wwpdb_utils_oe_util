@@ -184,7 +184,7 @@ class OeBuildMol(object):
                         self.__eD[atNo] = 1
                     else:
                         self.__eD[atNo] += 1
-            except:  # noqa: E722
+            except:  # noqa: E722 pylint: disable=bare-except
                 pass
 
         return self.__eD
@@ -228,7 +228,7 @@ class OeBuildMol(object):
             atType = ccAt.getType()
             fc = ccAt.getFormalCharge()
             chFlag = ccAt.isChiral()
-            arFlag = ccAt.isAromatic()
+            # arFlag = ccAt.isAromatic()
             isotope = ccAt.getIsotope()
             leavingAtom = ccAt.getLeavingAtomFlag()
 
@@ -269,11 +269,11 @@ class OeBuildMol(object):
             iat2 = aD[at2] - 1
             iType = ccBnd.getIntegerType()
             #
-            arFlag = ccBnd.isAromatic()  # noqa: F841
+            arFlag = ccBnd.isAromatic()  # noqa: F841 pylint: disable=unused-variable
             if (self.__debug):
                 self.__lfh.write(" %s %d -- %s %d (%d)\n" % (at1, iat1, at2, iat2, iType))
 
-            oeBnd = self.__oeMol.NewBond(aL[iat1], aL[iat2], iType)  # noqa: F841
+            oeBnd = self.__oeMol.NewBond(aL[iat1], aL[iat2], iType)  # noqa: F841 pylint: disable=unused-variable
 
             # oeBnd.SetAromatic(arFlag)
             # if arFlag:
@@ -310,11 +310,11 @@ class OeBuildMol(object):
             if (bond.GetOrder() == 2):
                 OEPerceiveCIPStereo(self.__oeMol, bond)
 
-    def build2D(self, setTitle=True):
+    def build2D(self, setTitle=True):  # pylint: disable=unused-argument
         try:
             self.__build2D(setTitle=True)
             return True
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             return False
 
     def __build2D(self, setTitle=True):
@@ -401,7 +401,7 @@ class OeBuildMol(object):
             for ii, atm in enumerate(self.__oeMol.GetAtoms()):
                 self.__lfh.write("OeBuildMol.build2d - atom  %d %s\n" % (ii, atm.GetName()))
 
-    def importFile(self, filePath, type='2D'):
+    def importFile(self, filePath, type='2D'):  # pylint: disable=redefined-builtin
         """  Contruct a OEGraphMol using the content of the input file.  The input
              file must have a file extension recognized by the OE toolkit (e.g. .sdf)
         """
@@ -450,7 +450,8 @@ class OeBuildMol(object):
                 aC[iAtNum] += 1
             else:
                 aC[iAtNum] = 1
-            atName = PdbxChemCompConstants._periodicTable[iAtNum - 1] + str(aC[iAtNum])
+            # Less than idea - should have an API
+            atName = PdbxChemCompConstants._periodicTable[iAtNum - 1] + str(aC[iAtNum])  # pylint: disable=protected-access
             atm.SetName(atName)
             #
             xyzL = OEFloatArray(3)

@@ -148,6 +148,8 @@ class OeDepictMultiPage(OeDepictBase):
         self.__lfh = log
         self.__useTitle = useTitle
         #
+        self.__multi = None
+        self.__image = None
 
     def __setupImage(self):
         if self._params['pageOrientation'] == 'landscape':
@@ -165,7 +167,7 @@ class OeDepictMultiPage(OeDepictBase):
 
         citer = grid.GetCells()
 
-        for ccId, oeMol, title in self._molTitleList:
+        for _ccId, oeMol, title in self._molTitleList:
             if not citer.IsValid():
                 # go to next page
                 self.__image = self.__multi.NewPage()
@@ -214,6 +216,9 @@ class OeDepict(OeDepictBase):
         self.__debug = False
         self.__lfh = log
         self.__useTitle = useTitle
+        #
+        self.__image = None
+        self.__grid = None
 
     def __setupImage(self):
         """ Internal method to configure a single page image.
@@ -234,7 +239,7 @@ class OeDepict(OeDepictBase):
         # We convert to list as may come in as a python 3 zipobject with is not indexable
         mollist = list(self._molTitleList)
         for idx, cell in enumerate(self.__grid.GetCells()):
-            ccId, oeMol, title = mollist[idx]
+            _ccId, oeMol, title = mollist[idx]
             #
             if self._params['suppressHydrogens']:
                 mol = oeMol.getGraphMolSuppressH()

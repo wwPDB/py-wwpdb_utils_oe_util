@@ -33,6 +33,8 @@ class OeShapeSearch(object):
         self.__lfh = log
         self.__refMol = None
         self.__fitMol = None
+        self.__bestSearch = None
+        self.__scoreiter = None
 
     def setRefMol(self, refMol):
         self.__refMol = refMol

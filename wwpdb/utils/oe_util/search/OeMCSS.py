@@ -59,6 +59,10 @@ class OeMCSS(object):
         #
         self.__refFD = {}
         self.__fitFD = {}
+        #
+        self.__refPath = None
+        self.__fitPath = None
+        self.__mcss = None
 
     def setSearchType(self, sType='default'):
         self.__searchType = sType
@@ -79,7 +83,7 @@ class OeMCSS(object):
         ccIdU = ccId.upper()
         self.__refPath = os.path.join(cachePath, ccIdU[0], ccIdU, ccIdU + '.cif')
 
-        id, self.__refmol, self.__refFD = self.__getCCDefFile(self.__refPath, suppressHydrogens=suppressHydrogens)
+        cid, self.__refmol, self.__refFD = self.__getCCDefFile(self.__refPath, suppressHydrogens=suppressHydrogens)  # pylint: disable=unused-variable
         #
         # Insert title here -
         if title is not None:
@@ -92,7 +96,7 @@ class OeMCSS(object):
         #
         self.__setupMCSS(self.__refmol)
 
-    def setRefPath(self, ccPath, title=None, suppressHydrogens=False, type='CC', importType='2D'):
+    def setRefPath(self, ccPath, title=None, suppressHydrogens=False, type='CC', importType='2D'):  # pylint: disable=redefined-builtin
         """ Set the query molecule for MCSS comparison using the input file path.
 
             The file type is either ['CC'] for a chemical component definition or another file type
@@ -152,7 +156,7 @@ class OeMCSS(object):
             self.__fitmol.SetTitle(self.__fitId)
             self.__fitTitle = None
 
-    def setFitIdList(self, ccIdList, cachePath='/data/components/ligand-dict-v3', suppressHydrogens=False):
+    def setFitIdList(self, ccIdList, cachePath='/data/components/ligand-dict-v3', suppressHydrogens=False):  # pylint: disable=unused-argument
         """Set the list of IDs to be compared with reference molecule by MCSS.
 
            From the input ID list build the internal pair list of
@@ -171,7 +175,7 @@ class OeMCSS(object):
             fitTitle = fitId + "/" + refId
             self.__pairTupleList.append((refId, refPath, refTitle, fitId, fitPath, fitTitle))
 
-    def setPairIdList(self, pairIdList, cachePath='/data/components/ligand-dict-v3', suppressHydrogens=False):
+    def setPairIdList(self, pairIdList, cachePath='/data/components/ligand-dict-v3', suppressHydrogens=False):  # pylint: disable=unused-argument
         """Set the list of ID pais to be aligned by MCSS.
 
            From the input ID list build the internal pair list of
@@ -272,9 +276,9 @@ class OeMCSS(object):
 
             fD['OEMOL'] = tMol
             return (ccId, tMol, fD)
-        except Exception as e:  # noqa: F841
+        except Exception as e:  # noqa: F841 pylint: disable=unused-variable
             traceback.print_exc(file=self.__lfh)
-            self.fail()
+            # self.fail()
 
         return None, None, None
 
@@ -320,7 +324,7 @@ class OeMCSS(object):
         # self.__mcss.SetMinAtoms(nAtomsRef/2)
 
     @timeout(30)
-    def doAlign(self, suppressHydrogens=False, unique=True, minFrac=1.0):
+    def doAlign(self, suppressHydrogens=False, unique=True, minFrac=1.0):  # pylint: disable=unused-argument
         """ Test the MCSS comparison between current reference and fit molecules -
             Return list of corresponding atoms on success or an empty list otherwise.
         """

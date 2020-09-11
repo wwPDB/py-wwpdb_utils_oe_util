@@ -29,7 +29,7 @@ import os.path
 import fnmatch
 
 try:
-    from openeye.oechem import OEFloatArray  # noqa: F401
+    from openeye.oechem import OEFloatArray  # noqa: F401 pylint: disable=unused-import
     skiptests = False
 except ImportError:
     skiptests = True
@@ -83,11 +83,13 @@ class OeDepictTests(unittest.TestCase):
         ifh.close()
         return idList
 
-    def __testMakeFromFiles(self, pathList=[]):
+    def __testMakeFromFiles(self, pathList=None):
         """Test case -  create OE molecules from the input chem comp definition path list.
         """
         self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
                                                  sys._getframe().f_code.co_name))
+        if pathList is None:
+            pathList = []
         try:
             oemList = []
             idList = []
@@ -100,7 +102,7 @@ class OeDepictTests(unittest.TestCase):
                 self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
                 self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
             return zip(idList, oemList, pathList)
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -118,15 +120,17 @@ class OeDepictTests(unittest.TestCase):
                 self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
                 self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
             return zip(idList, oemList, idList)
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
-    def __getPathList(self, topPath, pattern='*', excludeDirs=[], recurse=True):
+    def __getPathList(self, topPath, pattern='*', excludeDirs=None, recurse=True):
         """ Return a list of file paths in the input topPath which satisfy the input search criteria.
 
             This version does not follow symbolic links.
         """
+        if excludeDirs is None:
+            excludeDirs = []
         pathList = []
         #
         try:
@@ -167,7 +171,7 @@ class OeDepictTests(unittest.TestCase):
                 self.__lfh.write("molTitleList length is %d\n" % len(oeMolTitleList))
             #
             for ccId, mol, title in oeMolTitleList:
-                dirPath, fName = os.path.split(title)
+                # dirPath, fName = os.path.split(title)
                 imagePath = os.path.join(self.__testoutput, ccId + ".svg")
                 oed = OeDepict(verbose=self.__verbose, log=self.__lfh)
                 title = ''
@@ -177,7 +181,7 @@ class OeDepictTests(unittest.TestCase):
                 oed.setGridOptions(rows=1, cols=1)
                 oed.prepare()
                 oed.write(imagePath)
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -194,7 +198,7 @@ class OeDepictTests(unittest.TestCase):
                 self.__lfh.write("molTitleList length is %d\n" % len(oeMolTitleList))
             #
             for ccId, mol, title in oeMolTitleList:
-                dirPath, fName = os.path.split(title)
+                _dirPath, fName = os.path.split(title)
                 imagePath = os.path.join(self.__testoutput, fName[:-4] + ".svg")
                 oed = OeDepict(verbose=self.__verbose, log=self.__lfh)
                 oed.setMolTitleList([(ccId, mol, title)])
@@ -202,7 +206,7 @@ class OeDepictTests(unittest.TestCase):
                 oed.setGridOptions(rows=1, cols=1)
                 oed.prepare()
                 oed.write(imagePath)
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -220,7 +224,7 @@ class OeDepictTests(unittest.TestCase):
             oed.setGridOptions(rows=2, cols=2)
             oed.prepare()
             oed.write(os.path.join(self.__testoutput, "myIdListtest.png"))
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -237,7 +241,7 @@ class OeDepictTests(unittest.TestCase):
             oed.setGridOptions(rows=3, cols=3)
             oed.prepare()
             oed.write(os.path.join(self.__testoutput, "pathListtest.png"))
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -252,7 +256,7 @@ class OeDepictTests(unittest.TestCase):
             oed.setMolTitleList(oeMolTitleList)
             oed.prepare()
             oed.write(os.path.join(self.__testoutput, "mulitIdListtest.pdf"))
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -268,7 +272,7 @@ class OeDepictTests(unittest.TestCase):
             oed.setGridOptions(rows=2, cols=1)
             oed.prepare()
             oed.write(os.path.join(self.__testoutput, "multiPathListtest.pdf"))
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -283,7 +287,7 @@ class OeDepictTests(unittest.TestCase):
             oed.setDisplayOptions(labelAtomName=True, labelAtomCIPStereo=True, labelAtomIndex=False, labelBondIndex=False, bondDisplayWidth=0.5)
             oed.prepare()
             oed.write(os.path.join(self.__testoutput, "myErrortest.pdf"))
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -304,7 +308,7 @@ class OeDepictTests(unittest.TestCase):
             oed.setGridOptions(rows=1, cols=1)
             oed.prepare()
             oed.write(imagePath)
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -325,7 +329,7 @@ class OeDepictTests(unittest.TestCase):
             oed.setGridOptions(rows=1, cols=1)
             oed.prepare()
             oed.write(imagePath)
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -370,25 +374,24 @@ def suiteDepictSDF():
 
 
 if __name__ == '__main__':
-    if (True):
-        # unittest.main()
-        mySuite1 = suiteDepictMulti()
-        unittest.TextTestRunner(verbosity=2).run(mySuite1)
-        #
-        mySuite2 = suiteDepict()
-        unittest.TextTestRunner(verbosity=2).run(mySuite2)
-        #
-        mySuite3 = suiteDepictPrd()
-        unittest.TextTestRunner(verbosity=2).run(mySuite3)
+    # unittest.main()
+    mySuite1 = suiteDepictMulti()
+    unittest.TextTestRunner(verbosity=2).run(mySuite1)
+    #
+    mySuite2 = suiteDepict()
+    unittest.TextTestRunner(verbosity=2).run(mySuite2)
+    #
+    mySuite3 = suiteDepictPrd()
+    unittest.TextTestRunner(verbosity=2).run(mySuite3)
 
-        mySuite3 = suiteDepictCC()
-        unittest.TextTestRunner(verbosity=2).run(mySuite3)
+    mySuite3 = suiteDepictCC()
+    unittest.TextTestRunner(verbosity=2).run(mySuite3)
 
-        mySuite5 = suiteDepictSDF()
-        unittest.TextTestRunner(verbosity=2).run(mySuite5)
+    mySuite5 = suiteDepictSDF()
+    unittest.TextTestRunner(verbosity=2).run(mySuite5)
 
-        mySuite5 = suiteSmiles()
-        unittest.TextTestRunner(verbosity=2).run(mySuite5)
+    mySuite5 = suiteSmiles()
+    unittest.TextTestRunner(verbosity=2).run(mySuite5)
 
     mySuite3 = suiteDepictCC()
     unittest.TextTestRunner(verbosity=2).run(mySuite3)

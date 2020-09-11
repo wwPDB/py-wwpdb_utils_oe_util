@@ -22,8 +22,8 @@ import sys
 import traceback
 import unittest
 
-from oe_util.build.OeChemCompIoUtils import OeChemCompIoUtils
-from oe_util.oedepict.OeDepict import OeDepict
+from wwpdb.utils.oe_util.build.OeChemCompIoUtils import OeChemCompIoUtils
+from wwpdb.utils.oe_util.oedepict.OeDepict import OeDepict
 
 
 class OeDepictTests(unittest.TestCase):
@@ -46,8 +46,7 @@ class OeDepictTests(unittest.TestCase):
     def testDepictIdList(self):
         """Test case -  get, read, build OE molecule, and depict the molecule.
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OeDepictTests testDepictIDList\n")
         try:
             oeMolTitleList = self.__makeFromIdList(idList=self.__idList)
             if (self.__verbose):
@@ -62,15 +61,14 @@ class OeDepictTests(unittest.TestCase):
                 oed.setGridOptions(rows=1, cols=1)
                 oed.prepare()
                 oed.write(imagePath)
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
     def __makeFromIdList(self, idList):
         """ Create OE molecules from the input chemical component definition id list.
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OeDepictTests __makeFromIdList\n")
         try:
             oemList = []
             oeU = OeChemCompIoUtils(topCachePath=self.__topCachePath, verbose=self.__verbose, log=self.__lfh)
@@ -80,7 +78,7 @@ class OeDepictTests(unittest.TestCase):
                 self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
                 self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
             return zip(idList, oemList, idList)
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 

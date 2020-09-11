@@ -121,14 +121,14 @@ class PdbxBuildChemComp(PdbxStyleIoUtil):
             ofs.open(filePath)
             myMol = OEMol(oeMol)
             myMol.SetTitle(title)
-            self.__lfh.write("+%s.%s writing %s title %s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, filePath, myMol.GetTitle()))
+            self.__lfh.write("+PdbxBuildChemComp.writeOther writing %s title %s\n" % (filePath, myMol.GetTitle()))
             if constantMol:
                 OEWriteConstMolecule(ofs, myMol)
             else:
                 OEWriteMolecule(ofs, myMol)
             return True
         except Exception as e:
-            self.__lfh.write("+%s.%s FAILING %s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, str(e)))
+            self.__lfh.write("+PdbxBuildChemComp.writeOther FAILING %s\n" % str(e))
             traceback.print_exc(file=self.__lfh)
         return False
 
@@ -364,21 +364,3 @@ class PdbxBuildChemComp(PdbxStyleIoUtil):
                 bndRow['pdbx_ordinal'] = str(ii + 1)
                 rowL.append(bndRow)
         return rowL
-
-    def __getElementCounts(self):
-        """ Get the dictionary of element counts (eg. eD[iAtNo]=iCount).
-        """
-        if len(self.__eD) == 0:
-            # calculate from current oeMol
-            try:
-                self.__eD = {}
-                for atom in self.__oeMol.GetAtoms():
-                    atNo = atom.GetAtomicNum()
-                    if atNo not in self.__eD:
-                        self.__eD[atNo] = 1
-                    else:
-                        self.__eD[atNo] += 1
-            except:  # noqa: E722
-                pass
-
-        return self.__eD
