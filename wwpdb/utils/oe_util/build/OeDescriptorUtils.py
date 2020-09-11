@@ -32,7 +32,7 @@ class OeDescriptorUtils(object):
         pass
         #
 
-    def standardizeSmiles(self, smiles, type="ISOMERIC"): # pylint: disable=redefined-builtin
+    def standardizeSmiles(self, smiles, type="ISOMERIC"):  # pylint: disable=redefined-builtin
         """ Return a standardized SMILES (type) or None
         """
         smilesOut = None

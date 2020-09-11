@@ -81,4 +81,3 @@ def testSmilesConversionSuite():
 if __name__ == '__main__':
     mySuite = testSmilesConversionSuite()
     unittest.TextTestRunner(verbosity=2).run(mySuite)
-

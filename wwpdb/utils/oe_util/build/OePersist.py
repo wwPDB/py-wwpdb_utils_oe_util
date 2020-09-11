@@ -177,42 +177,48 @@ class OePersist(object):
 
             No locking is performed on the source file.
         """
-        with LockFile(dstDbFilePath, timeoutSeconds=self.__timeoutSeconds, retrySeconds=self.__retrySeconds, verbose=self.__verbose, log=self.__lfh) as lf:  # noqa: F841 pylint: disable=unused-variable
+        with LockFile(dstDbFilePath, timeoutSeconds=self.__timeoutSeconds, retrySeconds=self.__retrySeconds,
+                      verbose=self.__verbose, log=self.__lfh) as lf:  # noqa: F841 pylint: disable=unused-variable
             retVal = self.__moveStore(srcDbFilePath, dstDbFilePath)
         return retVal
 
     def store(self, dbFileName="my.db"):
         """ Store the current molecule list in persistent database.
         """
-        with LockFile(dbFileName, timeoutSeconds=self.__timeoutSeconds, retrySeconds=self.__retrySeconds, verbose=self.__verbose, log=self.__lfh) as lf:  # noqa: F841 pylint: disable=unused-variable
+        with LockFile(dbFileName, timeoutSeconds=self.__timeoutSeconds, retrySeconds=self.__retrySeconds,
+                      verbose=self.__verbose, log=self.__lfh) as lf:  # noqa: F841 pylint: disable=unused-variable
             retVal = self.__storeShelve(dbFileName)
         return retVal
 
     def recover(self, dbFileName="my.db"):
         """ Recover the stored state to the current in-memory molecule representation.
         """
-        with LockFile(dbFileName, timeoutSeconds=self.__timeoutSeconds, retrySeconds=self.__retrySeconds, verbose=self.__verbose, log=self.__lfh) as lf:  # noqa: F841 pylint: disable=unused-variable
+        with LockFile(dbFileName, timeoutSeconds=self.__timeoutSeconds, retrySeconds=self.__retrySeconds,
+                      verbose=self.__verbose, log=self.__lfh) as lf:  # noqa: F841 pylint: disable=unused-variable
             retVal = self.__recoverShelve(dbFileName)
         return retVal
 
     def getIndex(self, dbFileName="my.db"):
         """ Recover the index of the persistent store.
         """
-        with LockFile(dbFileName, timeoutSeconds=self.__timeoutSeconds, retrySeconds=self.__retrySeconds, verbose=self.__verbose, log=self.__lfh) as lf:  # noqa: F841  pylint: disable=unused-variable
+        with LockFile(dbFileName, timeoutSeconds=self.__timeoutSeconds, retrySeconds=self.__retrySeconds,
+                      verbose=self.__verbose, log=self.__lfh) as lf:  # noqa: F841  pylint: disable=unused-variable
             retVal = self.__indexShelve(dbFileName)
         return retVal
 
     def updateOneMolecule(self, inputMolecule, dbFileName="my.db"):
         """ Update or append a molecule to an existing store.
         """
-        with LockFile(dbFileName, timeoutSeconds=self.__timeoutSeconds, retrySeconds=self.__retrySeconds, verbose=self.__verbose, log=self.__lfh) as lf:  # noqa: F841 pylint: disable=unused-variable
+        with LockFile(dbFileName, timeoutSeconds=self.__timeoutSeconds, retrySeconds=self.__retrySeconds,
+                      verbose=self.__verbose, log=self.__lfh) as lf:  # noqa: F841 pylint: disable=unused-variable
             retVal = self.__updateMoleculeShelve(dbFileName=dbFileName, inputMolecule=inputMolecule)
         return retVal
 
     def updateMoleculeList(self, dbFileName="my.db", moleculeList=None):
         """ Update or append the contents of the input molecule list to an existing store.
         """
-        with LockFile(dbFileName, timeoutSeconds=self.__timeoutSeconds, retrySeconds=self.__retrySeconds, verbose=self.__verbose, log=self.__lfh) as lf:  # noqa: F841 pylint: disable=unused-variable
+        with LockFile(dbFileName, timeoutSeconds=self.__timeoutSeconds, retrySeconds=self.__retrySeconds,
+                      verbose=self.__verbose, log=self.__lfh) as lf:  # noqa: F841 pylint: disable=unused-variable
             retVal = self.__updateMoleculeListShelve(dbFileName=dbFileName, updateMoleculeList=moleculeList)
         return retVal
 
@@ -220,7 +226,8 @@ class OePersist(object):
     def fetchOneMolecule(self, dbFileName="my.db", moleculeName=None):
         """  Fetch a single object from a named molecule.  This is atomic operation with respect to the store.
         """
-        with LockFile(dbFileName, timeoutSeconds=self.__timeoutSeconds, retrySeconds=self.__retrySeconds, verbose=self.__verbose, log=self.__lfh) as lf:  # noqa: F841  pylint: disable=unused-variable
+        with LockFile(dbFileName, timeoutSeconds=self.__timeoutSeconds, retrySeconds=self.__retrySeconds,
+                      verbose=self.__verbose, log=self.__lfh) as lf:  # noqa: F841  pylint: disable=unused-variable
             retVal = self.__fetchOneMoleculeShelve(dbFileName, moleculeName)
         return retVal
 

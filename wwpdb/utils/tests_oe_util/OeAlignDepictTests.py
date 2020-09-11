@@ -170,7 +170,7 @@ class OeAlignDepictTests(unittest.TestCase):
         self.__lfh.write("\nStarting OeAlignDepictTests testSdfMCSAlignAtomMap\n")
         try:
             extPairTup = (os.path.join(self.__datadir, 'ATP.sdf'),
-                                 os.path.join(self.__datadir, 'ATP.cif'))
+                          os.path.join(self.__datadir, 'ATP.cif'))
             refPath = extPairTup[0]
             fitId = extPairTup[1]
             fitPath = extPairTup[1]

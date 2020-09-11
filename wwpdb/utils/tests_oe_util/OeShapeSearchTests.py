@@ -144,7 +144,7 @@ class OeShapeSearchtests(unittest.TestCase):
 
         endTime = time.time()
         self.__lfh.write("\nCompleted OeShapeSearchtests testCreateChemCompStore at %s (%d seconds)\n" % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                     endTime - startTime))
+                                                                                                          endTime - startTime))
 
     def testUpdateChemCompStoreWithPrd(self):
         """Test case -  update persistent store from a path list of PRD chemical component defintions.
