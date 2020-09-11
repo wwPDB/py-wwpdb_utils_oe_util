@@ -50,9 +50,11 @@ from wwpdb.utils.oe_util.build.OeChemCompIoUtils import OeChemCompIoUtils
 from wwpdb.utils.oe_util.oedepict.OeDepict import OeDepictBase
 
 
+# Note for pylint testing.  This base class references self._opt and self._param, but it is defined in a child class of a parallel class. We do not init it
 class OeDepictAlignBase(object):
     '''
     '''
+    # pylint: disable=no-member
 
     def __init__(self, verbose=True, log=sys.stderr):
         super(OeDepictAlignBase, self).__init__()
@@ -559,7 +561,7 @@ class OeDepictMCSAlignMulti(OeDepictAlignBase, OeDepictBase):
             aM = self.__alignListMultiWorker(imagePath=imagePath, layout='list')
         except TimeoutException:
             self.__lfh.write("+OeDepictMCSAlignMulti.alignOneWithListMulti timeout exception\n")
-            self.__lfh.write("+%s.%s no output written to %r\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, imagePath))
+            self.__lfh.write("+OeDepictMCSAlignMulti.alignOneWithListMulti no output written to %r\n" % imagePath)
         except Exception as e:
             self.__lfh.write("+OeDepictMCSAlignMulti.alignOneWithListMulti general exception here %s\n" % str(e))
             if (self.__verbose):
@@ -998,7 +1000,7 @@ class OeTestMCSAlign(OeDepictAlignBase):
             for mAt in match.GetAtoms():
                 atomMap.append((self._refId, mAt.pattern.GetName(), self._fitId, mAt.target.GetName()))
 
-        self.__lfh.write("+%s.%s nAtomsRef %d nAtomsFit %d match length %d \n" % (self.__class__.__name__, sys._getframe().f_code.co_name, nAtomsRef, nAtomsFit, len(atomMap)))
+        self.__lfh.write("+OeTestMCSAlign.doTestAlign nAtomsRef %d nAtomsFit %d match length %d \n" % (nAtomsRef, nAtomsFit, len(atomMap)))
 
         return atomMap
 
@@ -1025,7 +1027,7 @@ class OeTestMCSAlign(OeDepictAlignBase):
         #
         self._mcss.SetMaxMatches(self.__maxMatches)
         nlim = OEGetMCSExhaustiveSearchTruncationLimit()
-        self.__lfh.write("+%s.%s search limit %d max matches %d \n" % (self.__class__.__name__, sys._getframe().f_code.co_name, nlim, self.__maxMatches))
+        self.__lfh.write("+OeTestMCSAlign.doAlignWithAnal search limit %d max matches %d \n" % (nlim, self.__maxMatches))
         self._mcss.SetMCSFunc(OEMCSMaxAtoms())
         self._mcss.SetMinAtoms(int(minAtoms * self._minAtomMatchFraction))
         unique = False
@@ -1039,7 +1041,7 @@ class OeTestMCSAlign(OeDepictAlignBase):
                 atomMap.append((self._refId, mAt.pattern.GetName(), self._fitId, mAt.target.GetName()))
                 atomRefMatchD[mAt.pattern.GetName()] = mAt.target.GetName().strip()
                 atomFitMatchD[mAt.target.GetName()] = mAt.pattern.GetName().strip()
-        self.__lfh.write("+%s.%s nAtomsRef %d nAtomsFit %d match length %d \n" % (self.__class__.__name__, sys._getframe().f_code.co_name, nAtomsRef, nAtomsFit, len(atomMap)))
+        self.__lfh.write("+OeTestMCSAlign.doAlignWithAnal nAtomsRef %d nAtomsFit %d match length %d \n" % (nAtomsRef, nAtomsFit, len(atomMap)))
 
         #
         # Get unmapped reference and fit atoms -
