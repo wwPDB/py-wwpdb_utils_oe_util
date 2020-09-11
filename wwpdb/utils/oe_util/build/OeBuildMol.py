@@ -15,6 +15,7 @@
 #  5-May-2014 jdw add method build molecule from input SMILES importSmiles(smiles)
 #  6-Jun-2016 jdw general cleanup and platform selection parsing -  use native python on darwin
 #  8-Jun-2016 jdw add method to instantiate using an existing OEMOL and method to return ccId.
+# 31-Aug-2020 ZF  in importSmiles() function, added checking OEParseSmiles() return status
 #
 ##
 """
@@ -457,10 +458,12 @@ class OeBuildMol(object):
         """  Contruct a OEGraphMol using the input descriptor.
         """
         self.__oeMol = OEGraphMol()
-        OEParseSmiles(self.__oeMol, smiles)
-        OEFindRingAtomsAndBonds(self.__oeMol)
-        OEPerceiveChiral(self.__oeMol)
-        return True
+        if OEParseSmiles(self.__oeMol, smiles):
+            OEFindRingAtomsAndBonds(self.__oeMol)
+            OEPerceiveChiral(self.__oeMol)
+            return True
+        #
+        return False
 
     def getGraphMolSuppressH(self):
         """ Return the current constructed OE molecule with hydrogens suppressed.
