@@ -82,9 +82,9 @@ class OeDepictAlignBase(object):
         self._mcss = None
         self._miter = None
         #
-        # For a class that imports both -- this is local - but need other?
-        #self._opts = None
-        #self._params = None
+        # We cannot define these here - class heirarchy might be init at higher level.
+        # self._opts = None
+        # self._params = None
 
     def setRefMol(self, oeMol, ccId, title=None, imagePath=None):
         try:
@@ -217,7 +217,7 @@ class OeDepictAlignBase(object):
                 traceback.print_exc(file=self.__lfh)
         return False
 
-    def setFitPath(self, fitId, ccPath, title=None, imagePath=None, suppressHydrogens=False):  #  pylint: disable=unused-argument
+    def setFitPath(self, fitId, ccPath, title=None, imagePath=None, suppressHydrogens=False):  # pylint: disable=unused-argument
         """Set the test/fit molecule for MCSS comparison using the input file path.
 
             A title and imagePath are optionally provided otherwise the component Id will be used for title and
@@ -638,8 +638,8 @@ class OeDepictMCSAlignMulti(OeDepictAlignBase, OeDepictBase):
             self._opts.SetScale(min(refscale, fitscale))
 
             unique = True
-            self.__lfh.write("+OeDepictMCSAlignMulti.__alignListMultiWorker refId %s fitId %s nAtomsRef %d nAtomsFit %d mcssMinAtoms %d\n" % (
-                                                                                                       refId, fitId, nAtomsRef, nAtomsFit, mcssMinAtoms))
+            self.__lfh.write("+OeDepictMCSAlignMulti.__alignListMultiWorker refId %s fitId %s nAtomsRef %d nAtomsFit %d mcssMinAtoms %d\n" %
+                             (refId, fitId, nAtomsRef, nAtomsFit, mcssMinAtoms))
             self._miter = self._mcss.Match(fitMol, unique)
 
             self.__lfh.write("+OeDepictMCSAlignMulti.__alignListMultiWorker mcss match completed for refId %s fitId %s\n" % (refId, fitId))
