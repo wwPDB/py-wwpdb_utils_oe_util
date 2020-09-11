@@ -22,7 +22,7 @@ import time
 import unittest
 
 try:
-    from openeye.oechem import OEFloatArray  # noqa: F401
+    from openeye.oechem import OEFloatArray  # noqa: F401 pylint: disable=unused-import
     skiptests = False
 except ImportError:
     skiptests = True
@@ -39,7 +39,6 @@ logger = logging.getLogger()
 class OeDescriptorUtilsTests(unittest.TestCase):
 
     def setUp(self):
-        pass
         #
         self.__gtpSmilesList = ["O=P(O)(O)OP(=O)(O)OP(=O)(O)OCC3OC(n2cnc1c2N=C(N)NC1=O)C(O)C3O",
                                 "NC1=Nc2n(cnc2C(=O)N1)[C@@H]3O[C@H](CO[P@@](O)(=O)O[P@@](O)(=O)O[P](O)(O)=O)[C@@H](O)[C@H]3O",
@@ -62,15 +61,15 @@ class OeDescriptorUtilsTests(unittest.TestCase):
             for smiles in self.__gtpSmilesList:
                 smiIso = oedu.standardizeSmiles(smiles, type="ISOMERIC")
                 smiCan = oedu.standardizeSmiles(smiles, type="CANNONICAL")
-                logger.info("SMILES (ISO) {0}".format(smiIso))
-                logger.info("SMILES (CAN) {0}".format(smiCan))
+                logger.info("SMILES (ISO) %s", smiIso)
+                logger.info("SMILES (CAN) %s", smiCan)
 
         except Exception as e:
-            logger.exception("Error '{0}' occured. Arguments {1}.".format(e.message, e.args))
+            logger.exception("Error '%s' occured. Arguments %s.", str(e), e.args)
             self.fail()
         #
         endTime = time.time()
-        logger.info("Completed at %s (%.2f seconds)" % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
+        logger.info("Completed at %s (%.2f seconds)", time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime)
 
 
 def testSmilesConversionSuite():
@@ -80,9 +79,6 @@ def testSmilesConversionSuite():
 
 
 if __name__ == '__main__':
-    #
-    if (True):
-        mySuite = testSmilesConversionSuite()
-        unittest.TextTestRunner(verbosity=2).run(mySuite)
+    mySuite = testSmilesConversionSuite()
+    unittest.TextTestRunner(verbosity=2).run(mySuite)
 
-    #

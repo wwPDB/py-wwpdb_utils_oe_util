@@ -25,7 +25,7 @@ import traceback
 import os
 
 try:
-    from openeye.oechem import OEFloatArray  # noqa: F401
+    from openeye.oechem import OEFloatArray  # noqa: F401 pylint: disable=unused-import
     skiptests = False
 except ImportError:
     skiptests = True
@@ -69,8 +69,7 @@ class PdbxBuildChemCompTests(unittest.TestCase):
     def testBuildFromFiles(self):
         """Test case -  create OE molecules from the input chem comp definition path list.
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting PdbxBuildChemCompTests testBuildFromFiles\n")
         try:
             oemList = []
 
@@ -83,15 +82,14 @@ class PdbxBuildChemCompTests(unittest.TestCase):
                 ccB = PdbxBuildChemComp(verbose=self.__verbose, log=self.__lfh)
                 ccB.setOeMol(oem.getMol(), ccId, name=ccId)
                 ccB.write(filePath=fp)
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
     def testBuildFromIds(self):
         """Test case -  create OE molecules from the input chem comp definition path list.
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting PdbxBuildChemCompTests testBuildFroIds\n")
         try:
             oemList = []
             oeU = OeChemCompIoUtils(topCachePath=self.__topCachePath, verbose=self.__verbose, log=self.__lfh)
@@ -103,7 +101,7 @@ class PdbxBuildChemCompTests(unittest.TestCase):
                 ccB = PdbxBuildChemComp(verbose=self.__verbose, log=self.__lfh)
                 ccB.setOeMol(oem.getMol(), ccId, name=ccId)
                 ccB.write(filePath=fp)
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -116,7 +114,5 @@ def suiteBuildTests():
 
 
 if __name__ == '__main__':
-    #
-    if True:
-        mySuite = suiteBuildTests()
-        unittest.TextTestRunner(verbosity=2).run(mySuite)
+    mySuite = suiteBuildTests()
+    unittest.TextTestRunner(verbosity=2).run(mySuite)

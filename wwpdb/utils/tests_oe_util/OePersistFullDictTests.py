@@ -31,7 +31,7 @@ import os
 import os.path
 
 try:
-    from openeye.oechem import OEFloatArray  # noqa: F401
+    from openeye.oechem import OEFloatArray  # noqa: F401 pylint: disable=unused-import
     skiptests = False
 except ImportError:
     skiptests = True
@@ -92,12 +92,14 @@ class OePersistFullDictTests(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def getPathList(self, topPath, pattern='*', excludeDirs=[], recurse=True):
+    def getPathList(self, topPath, pattern='*', excludeDirs=None, recurse=True):
         """ Return a list of file paths in the input topPath which satisfy the input search criteria.
 
             This version does not follow symbolic links.
         """
         pathList = []
+        if excludeDirs is None:
+            excludeDirs = []
         #
         try:
             names = os.listdir(topPath)
@@ -129,9 +131,8 @@ class OePersistFullDictTests(unittest.TestCase):
                         Extract the path list by searching the file system of the CVS repository
         """
         startTime = time.time()
-        self.__lfh.write("\nStarting %s %s at %s\n" % (self.__class__.__name__,
-                                                       sys._getframe().f_code.co_name,
-                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
+        self.__lfh.write("\nStarting OePersistFullDictTests testCreateChemCompStore at %s\n" % (time.strftime("%Y %m %d %H:%M:%S",
+                                                                                                              time.localtime())))
         try:
             ccPathList = self.getPathList(topPath=self.__pathChemCompCVS, pattern="*.cif", excludeDirs=['CVS', 'REMOVED', 'FULL'])
             if (self.__verbose):
@@ -139,15 +140,13 @@ class OePersistFullDictTests(unittest.TestCase):
             dUtil = PdbxChemCompDictUtil(verbose=self.__verbose, log=self.__lfh)
             ret = dUtil.makeStoreFromPathList(pathList=ccPathList, storePath=self.__persistStorePathCC)
             self.assertTrue(ret, "makeStoreFromPathList failed")
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
         endTime = time.time()
-        self.__lfh.write("\nCompleted %s %s at %s (%d seconds)\n" % (self.__class__.__name__,
-                                                                     sys._getframe().f_code.co_name,
-                                                                     time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                     endTime - startTime))
+        self.__lfh.write("\nCompleted OePersistFullDictTests testCreateChemCompStore at %s (%d seconds)\n" % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
+                                                                                                              endTime - startTime))
 
     def testUpdateChemCompStoreWithPrd(self):
         """Test case -  update persistent store from a path list of PRD chemical component defintions.
@@ -155,9 +154,8 @@ class OePersistFullDictTests(unittest.TestCase):
                         Extract the path list from the file system of the PRD CVS repository.
         """
         startTime = time.time()
-        self.__lfh.write("\nStarting %s %s at %s\n" % (self.__class__.__name__,
-                                                       sys._getframe().f_code.co_name,
-                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
+        self.__lfh.write("\nStarting OePersistFullDictTests testUpdateChemCompStoreWithPrd at %s\n" % (time.strftime("%Y %m %d %H:%M:%S",
+                                                                                                                     time.localtime())))
         try:
             ccPathList = self.getPathList(topPath=self.__pathPrdChemCompCVS, pattern="*.cif", excludeDirs=['CVS', 'REMOVED', 'FULL'])
             if (self.__verbose):
@@ -166,48 +164,42 @@ class OePersistFullDictTests(unittest.TestCase):
             dUtil = PdbxChemCompDictUtil(verbose=self.__verbose, log=self.__lfh)
             dUtil.updateStoreByFile(pathList=ccPathList, storePath=self.__persistStorePathCC)
             #
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
         endTime = time.time()
-        self.__lfh.write("\nCompleted %s %s at %s (%d seconds)\n" % (self.__class__.__name__,
-                                                                     sys._getframe().f_code.co_name,
-                                                                     time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                     endTime - startTime))
+        self.__lfh.write("\nCompleted OePersistFullDictTests testUpdateChemCompStoreWithPrd at %s (%d seconds)\n" % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
+                                                                                                                     endTime - startTime))
 
     def testCreateChemCompIndex(self):
         """Test case -  create search index from chemical component persistent store
         """
         startTime = time.time()
-        self.__lfh.write("\nStarting %s %s at %s\n" % (self.__class__.__name__,
-                                                       sys._getframe().f_code.co_name,
-                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
+        self.__lfh.write("\nStarting OePersistFullDictTests testCreateChemCompIndex at %s\n" % (time.strftime("%Y %m %d %H:%M:%S",
+                                                                                                              time.localtime())))
         try:
             dIndx = PdbxChemCompDictIndex(verbose=self.__verbose, log=self.__lfh)
             ret = dIndx.makeIndex(storePath=self.__persistStorePathCC, indexPath=self.__indexPathCC)
             self.assertTrue(len(ret) != 0, "Index failed")
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
         endTime = time.time()
-        self.__lfh.write("\nCompleted %s %s at %s (%d seconds)\n" % (self.__class__.__name__,
-                                                                     sys._getframe().f_code.co_name,
-                                                                     time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                     endTime - startTime))
+        self.__lfh.write("\nCompleted OePersistFullDictTests testCreateChemCompIndex at %s (%d seconds)\n" % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
+                                                                                                              endTime - startTime))
 
     def testCreateStoreOE(self):
         """Test case -  build persistent store of OE molecules using the contents of the persistent store
                         of chemical component defintions.
         """
         startTime = time.time()
-        self.__lfh.write("\nStarting %s %s at %s\n" % (self.__class__.__name__,
-                                                       sys._getframe().f_code.co_name,
-                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
+        self.__lfh.write("\nStarting OePersistFullDictTests testCreateStoreOE at %s\n" % (time.strftime("%Y %m %d %H:%M:%S",
+                                                                                                        time.localtime())))
         try:
             myPersist = PdbxPersist(self.__verbose, self.__lfh)
-            indexD = myPersist.getIndex(dbFileName=self.__persistStorePathCC)  # noqa: F841
+            indexD = myPersist.getIndex(dbFileName=self.__persistStorePathCC)  # noqa: F841 pylint: disable=unused-variable
             myPersist.open(dbFileName=self.__persistStorePathCC)
             containerNameList = myPersist.getStoreContainerIndex()
 
@@ -240,23 +232,20 @@ class OePersistFullDictTests(unittest.TestCase):
             if (self.__debug):
                 self.__lfh.write("OePersistTests(testCreateStore) molecule list %r\n" % mL)
 
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
         endTime = time.time()
-        self.__lfh.write("\nCompleted %s %s at %s (%d seconds)\n" % (self.__class__.__name__,
-                                                                     sys._getframe().f_code.co_name,
-                                                                     time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                     endTime - startTime))
+        self.__lfh.write("\nCompleted OePersistFullDictTests testCreateStoreOE at %s (%d seconds)\n" % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
+                                                                                                        endTime - startTime))
 
     def testFetchAll(self):
         """Test case -  fetch all of the molecules in an 'open' persistent store
         """
         startTime = time.time()
-        self.__lfh.write("\nStarting %s %s at %s\n" % (self.__class__.__name__,
-                                                       sys._getframe().f_code.co_name,
-                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
+        self.__lfh.write("\nStarting OePersistFullDictTests testFetchAll at %s\n" % (time.strftime("%Y %m %d %H:%M:%S",
+                                                                                                   time.localtime())))
         try:
             myPersist = OePersist(self.__verbose, self.__lfh)
             myPersist.open(dbFileName=self.__storePath)
@@ -268,7 +257,7 @@ class OePersistFullDictTests(unittest.TestCase):
                 # name = molD['name']
                 ok = oem.deserialize(molD['oeb'])
                 if not ok:
-                    self.__lfh.write("Deserialized status %s = %d\n" % (ccId, ok))
+                    self.__lfh.write("Deserialized status %s = %s\n" % (ccId, ok))
                     continue
                 if (self.__debug):
                     self.__lfh.write("Deserialized SMILES (canonical) = %s\n" % oem.getCanSMILES())
@@ -276,24 +265,21 @@ class OePersistFullDictTests(unittest.TestCase):
 
             myPersist.close()
 
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
         endTime = time.time()
-        self.__lfh.write("\nCompleted %s %s at %s (%d seconds)\n" % (self.__class__.__name__,
-                                                                     sys._getframe().f_code.co_name,
-                                                                     time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                     endTime - startTime))
+        self.__lfh.write("\nCompleted OePersistFullDictTests testFetchAll at %s (%d seconds)\n" % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
+                                                                                                   endTime - startTime))
 
     def testFetchOne(self):
         """Test case -  fetch all of the molecules in the persistent store one by one.  Each fetch reopens
            the store.
         """
         startTime = time.time()
-        self.__lfh.write("\nStarting %s %s at %s\n" % (self.__class__.__name__,
-                                                       sys._getframe().f_code.co_name,
-                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
+        self.__lfh.write("\nStarting OePersistFullDictTests testFetchOne at %s\n" % (time.strftime("%Y %m %d %H:%M:%S",
+                                                                                                   time.localtime())))
         try:
             myPersist = OePersist(self.__verbose, self.__lfh)
             moleculeNameList = myPersist.getIndex(dbFileName=self.__storePath)
@@ -304,71 +290,20 @@ class OePersistFullDictTests(unittest.TestCase):
                 # name = molD['name']
                 ok = oem.deserialize(molD['oeb'])
                 if not ok:
-                    self.__lfh.write("Deserialized status %s = %d\n" % (ccId, ok))
+                    self.__lfh.write("Deserialized status %s = %s\n" % (ccId, ok))
                     continue
 
                 if (self.__debug):
                     self.__lfh.write("Deserialized SMILES (canonical) = %s\n" % oem.getCanSMILES())
                     self.__lfh.write("Deserialized SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
 
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
         endTime = time.time()
-        self.__lfh.write("\nCompleted %s %s at %s (%d seconds)\n" % (self.__class__.__name__,
-                                                                     sys._getframe().f_code.co_name,
-                                                                     time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                     endTime - startTime))
-
-    @unittest.skip("Code no longer works")
-    def testBoundedFormulaSearch(self):
-        """Test case -  for the set of PRD tests cases, perform a bounded formula search on the index file
-           and then extract the candidate matching molecules from the OE persistent store.
-
-           This approximates a typical search scenario.
-
-        """
-        startTime = time.time()
-        self.__lfh.write("\nStarting %s %s at %s\n" % (self.__class__.__name__,
-                                                       sys._getframe().f_code.co_name,
-                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
-        try:
-            myPersist = OePersist(self.__verbose, self.__lfh)
-            oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
-            #
-            dIndx = PdbxChemCompDictIndex(verbose=self.__verbose, log=self.__lfh)
-            ccIdx = dIndx.readIndex(indexPath=self.__indexPathCC)
-            self.__lfh.write("Index %s length = %d\n" % (self.__indexPathCC, len(ccIdx)))
-            #
-            for prdId in self.__prdIdList:
-                if prdId in ccIdx:
-                    d = ccIdx[prdId]
-                    eCounts = d['typeCounts']
-                    mL = dIndx.searchBoundedFormula(elementCounts=eCounts, indexPath=self.__indexPathCC)
-                    self.__lfh.write("Formula filter count for %s = %d\n" % (prdId, len(mL)))
-                    for ccId in mL:
-                        molD = myPersist.fetchOneMolecule(dbFileName=self.__storePath, moleculeName=ccId)
-                        # name = molD['name']
-                        ok = oem.deserialize(molD['oeb'])
-                        if not ok:
-                            self.__lfh.write("Deserialized status %s = %d\n" % (ccId, ok))
-                            continue
-                        if (self.__debug):
-                            self.__lfh.write("Deserialized SMILES (canonical) = %s\n" % oem.getCanSMILES())
-                            self.__lfh.write("Deserialized SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
-                else:
-                    self.__lfh.write("+WARNING - Index %s missing id %s \n" % (self.__indexPathCC, prdId))
-
-        except:  # noqa: E722
-            traceback.print_exc(file=self.__lfh)
-            self.fail()
-
-        endTime = time.time()
-        self.__lfh.write("\nCompleted %s %s at %s (%d seconds)\n" % (self.__class__.__name__,
-                                                                     sys._getframe().f_code.co_name,
-                                                                     time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                     endTime - startTime))
+        self.__lfh.write("\nCompleted OePersistFullDictTests testFetchOne at %s (%d seconds)\n" % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
+                                                                                                   endTime - startTime))
 
 
 def suiteCreateStoreCC():

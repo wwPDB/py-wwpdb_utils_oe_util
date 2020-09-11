@@ -26,7 +26,7 @@ import platform
 import os
 
 try:
-    from openeye.oechem import OEFloatArray  # noqa: F401
+    from openeye.oechem import OEFloatArray  # noqa: F401 pylint: disable=unused-import
     skiptests = False
 except ImportError:
     skiptests = True
@@ -59,8 +59,7 @@ class OeChemCompIoUtilsTests(unittest.TestCase):
     def testMakeFromFiles(self):
         """Test case -  create OE molecules from the input chem comp definition path list.
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OeChemCompIoUtilsTests testMakeFromFiles\n")
         try:
             oemList = []
             oeU = OeChemCompIoUtils(topCachePath=self.__topCachePath, verbose=self.__verbose, log=self.__lfh)
@@ -69,15 +68,14 @@ class OeChemCompIoUtilsTests(unittest.TestCase):
                 self.__lfh.write("Title              = %s\n" % oem.getTitle())
                 self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
                 self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
     def testMakeFromIds(self):
         """Test case -  create OE molecules from the input chem comp definition path list.
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OeChemCompIoUtilsTests testMakeFromIds\n")
         try:
             oemList = []
             oeU = OeChemCompIoUtils(topCachePath=self.__topCachePath, verbose=self.__verbose, log=self.__lfh)
@@ -86,7 +84,7 @@ class OeChemCompIoUtilsTests(unittest.TestCase):
                 self.__lfh.write("Title              = %s\n" % oem.getTitle())
                 self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
                 self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 

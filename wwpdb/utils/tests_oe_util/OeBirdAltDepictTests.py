@@ -20,12 +20,13 @@ __version__ = "V0.01"
 import sys
 import unittest
 import traceback
+import platform
 import time
 import os
 import os.path
 
 try:
-    from openeye.oechem import OEFloatArray  # noqa: F401
+    from openeye.oechem import OEFloatArray  # noqa: F401 pylint: disable=unused-import
     skiptests = False
 except ImportError:
     skiptests = True
@@ -44,6 +45,8 @@ class OeBirdDepictTests(unittest.TestCase):
         self.__lfh = sys.stderr
         self.__verbose = True
         self.__altFamilyIndexPath = os.path.join('examples', 'family-members-alternate.dat')
+        self.__here = os.path.abspath(os.path.dirname(__file__))
+        self.__testoutput = os.path.join(self.__here, 'test-output', platform.python_version())
 
     def tearDown(self):
         pass
@@ -53,8 +56,7 @@ class OeBirdDepictTests(unittest.TestCase):
 
            Returns -  a dictionary by family_id with valid id correpsondences.
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OeBirdDepictTests __testBuildBirdIndex\n")
         fD = {}
         afD = {}
         pD = {}
@@ -65,7 +67,7 @@ class OeBirdDepictTests(unittest.TestCase):
             familyIdL = bI.getFamilyList()
             for familyId in familyIdL:
                 prdIdList = bI.getPrdIdList(familyId)
-                prdPathList = bI.getPrdPathList(familyId)  # noqa: F841
+                prdPathList = bI.getPrdPathList(familyId)  # noqa: F841 pylint: disable=unused-variable
                 for prdId in prdIdList:
                     ccId = bI.getChemCompId(prdId)
                     ccPath = bI.getChemCompPath(prdId)
@@ -85,7 +87,7 @@ class OeBirdDepictTests(unittest.TestCase):
                 for pId in pIdList:
                     afD[fId].append((fId, pId, pD[pId][0], pD[pId][1]))
             ifh.close()
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -94,7 +96,7 @@ class OeBirdDepictTests(unittest.TestCase):
     def testFamilyDepiction(self):
         """Test case -  aligned family members --
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OeBirdDepictTests testFamilyDepiction\n")
         try:
             fD = self.__testBuildBirdIndex()
             famList = sorted(fD.keys())
@@ -103,7 +105,7 @@ class OeBirdDepictTests(unittest.TestCase):
                 if (len(fmList) < 1):
                     continue
 
-                (familyId, refPrdId, refCcId, refCcPath) = fmList[0]
+                (familyId, refPrdId, _refCcId, refCcPath) = fmList[0]
                 imageFileName = familyId + "-members.pdf"
                 if os.access(imageFileName, os.F_OK):
                     continue
@@ -117,7 +119,7 @@ class OeBirdDepictTests(unittest.TestCase):
 
                     oed.setRefPath(refId=refPrdId, ccPath=refCcPath, title=refPrdId, suppressHydrogens=True)
                     for fm in fmList[1:]:
-                        (familyId, prdId, ccId, ccPath) = fm
+                        (familyId, prdId, _ccId, ccPath) = fm
                         oed.addFitPath(fitId=prdId, ccPath=ccPath, title=prdId, suppressHydrogens=True)
 
                     aML = oed.alignOneWithListMulti(imagePath=imageFileName)
@@ -135,14 +137,14 @@ class OeBirdDepictTests(unittest.TestCase):
                                           bondDisplayWidth=0.5)
                     oed.prepare()
                     oed.write(imageFileName)
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
     def testFamilyDepictionHTMLIndex(self):
         """Test case -  aligned family members --
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OeBirdDepictTests testFamilyDepictionHTMLIndex\n")
         tS = time.strftime("%Y %m %d %H:%M:%S", time.localtime())
         ofh = open("index.html", 'w')
         ofh.write("<html>\n")
@@ -156,7 +158,7 @@ class OeBirdDepictTests(unittest.TestCase):
                 fmList = fD[fId]
                 if (len(fmList) < 1):
                     continue
-                (familyId, refPrdId, refCcId, refCcPath) = fmList[0]
+                (familyId, _refPrdId, _refCcId, _refCcPath) = fmList[0]
                 imageFileName = familyId + "-members.pdf"
                 if (os.access(imageFileName, os.R_OK)):
                     ofh.write('<li> <a href="%s">%s</a> with %2d members.</li>\n' % (imageFileName, familyId, len(fmList)))
@@ -164,7 +166,7 @@ class OeBirdDepictTests(unittest.TestCase):
             ofh.write("</body>\n")
             ofh.write("</html>\n")
 
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -182,9 +184,8 @@ def suiteHTMLIndexFamily():
 
 
 if __name__ == '__main__':
-    if (True):
-        mySuite1 = suiteDepictFamily()
-        unittest.TextTestRunner(verbosity=2).run(mySuite1)
-    if (True):
-        mySuite1 = suiteHTMLIndexFamily()
-        unittest.TextTestRunner(verbosity=2).run(mySuite1)
+    mySuite1 = suiteDepictFamily()
+    unittest.TextTestRunner(verbosity=2).run(mySuite1)
+
+    mySuite1 = suiteHTMLIndexFamily()
+    unittest.TextTestRunner(verbosity=2).run(mySuite1)

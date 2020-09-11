@@ -24,7 +24,7 @@ import unittest
 import traceback
 
 try:
-    from openeye.oechem import OEFloatArray  # noqa: F401
+    from openeye.oechem import OEFloatArray  # noqa: F401 pylint: disable=unused-import
     skiptests = False
 except ImportError:
     skiptests = True
@@ -54,7 +54,7 @@ class OeBuildModelMolTests(unittest.TestCase):
     def testBuildFromModel(self):
         """Test case -  build OE molecule from model instance
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OeBuildModelMolTests testBuildFromModel\n")
         try:
             oem = OeBuildModelMol(verbose=self.__verbose, log=self.__lfh)
             modelId = oem.setChemCompModelPath(self.__modelFilePath)
@@ -78,7 +78,7 @@ class OeBuildModelMolTests(unittest.TestCase):
                         self.__lfh.write("+testBuildFromModel. SMILES MISMATCH for %s\n" % modelId)
                         self.__lfh.write("+testBuildFromModel. SMILES (model)               %s\n" % sm)
                         self.__lfh.write("+testBuildFromModel. SMILES (reconstructed model) %s\n" % oem.getIsoSMILES())
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -87,7 +87,7 @@ class OeBuildModelMolTests(unittest.TestCase):
            then serialize and deserialize this molecule.
 
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OeBuildModelMolTests testSerialize3D\n")
         try:
             oem = OeBuildModelMol(verbose=self.__verbose, log=self.__lfh)
             for pth in self.__modelFilePathList:
@@ -106,7 +106,7 @@ class OeBuildModelMolTests(unittest.TestCase):
                 self.__lfh.write("Deserialized status = %d\n" % ok)
                 self.__lfh.write("Deserialized SMILES (canonical) = %s\n" % oemD.getCanSMILES())
                 self.__lfh.write("Deserialized SMILES (isomeric)  = %s\n" % oemD.getIsoSMILES())
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -119,6 +119,5 @@ def suiteOeModelBuild():
 
 
 if __name__ == '__main__':
-    if (True):
-        mySuite = suiteOeModelBuild()
-        unittest.TextTestRunner(verbosity=2).run(mySuite)
+    mySuite = suiteOeModelBuild()
+    unittest.TextTestRunner(verbosity=2).run(mySuite)

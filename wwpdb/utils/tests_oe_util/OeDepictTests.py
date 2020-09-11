@@ -86,8 +86,7 @@ class OeDepictTests(unittest.TestCase):
     def __testMakeFromFiles(self, pathList=None):
         """Test case -  create OE molecules from the input chem comp definition path list.
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OeDepictTests __testMakeFromFiles\n")
         if pathList is None:
             pathList = []
         try:
@@ -109,8 +108,7 @@ class OeDepictTests(unittest.TestCase):
     def __testMakeFromIds(self, idList):
         """Test case -  create OE molecules from the input chem comp definition id list.
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OeDepictTests __testMakeFromIds\n")
         try:
             oemList = []
             oeU = OeChemCompIoUtils(topCachePath=self.__pathChemCompCVS, verbose=self.__verbose, log=self.__lfh)
@@ -160,8 +158,7 @@ class OeDepictTests(unittest.TestCase):
     def testDepictCCIdList(self):
         """Test case -  get, read, build OE molecule, and depict the molecule.
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OeDepictTests testDepicCCIdList\n")
         try:
             # idList = self.__getIdsFromFile('IDLIST.list')
             idList = self.__idList
@@ -188,8 +185,7 @@ class OeDepictTests(unittest.TestCase):
     def testDepictPrdCCPathList(self):
         """Test case -  get, read, build OE molecule, and depict the molecule.
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OeDepictTests testDepictPrdCCPathList\n")
         try:
             ccPathList = self.__getPathList(topPath=self.__pathPrdChemCompCVS, pattern="*.cif", excludeDirs=['CVS', 'REMOVED', 'FULL'])
             oeMolTitleZip = self.__testMakeFromFiles(pathList=ccPathList)
@@ -213,8 +209,7 @@ class OeDepictTests(unittest.TestCase):
     def testDepictIdList(self):
         """Test case -  get, read, build OE molecule, and depict the molecule in a single image.
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OeDepictTests testDepictIdList\n")
         try:
             oeMolTitleList = self.__testMakeFromIds(self.__idList)
             oed = OeDepict(verbose=self.__verbose, log=self.__lfh)
@@ -231,8 +226,7 @@ class OeDepictTests(unittest.TestCase):
     def testDepictPathList(self):
         """Test case -  get, read, build OE molecule, and depict the molecule.
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OeDepictTests testDepictPathList\n")
         try:
             oeMolTitleList = self.__testMakeFromFiles(self.__pathList)
             oed = OeDepict(verbose=self.__verbose, log=self.__lfh)
@@ -248,8 +242,7 @@ class OeDepictTests(unittest.TestCase):
     def testDepictIdListMulti(self):
         """Test case -  get, read, build OE molecule, and depict the molecule.
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OeDepictTests testDepictIdListMulti\n")
         try:
             oeMolTitleList = self.__testMakeFromIds(self.__idList)
             oed = OeDepictMultiPage(verbose=self.__verbose, log=self.__lfh)
@@ -263,7 +256,7 @@ class OeDepictTests(unittest.TestCase):
     def testDepictPathListMulti(self):
         """Test case -  get, read, build OE molecule, and depict the molecule.
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OeDepictTests testDepictPathListMulti\n")
         try:
             oeMolTitleList = self.__testMakeFromFiles(self.__pathList)
             oed = OeDepictMultiPage(verbose=self.__verbose, log=self.__lfh)
@@ -279,7 +272,7 @@ class OeDepictTests(unittest.TestCase):
     def testDepictWithErrorsMulti(self):
         """Test case -  depicting missing bits --
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OeDepictTests testDepictWithErrorsMulti\n")
         try:
             oeMolTitleList = self.__testMakeFromFiles(self.__pathList2)
             oed = OeDepictMultiPage(verbose=self.__verbose, log=self.__lfh)
@@ -294,8 +287,7 @@ class OeDepictTests(unittest.TestCase):
     def testDepictOneSDF(self):
         """Test case -  get, read, build OE molecule from SDF file, and depict the molecule.
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OeDepictTests testDepictOneSDF\n")
         try:
             oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
             if oem.importFile(self.__sdfFilePath, type='3D'):
@@ -315,8 +307,7 @@ class OeDepictTests(unittest.TestCase):
     def testDepictSMILES(self):
         """Test case -  create depiction from SMILES descriptor.
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OeDepictTests testDepictSMILES\n")
         try:
             imagePath = os.path.join(self.__testoutput, "benzene.svg")
             oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)

@@ -27,7 +27,7 @@ import traceback
 import time
 
 try:
-    from openeye.oechem import OEFloatArray  # noqa: F401
+    from openeye.oechem import OEFloatArray  # noqa: F401 pylint: disable=unused-import
     skiptests = False
 except ImportError:
     skiptests = True
@@ -61,8 +61,7 @@ class OePersistTests(unittest.TestCase):
     def testCreateStore(self):
         """Test case -  build store from a selection of serialized OE molecules.
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OePersistTests testCreateStore\n")
         try:
             molList = []
             myPersist = OePersist(self.__verbose, self.__lfh)
@@ -90,7 +89,7 @@ class OePersistTests(unittest.TestCase):
             mL = myPersist.getIndex(dbFileName=self.__storePath)
             self.__lfh.write("OePersistTests(testCreateStore) molecule list %r\n" % mL)
 
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -98,9 +97,7 @@ class OePersistTests(unittest.TestCase):
         """Test case -  fetch all of the molecules in the persistent store
         """
         startTime = time.time()
-        self.__lfh.write("\nStarting %s %s at %s\n" % (self.__class__.__name__,
-                                                       sys._getframe().f_code.co_name,
-                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
+        self.__lfh.write("\nStarting OePersistTests testFetchAll at %s\n" % time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
         try:
             myPersist = OePersist(self.__verbose, self.__lfh)
             myPersist.open(dbFileName=self.__storePath)
@@ -117,23 +114,19 @@ class OePersistTests(unittest.TestCase):
 
             myPersist.close()
 
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
         endTime = time.time()
-        self.__lfh.write("\nCompleted %s %s at %s (%d seconds)\n" % (self.__class__.__name__,
-                                                                     sys._getframe().f_code.co_name,
-                                                                     time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                     endTime - startTime))
+        self.__lfh.write("\nCompleted OePersistTests testFetchAll at %s (%d seconds)\n" % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
+                                                                                           endTime - startTime))
 
     def testFetchOne(self):
         """Test case -  fetch all of the molecules in the persistent store one by one
         """
         startTime = time.time()
-        self.__lfh.write("\nStarting %s %s at %s\n" % (self.__class__.__name__,
-                                                       sys._getframe().f_code.co_name,
-                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
+        self.__lfh.write("\nStarting OePersistTests testFetchOne at %s\n" % time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
         try:
             myPersist = OePersist(self.__verbose, self.__lfh)
             moleculeNameList = myPersist.getIndex(dbFileName=self.__storePath)
@@ -149,21 +142,18 @@ class OePersistTests(unittest.TestCase):
 
             myPersist.close()
 
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
         endTime = time.time()
-        self.__lfh.write("\nCompleted %s %s at %s (%d seconds)\n" % (self.__class__.__name__,
-                                                                     sys._getframe().f_code.co_name,
-                                                                     time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                     endTime - startTime))
+        self.__lfh.write("\nCompleted OePersistTests testFetchOne at %s (%d seconds)\n" % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
+                                                                                           endTime - startTime))
 
     def testUpdateStore(self):
         """Test case -  update store from a selection of serialized OE molecules.
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OePersistTests testUpdateStore\n")
         try:
             myPersist = OePersist(self.__verbose, self.__lfh)
             oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
@@ -188,7 +178,7 @@ class OePersistTests(unittest.TestCase):
             mL = myPersist.getIndex(dbFileName=self.__storePath)
             self.__lfh.write("OePersistTests(testCreateStore) molecule list %r\n" % mL)
 
-        except:  # noqa: E722
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
