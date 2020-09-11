@@ -179,6 +179,8 @@ class OePersistFullDictTests(unittest.TestCase):
         self.__lfh.write("\nStarting OePersistFullDictTests testCreateChemCompIndex at %s\n" % (time.strftime("%Y %m %d %H:%M:%S",
                                                                                                               time.localtime())))
         try:
+            if not os.path.exists(self.__persistStorePathCC):
+                self.testCreateChemCompStore()
             dIndx = PdbxChemCompDictIndex(verbose=self.__verbose, log=self.__lfh)
             ret = dIndx.makeIndex(storePath=self.__persistStorePathCC, indexPath=self.__indexPathCC)
             self.assertTrue(len(ret) != 0, "Index failed")
