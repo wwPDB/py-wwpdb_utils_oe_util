@@ -136,7 +136,6 @@ jobs:
       - script: |
           export OE_LICENSE=$(oelicense.secureFilePath)      
           export CONFIG_SUPPORT_TOKEN_ENV=$(VAR_CONFIG_SUPPORT_TOKEN_ENV)
-          env
           ${{ format('python -m tox -e {0}', parameters.tox) }}
         displayName: 'Running tox task'
     - ${{ if and(not(startsWith(parameters.tox, 'py')), startsWith(parameters.python, '3.8')) }}:
