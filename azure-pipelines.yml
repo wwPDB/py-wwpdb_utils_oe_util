@@ -34,9 +34,13 @@ jobs:
     #
   - template: azure-template-tox-job.yml
     parameters: {tox: 'py38', python: '3.8', os: 'linux'}
+  - template: azure-template-tox-job.yml
+    parameters: {tox: 'py38', python: '3.8', os: 'macos'}
   #
   #
   - template: azure-template-publish-job.yml
     parameters: {tox: 'py38', python: '3.8', os: 'linux'}
+  - template: azure-template-publish-job.yml
+    parameters: {tox: 'py38', python: '3.8', os: 'macos'}
   #
 
