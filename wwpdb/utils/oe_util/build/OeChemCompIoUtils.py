@@ -18,20 +18,21 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.01"
 
-import sys
-import traceback
-import time
 import os
 import os.path
-
+import sys
+import traceback
 
 from wwpdb.utils.oe_util.build.OeBuildMol import OeBuildMol
+
 #
 #  Storage adapater can be changed here --
 if sys.platform in ['darwin']:
-    from mmcif_utils.persist.PdbxPyIoAdapter import PdbxPyIoAdapter as PdbxIoAdapter
+    from mmcif_utils.persist.PdbxPyIoAdapter import \
+        PdbxPyIoAdapter as PdbxIoAdapter
 else:
-    from mmcif_utils.persist.PdbxPyIoAdapter import PdbxPyIoAdapter as PdbxIoAdapter
+    from mmcif_utils.persist.PdbxPyIoAdapter import \
+        PdbxPyIoAdapter as PdbxIoAdapter
 
 
 class OeChemCompIoUtils(object):
@@ -53,7 +54,7 @@ class OeChemCompIoUtils(object):
         try:
             for pth in pathList:
                 myReader = PdbxIoAdapter(self.__verbose, self.__lfh)
-                ok = myReader.read(pdbxFilePath=pth)
+                ok = myReader.read(pdbxFilePath=pth)  # noqa: F841 pylint: disable=unused-variable
                 for container in myReader.getContainerList():
                     oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
                     oem.setDebug(self.__debug)
@@ -71,9 +72,9 @@ class OeChemCompIoUtils(object):
                         self.__lfh.write("+OeChemCompIoUtils.getOeMols() Title              = %s\n" % oem.getTitle())
                         self.__lfh.write("+OeChemCompIoUtils.getOeMols() SMILES (canonical) = %s\n" % oem.getCanSMILES())
                         self.__lfh.write("+OeChemCompIoUtils.getOeMols() SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
-        except:
+        except Exception as e:
             if self.__verbose:
-                self.__lfh.write("+OeChemCompIoUtils.getOeMols() Failed \n")
+                self.__lfh.write("+OeChemCompIoUtils.getOeMols() Failed %s\n" % str(e))
                 traceback.print_exc(file=self.__lfh)
         return oemList
 
@@ -81,46 +82,15 @@ class OeChemCompIoUtils(object):
         """ Return a list of OE mols constructed from the input Id of chemical definitions.
         """
         pathList = []
-        for id in idList:
-            if len(id) < 1:
+        for ide in idList:
+            if len(ide) < 1:
                 continue
-            idU = str(id).upper()
+            idU = str(ide).upper()
             if idU.startswith("PRDCC_"):
-                hash = idU[-1]
-                pth = os.path.join(self.__topCachePath, hash, idU + '.cif')
+                hashd = idU[-1]
+                pth = os.path.join(self.__topCachePath, hashd, idU + '.cif')
             else:
-                hash = idU[0]
-                pth = os.path.join(self.__topCachePath, hash, idU, idU + '.cif')
+                hashd = idU[0]
+                pth = os.path.join(self.__topCachePath, hashd, idU, idU + '.cif')
             pathList.append(pth)
         return self.getFromPathList(pathList, use3D=use3D, coordType=coordType, setTitle=setTitle)
-
-    def __getPathList(self, topPath, pattern='*', excludeDirs=[], recurse=True):
-        """ Return a list of file paths in the input topPath which satisfy the input search criteria.
-
-            This version does not follow symbolic links.
-        """
-        pathList = []
-        #
-        try:
-            names = os.listdir(topPath)
-        except os.error:
-            return pathList
-
-        # expand pattern
-        pattern = pattern or '*'
-        patternList = string.splitfields(pattern, ';')
-
-        for name in names:
-            fullname = os.path.normpath(os.path.join(topPath, name))
-            # check for matching files
-            for pat in patternList:
-                if fnmatch.fnmatch(name, pat):
-                    if os.path.isfile(fullname):
-                        pathList.append(fullname)
-                        continue
-            if recurse:
-                # recursively scan directories
-                if os.path.isdir(fullname) and not os.path.islink(fullname) and (name not in excludeDirs):
-                    pathList.extend(self.getPathList(topPath=fullname, pattern=pattern, excludeDirs=excludeDirs, recurse=recurse))
-
-        return pathList

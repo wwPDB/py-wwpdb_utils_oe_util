@@ -18,9 +18,10 @@ __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.01"
 
 import logging
-logger = logging.getLogger(__name__)
 
 from openeye import oechem
+
+logger = logging.getLogger(__name__)
 
 
 class OeDescriptorUtils(object):
@@ -31,7 +32,7 @@ class OeDescriptorUtils(object):
         pass
         #
 
-    def standardizeSmiles(self, smiles, type="ISOMERIC"):
+    def standardizeSmiles(self, smiles, type="ISOMERIC"):  # pylint: disable=redefined-builtin
         """ Return a standardized SMILES (type) or None
         """
         smilesOut = None
@@ -44,9 +45,9 @@ class OeDescriptorUtils(object):
                 elif type == "ISOMERIC":
                     smilesOut = oechem.OECreateIsoSmiString(mol)
             else:
-                logger.error("Unable to parse input SMILES '{0}'".format(smiles))
+                logger.error("Unable to parse input SMILES '%s'", smiles)
 
         except Exception as e:
-            logger.exception("Error '{0}' occured. Arguments {1}.".format(e.message, e.args))
+            logger.exception("Error '%s' occured. Arguments %s.", str(e), e.args)
 
         return smilesOut

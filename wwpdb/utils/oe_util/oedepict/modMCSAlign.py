@@ -1,7 +1,34 @@
 #!/usr/bin/env python
-#@ <SNIPPET-MCS-ALIGN>
-from openeye.oechem import *
-from openeye.oedepict import *
+# @ <SNIPPET-MCS-ALIGN>
+from openeye.oechem import (
+    OEExprOpts_DefaultAtoms,
+    OEExprOpts_DefaultBonds,
+    OEGraphMol,
+    OEIsAtomMember,
+    OEIsBondMember,
+    OEMCSMaxBondsCompleteCycles,
+    OEMCSSearch,
+    OEMCSType_Approximate,
+    OENotAtom,
+    OENotBond,
+    OEParseSmiles,
+    OEPinkTint,
+)
+from openeye.oedepict import (
+    OE2DMolDisplay,
+    OE2DMolDisplayOptions,
+    OEAddHighlighting,
+    OEGetMoleculeScale,
+    OEHighlightStyle_BallAndStick,
+    OEImage,
+    OEImageGrid,
+    OEPrepareAlignedDepiction,
+    OEPrepareDepiction,
+    OERenderMolecule,
+    OEScale_AutoScale,
+    OETitleLocation_Hidden,
+    OEWriteImage,
+)
 
 refmol = OEGraphMol()
 OEParseSmiles(refmol, "c1cc(c2cc(cnc2c1)CCCO)C(=O)CCO")
@@ -46,8 +73,8 @@ if miter.IsValid():
     matchedbonds = OEIsBondMember(match.GetPatternBonds())
     OEAddHighlighting(refdisp, OEPinkTint, hstyle, OENotAtom(matchedatoms), OENotBond(matchedbonds))
 
-    #abset = OEAtomBondSet(match.GetPatternAtoms(), match.GetPatternBonds())
-    #OEAddHighlighting(refdisp, OEBlueTint, hstyle, abset)
+    # abset = OEAtomBondSet(match.GetPatternAtoms(), match.GetPatternBonds())
+    # OEAddHighlighting(refdisp, OEBlueTint, hstyle, abset)
     OERenderMolecule(refcell, refdisp)
 
     # depict fit molecule with MCS highlighting
@@ -57,8 +84,8 @@ if miter.IsValid():
     matchedbonds = OEIsBondMember(match.GetTargetBonds())
     OEAddHighlighting(fitdisp, OEPinkTint, hstyle, OENotAtom(matchedatoms), OENotBond(matchedbonds))
 
-    #abset = OEAtomBondSet(match.GetTargetAtoms(), match.GetTargetBonds())
-    #OEAddHighlighting(fitdisp, OEBlueTint, hstyle, abset)
+    # abset = OEAtomBondSet(match.GetTargetAtoms(), match.GetTargetBonds())
+    # OEAddHighlighting(fitdisp, OEBlueTint, hstyle, abset)
     OERenderMolecule(fitcell, fitdisp)
 
 OEWriteImage("modMCSAlign.png", image)

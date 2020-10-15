@@ -23,35 +23,37 @@ import sys
 import unittest
 import traceback
 
-
 try:
-    from wwpdb.utils.oe_util.build.OeBuildModelMol import OeBuildModelMol
+    from openeye.oechem import OEFloatArray  # noqa: F401 pylint: disable=unused-import
+
     skiptests = False
-except ImportError as e:
+except ImportError:
     skiptests = True
-    
+
+if not skiptests:
+    from wwpdb.utils.oe_util.build.OeBuildModelMol import OeBuildModelMol
+
 from mmcif_utils.chemcomp.PdbxChemCompModelIo import PdbxChemCompModelIo
 from mmcif_utils.chemcomp.PdbxChemCompModel import PdbxChemCompModelDescriptor
 
+
 @unittest.skipIf(skiptests, "Requires oe library")
 class OeBuildModelMolTests(unittest.TestCase):
-
     def setUp(self):
         self.__lfh = sys.stderr
         self.__verbose = True
         HERE = os.path.abspath(os.path.dirname(__file__))
         TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
-        mockTopPath = os.path.join(TOPDIR, 'wwpdb', 'mock-data')
-        self.__modelFilePath = os.path.join(mockTopPath, 'CCD', 'MTGL00001.cif')
+        mockTopPath = os.path.join(TOPDIR, "wwpdb", "mock-data")
+        self.__modelFilePath = os.path.join(mockTopPath, "CCD", "MTGL00001.cif")
         self.__modelFilePathList = [self.__modelFilePath]
 
     def tearDown(self):
         pass
 
     def testBuildFromModel(self):
-        """Test case -  build OE molecule from model instance
-        """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name))
+        """Test case -  build OE molecule from model instance"""
+        self.__lfh.write("\nStarting OeBuildModelMolTests testBuildFromModel\n")
         try:
             oem = OeBuildModelMol(verbose=self.__verbose, log=self.__lfh)
             modelId = oem.setChemCompModelPath(self.__modelFilePath)
@@ -67,24 +69,24 @@ class OeBuildModelMolTests(unittest.TestCase):
             for d in dL:
                 pd = PdbxChemCompModelDescriptor(d, verbose=self.__verbose, log=self.__lfh)
                 print(pd.getType())
-                if pd.getType() == 'SMILES_CANNONICAL':
+                if pd.getType() == "SMILES_CANNONICAL":
                     sm = pd.getDescriptor()
-                    if (sm == oem.getIsoSMILES()):
+                    if sm == oem.getIsoSMILES():
                         self.__lfh.write("+testBuildFromModel. SMILES MATCH for %s\n" % modelId)
                     else:
                         self.__lfh.write("+testBuildFromModel. SMILES MISMATCH for %s\n" % modelId)
                         self.__lfh.write("+testBuildFromModel. SMILES (model)               %s\n" % sm)
                         self.__lfh.write("+testBuildFromModel. SMILES (reconstructed model) %s\n" % oem.getIsoSMILES())
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
     def testSerialize3D(self):
         """Test case -  build OE molecule using 3D data in the chemical component model instance and
-           then serialize and deserialize this molecule.
+        then serialize and deserialize this molecule.
 
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OeBuildModelMolTests testSerialize3D\n")
         try:
             oem = OeBuildModelMol(verbose=self.__verbose, log=self.__lfh)
             for pth in self.__modelFilePathList:
@@ -103,7 +105,7 @@ class OeBuildModelMolTests(unittest.TestCase):
                 self.__lfh.write("Deserialized status = %d\n" % ok)
                 self.__lfh.write("Deserialized SMILES (canonical) = %s\n" % oemD.getCanSMILES())
                 self.__lfh.write("Deserialized SMILES (isomeric)  = %s\n" % oemD.getIsoSMILES())
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -114,7 +116,7 @@ def suiteOeModelBuild():
     suiteSelect.addTest(OeBuildModelMolTests("testSerialize3D"))
     return suiteSelect
 
-if __name__ == '__main__':
-    if (True):
-        mySuite = suiteOeModelBuild()
-        unittest.TextTestRunner(verbosity=2).run(mySuite)
+
+if __name__ == "__main__":
+    mySuite = suiteOeModelBuild()
+    unittest.TextTestRunner(verbosity=2).run(mySuite)

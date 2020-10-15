@@ -22,11 +22,17 @@ __version__ = "V0.01"
 import sys
 import traceback
 
+from mmcif_utils.chemcomp.PdbxChemCompModel import (PdbxChemCompModel,
+                                                    PdbxChemCompModelAtom,
+                                                    PdbxChemCompModelBond)
 from mmcif_utils.chemcomp.PdbxChemCompModelIo import PdbxChemCompModelIo
-from mmcif_utils.chemcomp.PdbxChemCompModel import PdbxChemCompModel, PdbxChemCompModelAtom, PdbxChemCompModelBond
-from mmcif.api.PdbxContainers import *
-
-from openeye.oechem import *
+from openeye.oechem import (OE3DToInternalStereo, OEAroModelOpenEye,
+                            OEAssignAromaticFlags, OECreateCanSmiString,
+                            OECreateInChI, OECreateInChIKey,
+                            OECreateIsoSmiString, OEFindRingAtomsAndBonds,
+                            OEFormat_OEB, OEMol, OEMolecularFormula,
+                            OEPerceiveCIPStereo, OESuppressHydrogens,
+                            OEWriteMolecule, oemolistream, oemolostream)
 
 
 class OeBuildModelMol(object):
@@ -72,8 +78,8 @@ class OeBuildModelMol(object):
             self.__ccAtomDL = ccm.getAttribDictList(catName='pdbx_chem_comp_model_atom')
             self.__ccBondDL = ccm.getAttribDictList(catName='pdbx_chem_comp_model_bond')
             return self.__modelId
-        except:
-            self.__lfh.write("OeBuildModelMol(setChemCompModelPath) Fails for %s\n" % modelPath)
+        except Exception as e:
+            self.__lfh.write("OeBuildModelMol(setChemCompModelPath) Fails for %s %s\n" % (modelPath, str(e)))
             traceback.print_exc(file=self.__lfh)
         return None
 
@@ -144,7 +150,7 @@ class OeBuildModelMol(object):
                         self.__eD[atNo] = 1
                     else:
                         self.__eD[atNo] += 1
-            except:
+            except:  # noqa: E722 pylint: disable=bare-except
                 pass
 
         return self.__eD
@@ -153,7 +159,7 @@ class OeBuildModelMol(object):
         try:
             self.__build3D()
             return True
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             return False
 
     def __build3D(self):
@@ -218,7 +224,7 @@ class OeBuildModelMol(object):
             if (self.__debug):
                 self.__lfh.write(" %s %d -- %s %d (%d)\n" % (at1, iat1, at2, iat2, iType))
 
-            oeBnd = self.__oeMol.NewBond(aL[iat1], aL[iat2], iType)
+            oeBnd = self.__oeMol.NewBond(aL[iat1], aL[iat2], iType)  # noqa: F841 pylint: disable=unused-variable
 
             # oeBnd.SetAromatic(arFlag)
             # if arFlag:
@@ -250,7 +256,7 @@ class OeBuildModelMol(object):
     def getGraphMolSuppressH(self):
         """ Return the current constructed OE molecule with hydrogens suppressed.
         """
-        #OESuppressHydrogens(self.__oeMol, retainPolar=False,retainStereo=True,retainIsotope=True)
+        # OESuppressHydrogens(self.__oeMol, retainPolar=False,retainStereo=True,retainIsotope=True)
         OESuppressHydrogens(self.__oeMol)
         return self.__oeMol
 

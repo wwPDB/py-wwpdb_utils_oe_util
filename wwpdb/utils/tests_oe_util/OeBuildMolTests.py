@@ -26,95 +26,86 @@ import sys
 import unittest
 import traceback
 import platform
-import time
 import os
 
 try:
-    from wwpdb.utils.oe_util.build.OeBuildMol import OeBuildMol
-    from mmcif_utils.persist.PdbxPyIoAdapter import PdbxPyIoAdapter as PdbxIoAdapter
+    from openeye.oechem import OEFloatArray  # noqa: F401 pylint: disable=unused-import
+
     skiptests = False
 except ImportError:
     skiptests = True
 
+if not skiptests:
+    from wwpdb.utils.oe_util.build.OeBuildMol import OeBuildMol
+    from mmcif_utils.persist.PdbxPyIoAdapter import PdbxPyIoAdapter as PdbxIoAdapter
+
 
 @unittest.skipIf(skiptests, "Cannot import openeye.oechem for tests")
 class OeBuildMolTests(unittest.TestCase):
-
     def setUp(self):
         self.__lfh = sys.stderr
         self.__verbose = True
         self.__here = os.path.abspath(os.path.dirname(__file__))
-        self.__testoutput = os.path.join(self.__here, 'test-output', platform.python_version())
+        self.__testoutput = os.path.join(self.__here, "test-output", platform.python_version())
         if not os.path.exists(self.__testoutput):
             os.makedirs(self.__testoutput)
-        self.__datadir = os.path.join(self.__here, 'data')
-        self.__sdfFilePath = os.path.join(self.__datadir, 'ATP.sdf')
-        self.__pathList = [os.path.join(self.__datadir, 'ATP.cif'),
-                           os.path.join(self.__datadir, 'GTP.cif'),
-                           os.path.join(self.__datadir, 'ARG.cif')]
+        self.__datadir = os.path.join(self.__here, "data")
+        self.__sdfFilePath = os.path.join(self.__datadir, "ATP.sdf")
+        self.__pathList = [os.path.join(self.__datadir, "ATP.cif"), os.path.join(self.__datadir, "GTP.cif"), os.path.join(self.__datadir, "ARG.cif")]
 
     def tearDown(self):
         pass
 
     def testBuildMolFromSDF(self):
-        """Test case -  read a test SDF file and build the corresponding OEGraphMol
-        """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
+        """Test case -  read a test SDF file and build the corresponding OEGraphMol"""
+        self.__lfh.write("\nStarting OeBuildMolTests testBuildolFromSDF\n")
         try:
             oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
-            if oem.importFile(self.__sdfFilePath, type='3D'):
+            if oem.importFile(self.__sdfFilePath, type="3D"):
                 self.__lfh.write("Title              = %s\n" % oem.getTitle())
                 self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
                 self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
             else:
                 self.__lfh.write("SDF read failed for %s\n" % self.__sdfFilePath)
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
     def testBuildFromFiles(self):
-        """Test case -  build OE molecule from definition file source data.
-        """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
+        """Test case -  build OE molecule from definition file source data."""
+        self.__lfh.write("\nStarting OeBuildMolTests testBuildFromFiles\n")
         try:
             oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
             for pth in self.__pathList:
                 myReader = PdbxIoAdapter(self.__verbose, self.__lfh)
                 ok = myReader.read(pdbxFilePath=pth)
+                self.assertTrue(ok)
                 # myReader.write(pdbxFilePath="TMP.cif")
                 for container in myReader.getContainerList():
-                    oem.set(container.getName(),
-                            dcChemCompAtom=container.getObj("chem_comp_atom"),
-                            dcChemCompBond=container.getObj("chem_comp_bond"))
+                    oem.set(container.getName(), dcChemCompAtom=container.getObj("chem_comp_atom"), dcChemCompBond=container.getObj("chem_comp_bond"))
                     oem.build3D(coordType="model")
                     self.__lfh.write("Title              = %s\n" % oem.getTitle())
                     self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
                     self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
 
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
     def testSerialize2D(self):
         """Test case -  build OE molecule using 2D data in the definition source data file
-                        then serialize and deserialize this molecule.
+        then serialize and deserialize this molecule.
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OeBuildMolTests testSerialize2D\n")
         try:
             oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
             oem.setDebug(True)
             for pth in self.__pathList:
                 myReader = PdbxIoAdapter(self.__verbose, self.__lfh)
                 ok = myReader.read(pdbxFilePath=pth)
-                myReader.write(pdbxFilePath=os.path.join(self.__testoutput,
-                                                         "TMP.cif"))
+                myReader.write(pdbxFilePath=os.path.join(self.__testoutput, "TMP.cif"))
                 for container in myReader.getContainerList():
-                    oem.set(container.getName(),
-                            dcChemCompAtom=container.getObj("chem_comp_atom"),
-                            dcChemCompBond=container.getObj("chem_comp_bond"))
+                    oem.set(container.getName(), dcChemCompAtom=container.getObj("chem_comp_atom"), dcChemCompBond=container.getObj("chem_comp_bond"))
                     oem.build2D()
                     self.__lfh.write("Title              = %s\n" % oem.getTitle())
                     self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
@@ -129,28 +120,24 @@ class OeBuildMolTests(unittest.TestCase):
                     self.__lfh.write("Deserialized SMILES (canonical) = %s\n" % oemD.getCanSMILES())
                     self.__lfh.write("Deserialized SMILES (isomeric)  = %s\n" % oemD.getIsoSMILES())
 
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
     def testSerialize3D(self):
         """Test case -  build OE molecule using 3D data in the definition source data file
-                        then serialize and deserialize this molecule.
+        then serialize and deserialize this molecule.
 
         """
-        self.__lfh.write("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
+        self.__lfh.write("\nStarting OeBuildMolTests testSerialize3D\n")
         try:
             oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
             for pth in self.__pathList:
                 myReader = PdbxIoAdapter(self.__verbose, self.__lfh)
                 ok = myReader.read(pdbxFilePath=pth)
-                myReader.write(pdbxFilePath=os.path.join(self.__testoutput,
-                                                         "TMP.cif"))
+                myReader.write(pdbxFilePath=os.path.join(self.__testoutput, "TMP.cif"))
                 for container in myReader.getContainerList():
-                    oem.set(container.getName(),
-                            dcChemCompAtom=container.getObj("chem_comp_atom"),
-                            dcChemCompBond=container.getObj("chem_comp_bond"))
+                    oem.set(container.getName(), dcChemCompAtom=container.getObj("chem_comp_atom"), dcChemCompBond=container.getObj("chem_comp_bond"))
                     oem.build3D(coordType="model")
                     self.__lfh.write("Title              = %s\n" % oem.getTitle())
                     self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
@@ -165,7 +152,7 @@ class OeBuildMolTests(unittest.TestCase):
                     self.__lfh.write("Deserialized SMILES (canonical) = %s\n" % oemD.getCanSMILES())
                     self.__lfh.write("Deserialized SMILES (isomeric)  = %s\n" % oemD.getIsoSMILES())
 
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
@@ -184,10 +171,9 @@ def suiteOeBuildFromOther():
     return suiteSelect
 
 
-if __name__ == '__main__':
-    if (True):
-        mySuite = suiteOeBuild()
-        unittest.TextTestRunner(verbosity=2).run(mySuite)
+if __name__ == "__main__":
+    mySuite = suiteOeBuild()
+    unittest.TextTestRunner(verbosity=2).run(mySuite)
 
-        mySuite = suiteOeBuildFromOther()
-        unittest.TextTestRunner(verbosity=2).run(mySuite)
+    mySuite = suiteOeBuildFromOther()
+    unittest.TextTestRunner(verbosity=2).run(mySuite)

@@ -32,18 +32,24 @@ __version__ = "V0.01"
 import sys
 import traceback
 
-
-from wwpdb.utils.cc_dict_util.persist.PdbxChemCompPersist import PdbxChemCompIt, PdbxChemCompAtomIt, PdbxChemCompBondIt
-from wwpdb.utils.cc_dict_util.persist.PdbxChemCompPersist import PdbxChemCompDescriptorIt, PdbxChemCompIdentifierIt
-from mmcif.api.PdbxContainers import *
+from mmcif.io.IoAdapterCore import IoAdapterCore as IoAdapter
+# from mmcif.api.PdbxContainers import *
 from mmcif_utils.chemcomp.PdbxChemComp import PdbxChemCompConstants
-
-if sys.platform in ['darwin']:
-    from mmcif.io.IoAdapterPy import IoAdapterPy as IoAdapter
-else:
-    from mmcif.io.IoAdapterCore import IoAdapterCore as IoAdapter
-
-from openeye.oechem import *
+from openeye.oechem import (OE3DToInternalStereo, OEAddExplicitHydrogens,
+                            OEAroModelOpenEye, OEAssignAromaticFlags,
+                            OECIPAtomStereo_R, OECIPAtomStereo_S,
+                            OECIPBondStereo_E, OECIPBondStereo_Z,
+                            OECreateCanSmiString, OECreateInChI,
+                            OECreateInChIKey, OECreateIsoSmiString,
+                            OEFindRingAtomsAndBonds, OEFloatArray,
+                            OEFormat_OEB, OEGetAtomicSymbol, OEGraphMol, OEMol,
+                            OEMolecularFormula, OEParseSmiles,
+                            OEPerceiveChiral, OEPerceiveCIPStereo,
+                            OEReadMolecule, OESetCIPStereo,
+                            OESuppressHydrogens, OETriposAtomNames,
+                            OEWriteMolecule, oemolistream, oemolostream)
+from wwpdb.utils.cc_dict_util.persist.PdbxChemCompPersist import (
+    PdbxChemCompAtomIt, PdbxChemCompBondIt)
 
 
 class OeBuildMol(object):
@@ -84,8 +90,8 @@ class OeBuildMol(object):
             self.__dcChemCompAtom = cL[0].getObj("chem_comp_atom")
             self.__dcChemCompBond = cL[0].getObj("chem_comp_bond")
             return self.__ccId
-        except:
-            self.__lfh.write("OeBuildMol(setChemCompPath) Fails for %s\n" % ccPath)
+        except Exception as e:
+            self.__lfh.write("OeBuildMol(setChemCompPath) Fails for %s %s\n" % (ccPath, str(e)))
             traceback.print_exc(file=self.__lfh)
         return None
 
@@ -179,7 +185,7 @@ class OeBuildMol(object):
                         self.__eD[atNo] = 1
                     else:
                         self.__eD[atNo] += 1
-            except:
+            except:  # noqa: E722 pylint: disable=bare-except
                 pass
 
         return self.__eD
@@ -188,8 +194,8 @@ class OeBuildMol(object):
         try:
             self.__build3D(coordType=coordType, setTitle=setTitle)
             return True
-        except:
-            self.__lfh.write("OeBuildMol(build3D) Failing")
+        except Exception as e:
+            self.__lfh.write("OeBuildMol(build3D) Failing %s\n" % str(e))
             traceback.print_exc(file=self.__lfh)
         return False
 
@@ -223,7 +229,7 @@ class OeBuildMol(object):
             atType = ccAt.getType()
             fc = ccAt.getFormalCharge()
             chFlag = ccAt.isChiral()
-            arFlag = ccAt.isAromatic()
+            # arFlag = ccAt.isAromatic()
             isotope = ccAt.getIsotope()
             leavingAtom = ccAt.getLeavingAtomFlag()
 
@@ -264,11 +270,11 @@ class OeBuildMol(object):
             iat2 = aD[at2] - 1
             iType = ccBnd.getIntegerType()
             #
-            arFlag = ccBnd.isAromatic()
+            arFlag = ccBnd.isAromatic()  # noqa: F841 pylint: disable=unused-variable
             if (self.__debug):
                 self.__lfh.write(" %s %d -- %s %d (%d)\n" % (at1, iat1, at2, iat2, iType))
 
-            oeBnd = self.__oeMol.NewBond(aL[iat1], aL[iat2], iType)
+            oeBnd = self.__oeMol.NewBond(aL[iat1], aL[iat2], iType)  # noqa: F841 pylint: disable=unused-variable
 
             # oeBnd.SetAromatic(arFlag)
             # if arFlag:
@@ -305,11 +311,11 @@ class OeBuildMol(object):
             if (bond.GetOrder() == 2):
                 OEPerceiveCIPStereo(self.__oeMol, bond)
 
-    def build2D(self, setTitle=True):
+    def build2D(self, setTitle=True):  # pylint: disable=unused-argument
         try:
             self.__build2D(setTitle=True)
             return True
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             return False
 
     def __build2D(self, setTitle=True):
@@ -396,7 +402,7 @@ class OeBuildMol(object):
             for ii, atm in enumerate(self.__oeMol.GetAtoms()):
                 self.__lfh.write("OeBuildMol.build2d - atom  %d %s\n" % (ii, atm.GetName()))
 
-    def importFile(self, filePath, type='2D'):
+    def importFile(self, filePath, type='2D'):  # pylint: disable=redefined-builtin
         """  Contruct a OEGraphMol using the content of the input file.  The input
              file must have a file extension recognized by the OE toolkit (e.g. .sdf)
         """
@@ -404,7 +410,7 @@ class OeBuildMol(object):
         if not ifs.open(filePath):
             return False
         #
-        #self.__oeMol = OEGraphMol()
+        # self.__oeMol = OEGraphMol()
         self.__oeMol = OEMol()
         OEReadMolecule(ifs, self.__oeMol)
         #        OETriposAtomNames(self.__oeMol)
@@ -445,7 +451,8 @@ class OeBuildMol(object):
                 aC[iAtNum] += 1
             else:
                 aC[iAtNum] = 1
-            atName = PdbxChemCompConstants._periodicTable[iAtNum - 1] + str(aC[iAtNum])
+            # Less than idea - should have an API
+            atName = PdbxChemCompConstants._periodicTable[iAtNum - 1] + str(aC[iAtNum])  # pylint: disable=protected-access
             atm.SetName(atName)
             #
             xyzL = OEFloatArray(3)
@@ -468,7 +475,7 @@ class OeBuildMol(object):
     def getGraphMolSuppressH(self):
         """ Return the current constructed OE molecule with hydrogens suppressed.
         """
-        #OESuppressHydrogens(self.__oeMol, retainPolar=False,retainStereo=True,retainIsotope=True)
+        # OESuppressHydrogens(self.__oeMol, retainPolar=False,retainStereo=True,retainIsotope=True)
         OESuppressHydrogens(self.__oeMol)
         return self.__oeMol
 

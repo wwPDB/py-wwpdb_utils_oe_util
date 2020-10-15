@@ -1,4 +1,3 @@
-
 __docformat__ = "restructuredtext en"
 __author__ = "Ezra Peisach"
 __email__ = "ezra.peisach@rcsb.org"
