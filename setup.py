@@ -49,7 +49,7 @@ setup(
         "OpenEye-toolkits-python2.7-ucs2-linux-x64 == 2016.6.1; python_version == '2.7' and sys_platform=='linux2'",
         "OpenEye-toolkits ; python_version >= '3'",
     ],
-    packages=find_packages(exclude=["wwpdb.apps.tests_oe_util"]),
+    packages=find_packages(exclude=["wwpdb.utils.tests_oe_util"]),
     package_data={
         # If any package contains *.md or *.rst ...  files, include them:
         "": ["*.md", "*.rst", "*.txt", "*.cfg"]
