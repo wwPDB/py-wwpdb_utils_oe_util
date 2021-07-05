@@ -47,20 +47,20 @@ class OeMCSS(object):
     def __init__(self, verbose=True, log=sys.stderr):
         #
         self.__verbose = verbose
-        self.__debug = False
+        # self.__debug = False
         self.__lfh = log
         #
         self.__refId = None
         self.__refmol = None
-        self.__refTitle = None
+        # self.__refTitle = None
         #
         self.__fitId = None
         self.__fitmol = None
-        self.__fitTitle = None
+        # self.__fitTitle = None
         #
         self.__pairTupleList = []
         #
-        self.__minAtomMatchFraction = 0.50
+        # self.__minAtomMatchFraction = 0.50
         #
         self.__searchType = "default"
         #
@@ -95,10 +95,10 @@ class OeMCSS(object):
         # Insert title here -
         if title is not None:
             self.__refmol.SetTitle(title)
-            self.__refTitle = title
+            # self.__refTitle = title
         else:
             self.__refmol.SetTitle(self.__refId)
-            self.__refTitle = None
+            # self.__refTitle = None
         #
         #
         self.__setupMCSS(self.__refmol)
@@ -128,10 +128,10 @@ class OeMCSS(object):
         # Insert title here -
         if title is not None:
             self.__refmol.SetTitle(title)
-            self.__refTitle = title
+            # self.__refTitle = title
         else:
             self.__refmol.SetTitle(self.__refId)
-            self.__refTitle = None
+            # self.__refTitle = None
 
         self.__setupMCSS(self.__refmol)
 
@@ -146,20 +146,20 @@ class OeMCSS(object):
             self.__lfh.write("SMILES (isomeric)  = %s\n" % self.__fitFD["SMILES_STEREO"])
         if title is not None:
             self.__fitmol.SetTitle(title)
-            self.__fitTitle = title
+            # self.__fitTitle = title
         else:
             self.__fitmol.SetTitle(self.__fitId)
-            self.__fitTitle = None
+            # self.__fitTitle = None
 
     def setFitPath(self, ccPath, title=None, suppressHydrogens=False):
         """Set the path of the target/library molecule for MCSS comparison."""
         (self.__fitId, self.__fitmol, self.__fitFD) = self.__getCCDefFile(ccPath, suppressHydrogens=suppressHydrogens)
         if title is not None:
             self.__fitmol.SetTitle(title)
-            self.__fitTitle = title
+            # self.__fitTitle = title
         else:
             self.__fitmol.SetTitle(self.__fitId)
-            self.__fitTitle = None
+            # self.__fitTitle = None
 
     def setFitIdList(self, ccIdList, cachePath="/data/components/ligand-dict-v3", suppressHydrogens=False):  # pylint: disable=unused-argument
         """Set the list of IDs to be compared with reference molecule by MCSS.

@@ -81,7 +81,7 @@ class OeDepictAlignBase(object):
         super(OeDepictAlignBase, self).__init__()
         #
         self.__verbose = verbose
-        self.__debug = False
+        # self.__debug = False
         self.__lfh = log
         #
         self._refId = None
@@ -714,7 +714,7 @@ class OeDepictMCSAlign(OeDepictAlignBase, OeDepictBase):
         super(OeDepictMCSAlign, self).__init__(verbose=verbose, log=log)
         #
         self.__debug = True
-        self.__verbose = verbose
+        # self.__verbose = verbose
         self.__lfh = log
         #
         self.__image = None
@@ -840,9 +840,9 @@ class OeDepictMCSAlignSingle(OeDepictAlignBase, OeDepictBase):
     def __init__(self, verbose=False, log=sys.stderr):
         super(OeDepictMCSAlignSingle, self).__init__(verbose=verbose, log=log)
         #
-        self.__debug = True
-        self.__verbose = verbose
-        self.__lfh = log
+        # self.__debug = True
+        # self.__verbose = verbose
+        # self.__lfh = log
         self.__imageRef = None
         self.__imageFit = None
         #
@@ -935,8 +935,8 @@ class OeTestMCSAlign(OeDepictAlignBase):
     def __init__(self, verbose=False, log=sys.stderr, maxMatches=2048):
         super(OeTestMCSAlign, self).__init__(verbose=verbose, log=log)
         #
-        self.__debug = True
-        self.__verbose = verbose
+        # self.__debug = True
+        # self.__verbose = verbose
         self.__lfh = log
         self.__maxMatches = maxMatches
 

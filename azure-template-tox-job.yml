@@ -23,7 +23,8 @@ jobs:
       vmImage: 'ubuntu-latest'
 
   variables:
-    - group: py-shared-variables
+    group: py-shared-variables
+    PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
 
   steps:
     #
@@ -122,6 +123,15 @@ jobs:
     - script: python -m pip install --upgrade pip tox
       displayName: 'Install tools'
       #
+    - task: Cache@2
+      inputs:
+        key: 'python | "$(Agent.OS)" | requirements.txt'
+        restoreKeys: | 
+          python | "$(Agent.OS)"
+          python
+        path: $(PIP_CACHE_DIR)
+      displayName: Cache pip packages
+
     - script: pip install -r requirements.txt
       displayName: 'Install dependencies'
     #
@@ -137,6 +147,12 @@ jobs:
           export OE_LICENSE=$(oelicense.secureFilePath)      
           export CONFIG_SUPPORT_TOKEN_ENV=$(VAR_CONFIG_SUPPORT_TOKEN_ENV)
           ${{ format('python -m tox -e {0}', parameters.tox) }}
+        displayName: 'Running tox task'
+   e - ${{ if and(not(startsWith(parameters.tox, 'py')), startsWith(parameters.python, '3.9')) }}:
+      - script: |
+          export OE_LICENSE=$(oelicense.secureFilePath)      
+          export CONFIG_SUPPORT_TOKEN_ENV=$(VAR_CONFIG_SUPPORT_TOKEN_ENV)
+          ${{ format('python -m tox -e {0}-py39', parameters.tox) }}
         displayName: 'Running tox task'
     - ${{ if and(not(startsWith(parameters.tox, 'py')), startsWith(parameters.python, '3.8')) }}:
       - script: |

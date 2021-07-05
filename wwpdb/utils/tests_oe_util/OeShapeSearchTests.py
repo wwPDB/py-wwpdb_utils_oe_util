@@ -61,8 +61,6 @@ class OeShapeSearchtests(unittest.TestCase):
         self.__debug = False
         #
         self.__here = os.path.abspath(os.path.dirname(__file__))
-        self.__examples = os.path.join(self.__here, "examples")
-        self.__datadir = os.path.join(self.__here, "data")
         self.__testoutput = os.path.join(self.__here, "test-output", platform.python_version())
         if not os.path.exists(self.__testoutput):
             os.makedirs(self.__testoutput)
@@ -80,44 +78,44 @@ class OeShapeSearchtests(unittest.TestCase):
         # Test list of PRD molecule ids  -- In future check the convention on the identifiers
         #
         #
-        self.__prdIdListO = [
-            "PRDCC_000009",
-            "PRDCC_000109",
-            "PRDCC_000159",
-            "PRDCC_000199",
-            "PRDCC_000209",
-            "PRDCC_000219",
-            "PRDCC_000239",
-            "PRDCC_000259",
-            "PRDCC_000289",
-            "PRDCC_000299",
-            "PRDCC_000309",
-            "PRDCC_000319",
-            "PRDCC_000339",
-            "PRDCC_000379",
-            "PRDCC_000409",
-            "PRDCC_000419",
-        ]
+        # self.__prdIdListO = [
+        #     "PRDCC_000009",
+        #     "PRDCC_000109",
+        #     "PRDCC_000159",
+        #     "PRDCC_000199",
+        #     "PRDCC_000209",
+        #     "PRDCC_000219",
+        #     "PRDCC_000239",
+        #     "PRDCC_000259",
+        #     "PRDCC_000289",
+        #     "PRDCC_000299",
+        #     "PRDCC_000309",
+        #     "PRDCC_000319",
+        #     "PRDCC_000339",
+        #     "PRDCC_000379",
+        #     "PRDCC_000409",
+        #     "PRDCC_000419",
+        # ]
 
-        #
-        self.__prdIdList = [
-            "PRD_000009",
-            "PRD_000109",
-            "PRD_000159",
-            "PRD_000199",
-            "PRD_000209",
-            "PRD_000219",
-            "PRD_000239",
-            "PRD_000259",
-            "PRD_000289",
-            "PRD_000299",
-            "PRD_000309",
-            "PRD_000319",
-            "PRD_000339",
-            "PRD_000379",
-            "PRD_000409",
-            "PRD_000419",
-        ]
+        # #
+        # self.__prdIdList = [
+        #     "PRD_000009",
+        #     "PRD_000109",
+        #     "PRD_000159",
+        #     "PRD_000199",
+        #     "PRD_000209",
+        #     "PRD_000219",
+        #     "PRD_000239",
+        #     "PRD_000259",
+        #     "PRD_000289",
+        #     "PRD_000299",
+        #     "PRD_000309",
+        #     "PRD_000319",
+        #     "PRD_000339",
+        #     "PRD_000379",
+        #     "PRD_000409",
+        #     "PRD_000419",
+        # ]
 
     def tearDown(self):
         pass

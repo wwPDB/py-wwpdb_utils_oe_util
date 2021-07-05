@@ -25,9 +25,9 @@ from openeye.oeshape import OEBestOverlay, OEBestOverlayScoreIter, OECalcVolume,
 
 
 class OeShapeSearch(object):
-    def __init__(self, verbose=False, log=sys.stderr):
-        self.__verbose = verbose
-        self.__lfh = log
+    def __init__(self, verbose=False, log=sys.stderr):  # pylint: disable=unused-argument
+        # self.__verbose = verbose
+        # self.__lfh = log
         self.__refMol = None
         self.__fitMol = None
         self.__bestSearch = None

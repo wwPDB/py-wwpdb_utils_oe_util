@@ -45,7 +45,6 @@ class OePersistTests(unittest.TestCase):
         self.__lfh = sys.stdout
         self.__verbose = True
         self.__here = os.path.abspath(os.path.dirname(__file__))
-        self.__examples = os.path.join(self.__here, "examples")
         self.__datadir = os.path.join(self.__here, "data")
         self.__testoutput = os.path.join(self.__here, "test-output", platform.python_version())
         if not os.path.exists(self.__testoutput):

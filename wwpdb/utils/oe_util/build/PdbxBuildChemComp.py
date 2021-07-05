@@ -44,13 +44,10 @@ class PdbxBuildChemComp(PdbxStyleIoUtil):
     def __init__(self, verbose=True, log=sys.stderr):
         super(PdbxBuildChemComp, self).__init__(styleObject=ChemCompCategoryStyle(), verbose=verbose, log=log)
 
-        self.__verbose = verbose
-        self.__debug = False
+        # self.__verbose = verbose
+        # self.__debug = False
         self.__lfh = log
         #
-        self.__topCachePath = None
-        self.__ccU = None
-        self.__filePath = None
 
     def getCategory(self, catName='chem_comp'):
         return self.getItemDictList(catName)

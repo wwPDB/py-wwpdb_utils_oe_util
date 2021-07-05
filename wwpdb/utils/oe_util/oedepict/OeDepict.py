@@ -67,11 +67,11 @@ class OeDepictBase(object):
 
     """Base class for 2D depictions in single and multi-page format."""
 
-    def __init__(self, verbose=True, log=sys.stderr):
+    def __init__(self, verbose=True, log=sys.stderr):  # pylint: disable=unused-argument
         super(OeDepictBase, self).__init__()
-        self.__verbose = verbose
-        self.__debug = False
-        self.__lfh = log
+        # self.__verbose = verbose
+        # self.__debug = False
+        # self.__lfh = log
         #
         self._molTitleList = []
         self._opts = None
@@ -151,9 +151,9 @@ class OeDepictMultiPage(OeDepictBase):
 
     def __init__(self, verbose=True, log=sys.stderr, useTitle=True):
         super(OeDepictMultiPage, self).__init__(verbose=verbose, log=log)
-        self.__verbose = verbose
-        self.__debug = False
-        self.__lfh = log
+        # self.__verbose = verbose
+        # self.__debug = False
+        # self.__lfh = log
         self.__useTitle = useTitle
         #
         self.__multi = None
@@ -218,7 +218,7 @@ class OeDepict(OeDepictBase):
 
     def __init__(self, verbose=True, log=sys.stderr, useTitle=True):
         super(OeDepict, self).__init__(verbose=verbose, log=log)
-        self.__verbose = verbose
+        # self.__verbose = verbose
         self.__debug = False
         self.__lfh = log
         self.__useTitle = useTitle

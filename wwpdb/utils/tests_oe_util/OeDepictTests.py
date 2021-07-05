@@ -48,7 +48,6 @@ class OeDepictTests(unittest.TestCase):
         self.__verbose = True
 
         self.__here = os.path.abspath(os.path.dirname(__file__))
-        self.__examples = os.path.join(self.__here, "examples")
         self.__datadir = os.path.join(self.__here, "data")
         self.__testoutput = os.path.join(self.__here, "test-output", platform.python_version())
         if not os.path.exists(self.__testoutput):
@@ -76,13 +75,13 @@ class OeDepictTests(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def __getIdsFromFile(self, fPath):
-        ifh = open(fPath, "r")
-        idList = []
-        for line in ifh:
-            idList.append(line[:-1])
-        ifh.close()
-        return idList
+    # def __getIdsFromFile(self, fPath):
+    #     ifh = open(fPath, "r")
+    #     idList = []
+    #     for line in ifh:
+    #         idList.append(line[:-1])
+    #     ifh.close()
+    #     return idList
 
     def __testMakeFromFiles(self, pathList=None):
         """Test case -  create OE molecules from the input chem comp definition path list."""

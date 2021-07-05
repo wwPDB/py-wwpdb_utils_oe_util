@@ -40,11 +40,9 @@ class OePersist(object):
         self.__debug = True
         self.__lfh = log
         #
-        self.__inputPdbxfilePath = None
         self.__moleculeList = []
 
         self.__moleculeNameList = []
-        self.__storeObjectIndex = False
         #
         # Parameters to tune lock file management --
         self.__timeoutSeconds = 10
@@ -428,9 +426,9 @@ class OePersist(object):
                 traceback.print_exc(file=self.__lfh)
             return False
 
-    def __attributePart(self, name):
-        i = name.find(".")
-        if i == -1:
-            return None
-        else:
-            return name[i + 1:]
+    # def __attributePart(self, name):
+    #     i = name.find(".")
+    #     if i == -1:
+    #         return None
+    #     else:
+    #         return name[i + 1:]
