@@ -23,6 +23,9 @@ import os.path
 import sys
 import traceback
 
+from wwpdb.utils.config.ConfigInfo import ConfigInfo
+from wwpdb.utils.config.ConfigInfoApp import ConfigInfoAppCommon
+from wwpdb.io.locator.ChemRefPathInfo import ChemRefPathInfo
 from wwpdb.utils.oe_util.build.OeBuildMol import OeBuildMol
 
 #
@@ -46,6 +49,10 @@ class OeChemCompIoUtils(object):
         self.__debug = False
         self.__lfh = log
         #
+        self.__cI = ConfigInfo()
+        self.__cICommon = ConfigInfoAppCommon()
+        self.__ccRefPathInfo = ChemRefPathInfo(configObj=self.__cI, configCommonObj=self.__cICommon,
+                                               verbose=self.__verbose, log=self.__lfh)
 
     def getFromPathList(self, pathList, use3D=True, coordType="model", setTitle=True):
         """ Return a list of OE mols constructed from the input pathList of chemical definitions.
@@ -86,11 +93,6 @@ class OeChemCompIoUtils(object):
             if len(ide) < 1:
                 continue
             idU = str(ide).upper()
-            if idU.startswith("PRDCC_"):
-                hashd = idU[-1]
-                pth = os.path.join(self.__topCachePath, hashd, idU + '.cif')
-            else:
-                hashd = idU[0]
-                pth = os.path.join(self.__topCachePath, hashd, idU, idU + '.cif')
+            pth = self.__ccRefPathInfo.getFilePath(idU)
             pathList.append(pth)
         return self.getFromPathList(pathList, use3D=use3D, coordType=coordType, setTitle=setTitle)
