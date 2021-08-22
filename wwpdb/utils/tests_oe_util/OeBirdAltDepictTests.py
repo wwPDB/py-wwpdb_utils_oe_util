@@ -24,6 +24,8 @@ import platform
 import time
 import os
 import os.path
+if sys.version_info[0] < 3:
+    from io import open as open
 
 try:
     from openeye.oechem import OEFloatArray  # noqa: F401 pylint: disable=unused-import
@@ -77,7 +79,7 @@ class OeBirdDepictTests(unittest.TestCase):
                         fD[familyId].append((familyId, prdId, ccId, ccPath))
                         pD[prdId] = (ccId, ccPath)
 
-            ifh = open(self.__altFamilyIndexPath, "r")
+            ifh = open(self.__altFamilyIndexPath, "r", encoding="utf-8")
             for line in ifh:
                 fields = line.split()
                 fId = fields[0].strip()
@@ -145,7 +147,7 @@ class OeBirdDepictTests(unittest.TestCase):
         """Test case -  aligned family members --"""
         self.__lfh.write("\nStarting OeBirdDepictTests testFamilyDepictionHTMLIndex\n")
         tS = time.strftime("%Y %m %d %H:%M:%S", time.localtime())
-        ofh = open("index.html", "w")
+        ofh = open("index.html", "w", encoding="utf-8")
         ofh.write("<html>\n")
         ofh.write("<body>\n")
         ofh.write("<h4>Index of family chemical diagrams produced on: %s</h4>\n" % tS)

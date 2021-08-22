@@ -27,6 +27,8 @@ import unittest
 import traceback
 import platform
 import os
+if sys.version_info[0] < 3:
+    from io import open as open
 
 try:
     from openeye.oechem import OEFloatArray  # noqa: F401 pylint: disable=unused-import
@@ -65,7 +67,7 @@ class OeAlignDepictTests(unittest.TestCase):
 
     def __readPairList(self, fn="./examples/rna-linking-components.txt"):
         pairList = []
-        ifh = open(fn, "r")
+        ifh = open(fn, "r", encoding="utf-8")
         for line in ifh:
             fields = line.split()
             pairList.append((fields[1], fields[0]))
