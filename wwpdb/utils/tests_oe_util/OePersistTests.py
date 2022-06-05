@@ -101,7 +101,7 @@ class OePersistTests(unittest.TestCase):
                 molD = myPersist.fetchMolecule(moleculeName=ccId)
                 # name = molD['name']
                 ok = oem.deserialize(molD["oeb"])
-                self.__lfh.write("Deserialized status = %d\n" % ok)
+                self.__lfh.write("Deserialized status = %s\n" % ok)
                 self.__lfh.write("Deserialized SMILES (canonical) = %s\n" % oem.getCanSMILES())
                 self.__lfh.write("Deserialized SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
 
@@ -127,7 +127,7 @@ class OePersistTests(unittest.TestCase):
                 molD = myPersist.fetchOneMolecule(dbFileName=self.__storePath, moleculeName=ccId)
                 # name = molD['name']
                 ok = oem.deserialize(molD["oeb"])
-                self.__lfh.write("Deserialized status = %d\n" % ok)
+                self.__lfh.write("Deserialized status = %s\n" % ok)
                 self.__lfh.write("Deserialized SMILES (canonical) = %s\n" % oem.getCanSMILES())
                 self.__lfh.write("Deserialized SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
 

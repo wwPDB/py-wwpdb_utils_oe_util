@@ -27,6 +27,7 @@ import sys
 import platform
 import os
 import os.path
+
 if sys.version_info[0] < 3:
     from io import open as open
 

@@ -27,6 +27,7 @@ import unittest
 import traceback
 import platform
 import os
+
 if sys.version_info[0] < 3:
     from io import open as open
 

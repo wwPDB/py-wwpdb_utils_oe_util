@@ -102,7 +102,7 @@ class OeBuildModelMolTests(unittest.TestCase):
                 #
                 oemD = OeBuildModelMol(verbose=self.__verbose, log=self.__lfh)
                 ok = oemD.deserialize(oeS)
-                self.__lfh.write("Deserialized status = %d\n" % ok)
+                self.__lfh.write("Deserialized status = %s\n" % ok)
                 self.__lfh.write("Deserialized SMILES (canonical) = %s\n" % oemD.getCanSMILES())
                 self.__lfh.write("Deserialized SMILES (isomeric)  = %s\n" % oemD.getIsoSMILES())
         except:  # noqa: E722 pylint: disable=bare-except

@@ -8,6 +8,7 @@ import re
 from setuptools import find_packages
 from setuptools import setup
 import sys
+
 if sys.version_info[0] < 3:
     from io import open as open
 

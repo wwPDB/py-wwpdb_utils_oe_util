@@ -116,7 +116,7 @@ class OeBuildMolTests(unittest.TestCase):
                     #
                     oemD = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
                     ok = oemD.deserialize(oeS)
-                    self.__lfh.write("Deserialized status = %d\n" % ok)
+                    self.__lfh.write("Deserialized status = %s\n" % ok)
                     self.__lfh.write("Deserialized SMILES (canonical) = %s\n" % oemD.getCanSMILES())
                     self.__lfh.write("Deserialized SMILES (isomeric)  = %s\n" % oemD.getIsoSMILES())
 
@@ -148,7 +148,7 @@ class OeBuildMolTests(unittest.TestCase):
                     #
                     oemD = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
                     ok = oemD.deserialize(oeS)
-                    self.__lfh.write("Deserialized status = %d\n" % ok)
+                    self.__lfh.write("Deserialized status = %s\n" % ok)
                     self.__lfh.write("Deserialized SMILES (canonical) = %s\n" % oemD.getCanSMILES())
                     self.__lfh.write("Deserialized SMILES (isomeric)  = %s\n" % oemD.getIsoSMILES())
 
