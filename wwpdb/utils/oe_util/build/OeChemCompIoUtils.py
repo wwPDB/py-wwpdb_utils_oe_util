@@ -90,7 +90,19 @@ class OeChemCompIoUtils(object):
                 hashd = idU[-1]
                 pth = os.path.join(self.__topCachePath, hashd, idU + '.cif')
             else:
-                hashd = idU[0]
+                hashd = self.__getCcdHash(idU)
                 pth = os.path.join(self.__topCachePath, hashd, idU, idU + '.cif')
             pathList.append(pth)
         return self.getFromPathList(pathList, use3D=use3D, coordType=coordType, setTitle=setTitle)
+
+    def __getCcdHash(self, idCode):
+        """Returns the hash code for a CCD id.  Currently first letter"""
+        if not idCode:
+            return None
+
+        if len(idCode) > 3:
+            hash_key = idCode.upper()[-2:]
+        else:
+            hash_key = idCode.upper()[0]
+
+        return hash_key

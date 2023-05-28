@@ -49,7 +49,7 @@ class OeChemCompIoUtilsTests(unittest.TestCase):
 
         self.__topCachePath = os.path.join(self.__here, "ligand-dict-v3")
         self.__pathList = [os.path.join(self.__datadir, "ATP.cif"), os.path.join(self.__datadir, "GTP.cif"), os.path.join(self.__datadir, "ARG.cif")]
-        self.__idList = ["MSE", "GTP", "TRP"]
+        self.__idList = ["MSE", "GTP", "TRP", "XXATP"]
 
     def tearDown(self):
         pass
@@ -77,6 +77,7 @@ class OeChemCompIoUtilsTests(unittest.TestCase):
             oeU = OeChemCompIoUtils(topCachePath=self.__topCachePath, verbose=self.__verbose, log=self.__lfh)
             oemList = oeU.getFromIdList(self.__idList, use3D=True, coordType="model")
             for oem in oemList:
+                self.__lfh.write("CcId               = %s\n" % oem.getCcId())
                 self.__lfh.write("Title              = %s\n" % oem.getTitle())
                 self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
                 self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
