@@ -59,7 +59,8 @@ class OeDescriptorUtilsTests(unittest.TestCase):
         logger.info("Starting")
         startTime = time.time()
         try:
-            oedu = OeDescriptorUtils()
+            oedu = OeDescriptorUtils()  # pylint: disable=possibly-used-before-assignment
+
             for smiles in self.__gtpSmilesList:
                 smiIso = oedu.standardizeSmiles(smiles, type="ISOMERIC")
                 smiCan = oedu.standardizeSmiles(smiles, type="CANNONICAL")

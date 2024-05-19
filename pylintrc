@@ -61,18 +61,7 @@ confidence=
 # no Warning level messages displayed, use "--disable=all --enable=classes
 # --disable=W".
 disable=missing-docstring,
-        empty-docstring,
-        raw-checker-failed,
-        bad-inline-option,
-        locally-disabled,
-        file-ignored,
-        suppressed-message,
-        useless-suppression,
-        deprecated-pragma,
-        use-symbolic-message-instead,
         broad-except,
-	unspecified-encoding,
-        raise-missing-from	
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -115,7 +104,7 @@ max-nested-blocks=5
 # inconsistent-return-statements if a never returning function is called then
 # it will be considered as an explicit return statement and no message will be
 # printed.
-never-returning-functions=sys.exit
+#never-returning-functions=sys.exit
 
 
 [LOGGING]

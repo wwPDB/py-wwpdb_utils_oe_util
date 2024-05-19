@@ -55,7 +55,8 @@ class OeBuildModelMolTests(unittest.TestCase):
         """Test case -  build OE molecule from model instance"""
         self.__lfh.write("\nStarting OeBuildModelMolTests testBuildFromModel\n")
         try:
-            oem = OeBuildModelMol(verbose=self.__verbose, log=self.__lfh)
+            oem = OeBuildModelMol(verbose=self.__verbose, log=self.__lfh)  # pylint: disable=possibly-used-before-assignment
+
             modelId = oem.setChemCompModelPath(self.__modelFilePath)
             self.__lfh.write("Model              = %s\n" % modelId)
             oem.build3D()

@@ -1,2 +1,2 @@
 --extra-index-url https://pypi.anaconda.org/OpenEye/simple
-OpenEye-toolkits
+OpenEye-toolkits~=2022.1.1

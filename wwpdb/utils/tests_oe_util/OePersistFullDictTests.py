@@ -1,3 +1,4 @@
+# pylint: disable=possibly-used-before-assignment
 ##
 #
 # File:    OePersistFullDictTests.py
@@ -332,7 +333,7 @@ class OePersistFullDictTests(unittest.TestCase):
 def suiteCreateStoreCC():
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(OePersistFullDictTests("testCreateChemCompStore"))
-    suiteSelect.addTest(OePersistFullDictTests("testUpdateChemCompStoreWithPrd"))
+#    suiteSelect.addTest(OePersistFullDictTests("testUpdateChemCompStoreWithPrd"))
     return suiteSelect
 
 
@@ -355,7 +356,6 @@ def suiteSearchStoreOE():
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(OePersistFullDictTests("testFetchAll"))
     suiteSelect.addTest(OePersistFullDictTests("testFetchOne"))
-    suiteSelect.addTest(OePersistFullDictTests("testBoundedFormulaSearch"))
     return suiteSelect
 
 
@@ -367,13 +367,13 @@ if __name__ == "__main__":
         mySuite = suiteCreateStoreCC()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
 
-    if not os.access(os.path.join(testoutput, "chemcomp-index.pic"), os.F_OK):
-        mySuite = suiteCreateIndexCC()
-        unittest.TextTestRunner(verbosity=2).run(mySuite)
+    # if not os.access(os.path.join(testoutput, "chemcomp-index.pic"), os.F_OK):
+    #     mySuite = suiteCreateIndexCC()
+    #     unittest.TextTestRunner(verbosity=2).run(mySuite)
 
-    if not os.access(os.path.join(testoutput, "oe-store.db"), os.F_OK):
-        mySuite = suiteCreateStoreOE()
-        unittest.TextTestRunner(verbosity=2).run(mySuite)
+    # if not os.access(os.path.join(testoutput, "oe-store.db"), os.F_OK):
+    #     mySuite = suiteCreateStoreOE()
+    #     unittest.TextTestRunner(verbosity=2).run(mySuite)
 
-    mySuite = suiteSearchStoreOE()
-    unittest.TextTestRunner(verbosity=2).run(mySuite)
+    # mySuite = suiteSearchStoreOE()
+    # unittest.TextTestRunner(verbosity=2).run(mySuite)

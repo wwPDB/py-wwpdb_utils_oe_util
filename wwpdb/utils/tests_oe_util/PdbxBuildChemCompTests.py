@@ -56,6 +56,7 @@ class PdbxBuildChemCompTests(unittest.TestCase):
             self.__lfh.write("\nTitle              %s = %s\n" % (oem.getCcId(), oem.getTitle()))
             self.__lfh.write("Formula            %s = %s\n" % (oem.getCcId(), oem.getFormula()))
             self.__lfh.write("SMILES (canonical) %s = %s\n" % (oem.getCcId(), oem.getCanSMILES()))
+
             self.__lfh.write("SMILES (isomeric)  %s = %s\n" % (oem.getCcId(), oem.getIsoSMILES()))
             inKy = oem.getInChIKey()
             self.__lfh.write("InChIKey (std)     %s = %s\n" % (oem.getCcId(), inKy))
@@ -72,13 +73,13 @@ class PdbxBuildChemCompTests(unittest.TestCase):
         try:
             oemList = []
 
-            oeU = OeChemCompIoUtils(topCachePath=self.__topCachePath, verbose=self.__verbose, log=self.__lfh)
+            oeU = OeChemCompIoUtils(topCachePath=self.__topCachePath, verbose=self.__verbose, log=self.__lfh)  # pylint: disable=possibly-used-before-assignment
             oemList = oeU.getFromPathList(self.__pathList, use3D=True, coordType="model")
             self.__molListPrint(oemList)
             for oem in oemList:
                 ccId = oem.getCcId()
                 fp = "FF_" + ccId + ".cif"
-                ccB = PdbxBuildChemComp(verbose=self.__verbose, log=self.__lfh)
+                ccB = PdbxBuildChemComp(verbose=self.__verbose, log=self.__lfh)  # pylint: disable=possibly-used-before-assignment
                 ccB.setOeMol(oem.getMol(), ccId, name=ccId)
                 ccB.write(filePath=fp)
         except:  # noqa: E722 pylint: disable=bare-except

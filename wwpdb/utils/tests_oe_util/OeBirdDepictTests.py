@@ -1,4 +1,4 @@
-##
+# pylint: disable=possibly-used-before-assignment##
 #
 # File:    OeBirdDepictTests.py
 # Author:  jdw

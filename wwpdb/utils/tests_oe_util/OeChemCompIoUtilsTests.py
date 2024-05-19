@@ -59,7 +59,7 @@ class OeChemCompIoUtilsTests(unittest.TestCase):
         self.__lfh.write("\nStarting OeChemCompIoUtilsTests testMakeFromFiles\n")
         try:
             oemList = []
-            oeU = OeChemCompIoUtils(topCachePath=self.__topCachePath, verbose=self.__verbose, log=self.__lfh)
+            oeU = OeChemCompIoUtils(topCachePath=self.__topCachePath, verbose=self.__verbose, log=self.__lfh)  # pylint: disable=possibly-used-before-assignment
             oemList = oeU.getFromPathList(self.__pathList, use3D=True, coordType="model")
             for oem in oemList:
                 self.__lfh.write("Title              = %s\n" % oem.getTitle())

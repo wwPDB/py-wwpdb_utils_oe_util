@@ -81,7 +81,7 @@ class OeAlignDepictTests(unittest.TestCase):
         """Test case -  Simple pairwise MCSS alignment  -  Each aligned pair output to a separate image file"""
         self.__lfh.write("\nStarting OeAlignDepictTests tstMCSalignPairDepict\n")
         try:
-            oed = OeDepictMCSAlign(verbose=self.__verbose, log=self.__lfh)
+            oed = OeDepictMCSAlign(verbose=self.__verbose, log=self.__lfh)  # pylint: disable=possibly-used-before-assignment
             oed.setRefId(self.__refId, cachePath=self.__topCachePath)
             for fitId in self.__idList:
                 oed.setFitId(fitId, cachePath=self.__topCachePath)

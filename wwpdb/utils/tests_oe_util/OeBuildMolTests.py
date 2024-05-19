@@ -60,7 +60,7 @@ class OeBuildMolTests(unittest.TestCase):
         """Test case -  read a test SDF file and build the corresponding OEGraphMol"""
         self.__lfh.write("\nStarting OeBuildMolTests testBuildolFromSDF\n")
         try:
-            oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
+            oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)  # pylint: disable=possibly-used-before-assignment
             if oem.importFile(self.__sdfFilePath, type="3D"):
                 self.__lfh.write("Title              = %s\n" % oem.getTitle())
                 self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
@@ -77,7 +77,7 @@ class OeBuildMolTests(unittest.TestCase):
         try:
             oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
             for pth in self.__pathList:
-                myReader = PdbxIoAdapter(self.__verbose, self.__lfh)
+                myReader = PdbxIoAdapter(self.__verbose, self.__lfh)  # pylint: disable=possibly-used-before-assignment
                 ok = myReader.read(pdbxFilePath=pth)
                 self.assertTrue(ok)
                 # myReader.write(pdbxFilePath="TMP.cif")

@@ -1,3 +1,4 @@
+# pylint: disable=possibly-used-before-assignment
 ##
 #
 # File:    OePersistTests.py
