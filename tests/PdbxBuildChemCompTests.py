@@ -13,16 +13,17 @@
 Test cases for OE -> CC building tools -
 
 """
+
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.01"
 
-import sys
-import unittest
-import traceback
 import os
+import sys
+import traceback
+import unittest
 
 try:
     from openeye.oechem import OEFloatArray  # noqa: F401 pylint: disable=unused-import
@@ -32,8 +33,8 @@ except ImportError:
     skiptests = True
 
 if not skiptests:
-    from wwpdb.utils.oe_util.build.PdbxBuildChemComp import PdbxBuildChemComp
     from wwpdb.utils.oe_util.build.OeChemCompIoUtils import OeChemCompIoUtils
+    from wwpdb.utils.oe_util.build.PdbxBuildChemComp import PdbxBuildChemComp
 
 
 @unittest.skipIf(skiptests, "Requires openeye library")
@@ -64,7 +65,6 @@ class PdbxBuildChemCompTests(unittest.TestCase):
             if inKy not in inKyD:
                 inKyD[inKy] = []
             inKyD[inKy].append(inKy)
-            #
         self.__lfh.write("Unique InChiKeys =  %d\n" % (len(inKyD)))
 
     def testBuildFromFiles(self):

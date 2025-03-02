@@ -13,6 +13,7 @@
 Classes to build 2D OE molecule depictions from ChemComp definitions.
 
 """
+
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
@@ -63,11 +64,10 @@ class LabelAtoms(OEDisplayAtomPropBase):
         return copy.__disown__()
 
 
-class OeDepictBase(object):
-
+class OeDepictBase:
     """Base class for 2D depictions in single and multi-page format."""
 
-    def __init__(self, verbose=True, log=sys.stderr):  # pylint: disable=unused-argument
+    def __init__(self, verbose=True, log=sys.stderr):  # noqa: ARG002 pylint: disable=unused-argument
         super(OeDepictBase, self).__init__()
         # self.__verbose = verbose
         # self.__debug = False
@@ -142,11 +142,9 @@ class OeDepictBase(object):
         #
         # 5.0 is minimum size -
         self._opts.SetTitleHeight(5.0)
-        #
 
 
 class OeDepictMultiPage(OeDepictBase):
-
     """Create 2D depictions in multipage format from a list of OE molecules and title strings"""
 
     def __init__(self, verbose=True, log=sys.stderr, useTitle=True):
@@ -155,7 +153,6 @@ class OeDepictMultiPage(OeDepictBase):
         # self.__debug = False
         # self.__lfh = log
         self.__useTitle = useTitle
-        #
         self.__multi = None
         self.__image = None
 
@@ -185,7 +182,6 @@ class OeDepictMultiPage(OeDepictBase):
                 citer = grid.GetCells()
 
             cell = citer.Target()
-            #
             if self._params["suppressHydrogens"]:
                 mol = oeMol.getGraphMolSuppressH()
             else:
@@ -196,8 +192,6 @@ class OeDepictMultiPage(OeDepictBase):
                 self._opts.SetTitleHeight(5.0)
             else:
                 mol.SetTitle("")
-            #
-            #
             OEPrepareDepiction(mol)
             self._opts.SetDimensions(cell.GetWidth(), cell.GetHeight(), OEScale_AutoScale)
             self._assignDisplayOptions()
@@ -213,7 +207,6 @@ class OeDepictMultiPage(OeDepictBase):
 
 
 class OeDepict(OeDepictBase):
-
     """Create 2D depictions in single-page format from a list of OE molecules & title strings"""
 
     def __init__(self, verbose=True, log=sys.stderr, useTitle=True):
@@ -222,19 +215,16 @@ class OeDepict(OeDepictBase):
         self.__debug = False
         self.__lfh = log
         self.__useTitle = useTitle
-        #
         self.__image = None
         self.__grid = None
 
     def __setupImage(self):
         """Internal method to configure a single page image."""
-        #
         self.__image = OEImage(self._params["imageSizeX"], self._params["imageSizeY"])
         self.__grid = OEImageGrid(self.__image, self._params["gridRows"], self._params["gridCols"])
         self.__grid.SetCellGap(self._params["cellGap"])
         self.__grid.SetMargins(self._params["cellMargin"])
         self._opts = OE2DMolDisplayOptions(self.__grid.GetCellWidth(), self.__grid.GetCellHeight(), OEScale_AutoScale)
-        #
         if self.__debug:
             self.__lfh.write("Num columns %d\n" % self.__grid.NumCols())
             self.__lfh.write("Num rows    %d\n" % self.__grid.NumRows())
@@ -245,7 +235,6 @@ class OeDepict(OeDepictBase):
         mollist = list(self._molTitleList)
         for idx, cell in enumerate(self.__grid.GetCells()):
             _ccId, oeMol, title = mollist[idx]
-            #
             if self._params["suppressHydrogens"]:
                 mol = oeMol.getGraphMolSuppressH()
             else:
@@ -255,8 +244,6 @@ class OeDepict(OeDepictBase):
                 self._opts.SetTitleHeight(5.0)
             else:
                 mol.SetTitle("")
-            #
-            #
             OEPrepareDepiction(mol)
             self._opts.SetDimensions(cell.GetWidth(), cell.GetHeight(), OEScale_AutoScale)
 

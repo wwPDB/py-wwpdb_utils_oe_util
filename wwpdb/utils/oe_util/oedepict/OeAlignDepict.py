@@ -14,6 +14,7 @@
 Classes to depict MCS alignments.
 
 """
+
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
@@ -66,12 +67,12 @@ from openeye.oedepict import (
     OEWriteImage,
     OEWriteMultiPageImage,
 )
+
 from wwpdb.utils.cc_dict_util.timeout.TimeoutMultiProc import timeout
 from wwpdb.utils.oe_util.build.OeBuildMol import OeBuildMol
 
 
-class OeDepictMCSAlign(object):
-
+class OeDepictMCSAlign:
     """Create 2D depictions of MCSS alignments.  Targets can be chemical component identifiers
     or paths to chemical component definition files.  Inputs can be in the the form of pairs,
     lists, and pair lists of chemical component definitions.
@@ -79,33 +80,24 @@ class OeDepictMCSAlign(object):
     """
 
     def __init__(self, verbose=True, log=sys.stderr):
-        #
         self.__verbose = verbose
         self.__debug = False
         self.__lfh = log
-        #
         self.__refId = None
         self.__refmol = None
         self.__refTitle = None
-        #
         self.__fitId = None
         self.__fitmol = None
         self.__fitTitle = None
-        #
         self.__pairTupleList = []
-        #
         self.__minAtomMatchFraction = 0.50
         self.__pageOrientation = "portrait"
-        #
         self.__searchType = "default"
-        #
         self.__refFD = {}
         self.__fitFD = {}
-        #
         self.__refPath = None
         self.__fitPath = None
         self.__mcss = None
-        #
         self.__image = None
         self.__grid = None
         self.__opts = None
@@ -141,12 +133,10 @@ class OeDepictMCSAlign(object):
         else:
             self.__refmol.SetTitle(self.__refId)
             self.__refTitle = None
-        #
-        #
         OEPrepareDepiction(self.__refmol)
         self.__setupMCSS(self.__refmol)
 
-    def setRefPath(self, ccPath, title=None, suppressHydrogens=False, type="CC", importType="2D"):  # pylint: disable=redefined-builtin
+    def setRefPath(self, ccPath, title=None, suppressHydrogens=False, type="CC", importType="2D"):  # noqa: A002 pylint: disable=redefined-builtin
         """Set the query molecule for MCSS comparison using the input file path.
 
         The file type is either ['CC'] for a chemical component definition or another file type
@@ -159,10 +149,14 @@ class OeDepictMCSAlign(object):
         The hydrogen flag can be used to perform the MCSS using only heavy atoms.
         """
         self.__refPath = ccPath
-        if type in ["CC"]:
-            (self.__refId, self.__refmol, self.__refFD) = self.__getCCDefFile(ccPath, suppressHydrogens=suppressHydrogens)
+        if type == "CC":
+            (self.__refId, self.__refmol, self.__refFD) = self.__getCCDefFile(
+                ccPath, suppressHydrogens=suppressHydrogens
+            )
         else:
-            (self.__refId, self.__refmol, self.__refFD) = self.__getMiscFile(ccPath, suppressHydrogens=suppressHydrogens, importType=importType)
+            (self.__refId, self.__refmol, self.__refFD) = self.__getMiscFile(
+                ccPath, suppressHydrogens=suppressHydrogens, importType=importType
+            )
 
         if self.__verbose:
             self.__lfh.write("Derived ref ID     = %s\n" % self.__refId)
@@ -184,7 +178,9 @@ class OeDepictMCSAlign(object):
         self.__fitId = ccId
         ccIdU = ccId.upper()
         self.__fitPath = os.path.join(cachePath, ccIdU[0], ccIdU, ccIdU + ".cif")
-        self.__fitId, self.__fitmol, self.__fitFD = self.__getCCDefFile(self.__fitPath, suppressHydrogens=suppressHydrogens)
+        self.__fitId, self.__fitmol, self.__fitFD = self.__getCCDefFile(
+            self.__fitPath, suppressHydrogens=suppressHydrogens
+        )
         if self.__verbose:
             self.__lfh.write("Fit ID             = %s\n" % self.__fitId)
             self.__lfh.write("SMILES (isomeric)  = %s\n" % self.__fitFD["SMILES_STEREO"])
@@ -205,7 +201,7 @@ class OeDepictMCSAlign(object):
             self.__fitmol.SetTitle(self.__fitId)
             self.__fitTitle = None
 
-    def setFitIdList(self, ccIdList, cachePath="/data/components/ligand-dict-v3", suppressHydrogens=False):  # pylint: disable=unused-argument
+    def setFitIdList(self, ccIdList, cachePath="/data/components/ligand-dict-v3", suppressHydrogens=False):  # noqa: ARG002 pylint: disable=unused-argument
         """Set the list of IDs to be compared with reference molecule by MCSS.
 
         From the input ID list build the internal pair list of
@@ -215,31 +211,28 @@ class OeDepictMCSAlign(object):
         for ccId in ccIdList:
             refId = self.__refId
             refPath = self.__refPath
-            #
             fitId = ccId
             ccIdU = ccId.upper()
             fitPath = os.path.join(cachePath, ccIdU[0], ccIdU, ccIdU + ".cif")
-            #
             refTitle = refId + "/" + fitId
             fitTitle = fitId + "/" + refId
             self.__pairTupleList.append((refId, refPath, refTitle, fitId, fitPath, fitTitle))
 
-    def setFitPathList(self, fitPathTupList, suppressHydrogens=False):  # pylint: disable=unused-argument
+    def setFitPathList(self, fitPathTupList, suppressHydrogens=False):  # noqa: ARG002 pylint: disable=unused-argument
         """Set the list of paths for the target/library molecules to be compared with reference molecule by MCSS.
 
         From the input path tuple list build the internal pair list of
         tuples  [(fitId,fitPath,fitTitle),(),...]
         """
         self.__pairTupleList = []
-        for fitId, fitPath, fitTitle in fitPathTupList:
+        for fitId, fitPath, _fitTitle in fitPathTupList:
             refId = self.__refId
             refPath = self.__refPath
-            #
             refTitle = refId + "/" + fitId
-            fitTitle = fitId + "/" + refId
-            self.__pairTupleList.append((refId, refPath, refTitle, fitId, fitPath, fitTitle))
+            newFitTitle = fitId + "/" + refId
+            self.__pairTupleList.append((refId, refPath, refTitle, fitId, fitPath, newFitTitle))
 
-    def setPairIdList(self, pairIdList, cachePath="/data/components/ligand-dict-v3", suppressHydrogens=False):  # pylint: disable=unused-argument
+    def setPairIdList(self, pairIdList, cachePath="/data/components/ligand-dict-v3", suppressHydrogens=False):  # noqa: ARG002 pylint: disable=unused-argument
         """Set the list of ID pais to be aligned by MCSS.
 
         From the input ID list build the internal pair list of
@@ -250,10 +243,8 @@ class OeDepictMCSAlign(object):
         for refId, fitId in pairIdList:
             ccIdU = refId.upper()
             refPath = os.path.join(cachePath, ccIdU[0], ccIdU, ccIdU + ".cif")
-            #
             ccIdU = fitId.upper()
             fitPath = os.path.join(cachePath, ccIdU[0], ccIdU, ccIdU + ".cif")
-            #
             refTitle = refId + "/" + fitId
             fitTitle = fitId + "/" + refId
             self.__pairTupleList.append((refId, refPath, refTitle, fitId, fitPath, fitTitle))
@@ -263,7 +254,6 @@ class OeDepictMCSAlign(object):
         for comparison and depiction.
 
         """
-        #
         oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
         ccId = oem.setChemCompPath(ccPath)
         oem.build2D()
@@ -278,12 +268,17 @@ class OeDepictMCSAlign(object):
             self.__lfh.write("  InChI              = %s\n" % oem.getInChI())
 
         fD = {}
-        fD = {"Formula": oem.getFormula(), "SMILES": oem.getCanSMILES(), "SMILES_STEREO": oem.getIsoSMILES(), "InChI": oem.getInChI(), "InChIKey": oem.getInChIKey()}
+        fD = {
+            "Formula": oem.getFormula(),
+            "SMILES": oem.getCanSMILES(),
+            "SMILES_STEREO": oem.getIsoSMILES(),
+            "InChI": oem.getInChI(),
+            "InChIKey": oem.getInChIKey(),
+        }
 
         if suppressHydrogens:
             return (ccId, oem.getGraphMolSuppressH(), fD)
-        else:
-            return (ccId, oem.getMol(), fD)
+        return (ccId, oem.getMol(), fD)
 
     def __getMiscFile(self, ccPath, suppressHydrogens=False, importType="2D"):
         """Fetch a miscellaneous chemical file (ccPath) and build OE molecules
@@ -317,7 +312,18 @@ class OeDepictMCSAlign(object):
                 for ii, atm in enumerate(tMol.GetAtoms()):
                     xyzL = OEFloatArray(3)
                     tMol.GetCoords(atm, xyzL)
-                    molXyzL.append((ii, atm.GetIdx(), atm.GetAtomicNum(), atm.GetName(), atm.GetType(), "%.3f" % xyzL[0], "%.3f" % xyzL[1], "%.3f" % xyzL[2]))
+                    molXyzL.append(
+                        (
+                            ii,
+                            atm.GetIdx(),
+                            atm.GetAtomicNum(),
+                            atm.GetName(),
+                            atm.GetType(),
+                            "%.3f" % xyzL[0],
+                            "%.3f" % xyzL[1],
+                            "%.3f" % xyzL[2],
+                        )
+                    )
             fD = {}
             fD = {
                 "Formula": oem.getFormula(),
@@ -332,7 +338,10 @@ class OeDepictMCSAlign(object):
                 xyzL = OEFloatArray(3)
                 tMol.GetCoords(atm, xyzL)
                 if self.__verbose:
-                    self.__lfh.write("OeAlignDepict.__getMiscFile - atom  %d %s %s %s %s %r\n" % (ii, atm.GetIdx(), atm.GetAtomicNum(), atm.GetName(), atm.GetType(), xyzL))
+                    self.__lfh.write(
+                        "OeAlignDepict.__getMiscFile - atom  %d %s %s %s %s %r\n"
+                        % (ii, atm.GetIdx(), atm.GetAtomicNum(), atm.GetName(), atm.GetType(), xyzL)
+                    )
 
             return (ccId, tMol, fD)
         except:  # noqa: E722 pylint: disable=bare-except
@@ -343,7 +352,6 @@ class OeDepictMCSAlign(object):
 
     def __setupMCSS(self, refmol):
         """Internal initialization for the MCSS comparison."""
-        #
         if self.__searchType == "default":
             self.__mcss = OEMCSSearch(OEMCSType_Approximate)
             atomexpr = OEExprOpts_DefaultAtoms
@@ -382,12 +390,11 @@ class OeDepictMCSAlign(object):
         # self.__mcss.SetMinAtoms(nAtomsRef/2)
 
     @timeout(15)
-    def testAlign(self, suppressHydrogens=False, unique=True, minFrac=1.0):  # pylint: disable=unused-argument
+    def testAlign(self, suppressHydrogens=False, unique=True, minFrac=1.0):  # noqa: ARG002 pylint: disable=unused-argument
         """Test the MCSS comparison between current reference and fit molecules -
         Return list of corresponding atoms on success or an empty list otherwise.
         """
         atomMap = []
-        #
         nAtomsRef = self.__refmol.NumAtoms()
         nAtomsFit = self.__fitmol.NumAtoms()
         minAtoms = int(min(nAtomsRef, nAtomsFit) * minFrac)
@@ -404,17 +411,26 @@ class OeDepictMCSAlign(object):
             match = miter.Target()
             for mAt in match.GetAtoms():
                 # atomMap.append( (self.__refId,mAt.pattern.GetName(),self.__fitId,mAt.target.GetName() ))
-                atomMap.append((self.__refId, mAt.pattern.GetIdx(), mAt.pattern.GetType(), mAt.pattern.GetName(), self.__fitId, mAt.target.GetIdx(), mAt.target.GetName()))
+                atomMap.append(
+                    (
+                        self.__refId,
+                        mAt.pattern.GetIdx(),
+                        mAt.pattern.GetType(),
+                        mAt.pattern.GetName(),
+                        self.__fitId,
+                        mAt.target.GetIdx(),
+                        mAt.target.GetName(),
+                    )
+                )
 
         return atomMap
 
     @timeout(30)
-    def doAlign(self, suppressHydrogens=False, unique=True, minFrac=1.0):  # pylint: disable=unused-argument
+    def doAlign(self, suppressHydrogens=False, unique=True, minFrac=1.0):  # noqa: ARG002  pylint: disable=unused-argument
         """Test the MCSS comparison between current reference and fit molecules -
         Return list of corresponding atoms on success or an empty list otherwise.
         """
         atomMap = []
-        #
         nAtomsRef = self.__refmol.NumAtoms()
         nAtomsFit = self.__fitmol.NumAtoms()
         minAtoms = int(min(nAtomsRef, nAtomsFit) * minFrac)
@@ -431,17 +447,26 @@ class OeDepictMCSAlign(object):
             match = miter.Target()
             for mAt in match.GetAtoms():
                 # atomMap.append( (self.__refId,mAt.pattern.GetName(),self.__fitId,mAt.target.GetName() ))
-                atomMap.append((self.__refId, mAt.pattern.GetIdx(), mAt.pattern.GetType(), mAt.pattern.GetName(), self.__fitId, mAt.target.GetIdx(), mAt.target.GetName()))
+                atomMap.append(
+                    (
+                        self.__refId,
+                        mAt.pattern.GetIdx(),
+                        mAt.pattern.GetType(),
+                        mAt.pattern.GetName(),
+                        self.__fitId,
+                        mAt.target.GetIdx(),
+                        mAt.target.GetName(),
+                    )
+                )
 
         return (nAtomsRef, self.__refFD["SMILES_STEREO"], nAtomsFit, self.__fitFD["SMILES_STEREO"], atomMap)
 
     @timeout(30)
-    def doAlignAlt(self, suppressHydrogens=False, unique=True, minFrac=1.0):  # pylint: disable=unused-argument
+    def doAlignAlt(self, suppressHydrogens=False, unique=True, minFrac=1.0):  # noqa: ARG002 pylint: disable=unused-argument
         """Test the MCSS comparison between current reference and fit molecules -
         Return list of corresponding atoms on success or an empty list otherwise.
         """
         atomMap = []
-        #
         nAtomsRef = self.__refmol.NumAtoms()
         nAtomsFit = self.__fitmol.NumAtoms()
         minAtoms = int(min(nAtomsRef, nAtomsFit) * minFrac)
@@ -474,7 +499,6 @@ class OeDepictMCSAlign(object):
 
     def __setupImage(self, imageX=400, imageY=400):
         """Internal method to configure a single pair alignment image."""
-        #
         self.__image = OEImage(imageX, imageY)
         rows = 1
         cols = 2
@@ -486,10 +510,8 @@ class OeDepictMCSAlign(object):
 
     def __setupImageMulti(self, gridRows=2, gridCols=2):
         """Internal method to configure a multipage image."""
-        #
         self.__gridRows = gridRows
         self.__gridCols = gridCols
-        #
         if self.__pageOrientation == "landscape":
             self.__multi = OEMultiPageImageFile(OEPageOrientation_Landscape, OEPageSize_US_Letter)
         else:
@@ -527,7 +549,6 @@ class OeDepictMCSAlign(object):
         self.__refmol.SetTitle(self.__refTitle)
         OEPrepareDepiction(self.__refmol)
 
-        #
         if self.__fitTitle is None:
             self.__fitTitle = self.__fitId + "/" + self.__refId
         self.__fitmol.SetTitle(self.__fitTitle)
@@ -597,18 +618,14 @@ class OeDepictMCSAlign(object):
 
         Image Output is in multipage layout.
         """
-        #
         self.__setupImageMulti(gridRows=gridRows, gridCols=gridCols)
-        #
         atomMap = []
-        #
         numRows = self.__grid.NumRows()
         rowIdx = 0
-        for (refId, refPath, refTitle, fitId, fitPath, fitTitle) in self.__pairTupleList:
+        for refId, refPath, refTitle, fitId, fitPath, fitTitle in self.__pairTupleList:
             self.setRefPath(refPath, title=refTitle, suppressHydrogens=suppressHydrogens)
             OEPrepareDepiction(self.__refmol)
 
-            #
             _tId, fitmol, _fitFD = self.__getCCDefFile(fitPath, suppressHydrogens=suppressHydrogens)
             fitmol.SetTitle(fitTitle)
             #
@@ -662,7 +679,10 @@ class OeDepictMCSAlign(object):
 
             optInverseFit = True
 
-            self.__lfh.write("+OeAlignDepict.alignPairList refId %s fitId %s nAtomsRef %d nAtomsFit %s mcssMinAtoms %d\n" % (refId, fitId, nAtomsRef, nAtomsFit, mcssMinAtoms))
+            self.__lfh.write(
+                "+OeAlignDepict.alignPairList refId %s fitId %s nAtomsRef %d nAtomsFit %s mcssMinAtoms %d\n"
+                % (refId, fitId, nAtomsRef, nAtomsFit, mcssMinAtoms)
+            )
             unique = True
 
             miter = self.__mcss.Match(fitmol, unique)

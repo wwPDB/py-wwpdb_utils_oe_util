@@ -12,6 +12,7 @@
 A collection of tests for the OEBuildModelMol and related classes.
 
 """
+
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
@@ -20,8 +21,8 @@ __version__ = "V0.01"
 
 import os
 import sys
-import unittest
 import traceback
+import unittest
 
 try:
     from openeye.oechem import OEFloatArray  # noqa: F401 pylint: disable=unused-import
@@ -33,8 +34,8 @@ except ImportError:
 if not skiptests:
     from wwpdb.utils.oe_util.build.OeBuildModelMol import OeBuildModelMol
 
-from mmcif_utils.chemcomp.PdbxChemCompModelIo import PdbxChemCompModelIo
 from mmcif_utils.chemcomp.PdbxChemCompModel import PdbxChemCompModelDescriptor
+from mmcif_utils.chemcomp.PdbxChemCompModelIo import PdbxChemCompModelIo
 
 
 @unittest.skipIf(skiptests, "Requires oe library")
@@ -43,9 +44,8 @@ class OeBuildModelMolTests(unittest.TestCase):
         self.__lfh = sys.stderr
         self.__verbose = True
         HERE = os.path.abspath(os.path.dirname(__file__))
-        TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
-        mockTopPath = os.path.join(TOPDIR, "wwpdb", "mock-data")
-        self.__modelFilePath = os.path.join(mockTopPath, "CCD", "MTGL00001.cif")
+        datadir = os.path.join(HERE, "data")
+        self.__modelFilePath = os.path.join(datadir, "MTGL00001.cif")
         self.__modelFilePathList = [self.__modelFilePath]
 
     def tearDown(self):
@@ -63,13 +63,12 @@ class OeBuildModelMolTests(unittest.TestCase):
             self.__lfh.write("Title              = %s\n" % oem.getTitle())
             self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
             self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
-            #
             pccm = PdbxChemCompModelIo(verbose=self.__verbose, log=self.__lfh)
             pccm.setFilePath(self.__modelFilePath)
             dL = pccm.getDescriptorList()
             for d in dL:
                 pd = PdbxChemCompModelDescriptor(d, verbose=self.__verbose, log=self.__lfh)
-                print(pd.getType())
+                print(pd.getType())  # noqa: T201
                 if pd.getType() == "SMILES_CANNONICAL":
                     sm = pd.getDescriptor()
                     if sm == oem.getIsoSMILES():
@@ -98,9 +97,7 @@ class OeBuildModelMolTests(unittest.TestCase):
                 self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
                 self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
                 oeS = oem.serialize()
-                #
                 self.__lfh.write("Serialized string length = %d\n" % len(oeS))
-                #
                 oemD = OeBuildModelMol(verbose=self.__verbose, log=self.__lfh)
                 ok = oemD.deserialize(oeS)
                 self.__lfh.write("Deserialized status = %s\n" % ok)

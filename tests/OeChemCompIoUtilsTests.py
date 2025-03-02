@@ -13,17 +13,18 @@
 Test cases for persistent storage of serialized OE molecule objects.
 
 """
+
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.01"
 
-import sys
-import unittest
-import traceback
-import platform
 import os
+import platform
+import sys
+import traceback
+import unittest
 
 try:
     from openeye.oechem import OEFloatArray  # noqa: F401 pylint: disable=unused-import
@@ -48,7 +49,11 @@ class OeChemCompIoUtilsTests(unittest.TestCase):
         self.__datadir = os.path.join(self.__here, "data")
 
         self.__topCachePath = os.path.join(self.__here, "ligand-dict-v3")
-        self.__pathList = [os.path.join(self.__datadir, "ATP.cif"), os.path.join(self.__datadir, "GTP.cif"), os.path.join(self.__datadir, "ARG.cif")]
+        self.__pathList = [
+            os.path.join(self.__datadir, "ATP.cif"),
+            os.path.join(self.__datadir, "GTP.cif"),
+            os.path.join(self.__datadir, "ARG.cif"),
+        ]
         self.__idList = ["MSE", "GTP", "TRP", "XXATP"]
 
     def tearDown(self):
@@ -94,6 +99,5 @@ def suite1():
 
 
 if __name__ == "__main__":
-    #
     mySuite = suite1()
     unittest.TextTestRunner(verbosity=2).run(mySuite)

@@ -16,17 +16,18 @@
 A collection of tests for the OEBuildMol and related classes.
 
 """
+
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.01"
 
-import sys
-import unittest
-import traceback
-import platform
 import os
+import platform
+import sys
+import traceback
+import unittest
 
 try:
     from openeye.oechem import OEFloatArray  # noqa: F401 pylint: disable=unused-import
@@ -36,8 +37,9 @@ except ImportError:
     skiptests = True
 
 if not skiptests:
-    from wwpdb.utils.oe_util.build.OeBuildMol import OeBuildMol
     from mmcif_utils.persist.PdbxPyIoAdapter import PdbxPyIoAdapter as PdbxIoAdapter
+
+    from wwpdb.utils.oe_util.build.OeBuildMol import OeBuildMol
 
 
 @unittest.skipIf(skiptests, "Cannot import openeye.oechem for tests")
@@ -51,7 +53,11 @@ class OeBuildMolTests(unittest.TestCase):
             os.makedirs(self.__testoutput)
         self.__datadir = os.path.join(self.__here, "data")
         self.__sdfFilePath = os.path.join(self.__datadir, "ATP.sdf")
-        self.__pathList = [os.path.join(self.__datadir, "ATP.cif"), os.path.join(self.__datadir, "GTP.cif"), os.path.join(self.__datadir, "ARG.cif")]
+        self.__pathList = [
+            os.path.join(self.__datadir, "ATP.cif"),
+            os.path.join(self.__datadir, "GTP.cif"),
+            os.path.join(self.__datadir, "ARG.cif"),
+        ]
 
     def tearDown(self):
         pass
@@ -82,7 +88,11 @@ class OeBuildMolTests(unittest.TestCase):
                 self.assertTrue(ok)
                 # myReader.write(pdbxFilePath="TMP.cif")
                 for container in myReader.getContainerList():
-                    oem.set(container.getName(), dcChemCompAtom=container.getObj("chem_comp_atom"), dcChemCompBond=container.getObj("chem_comp_bond"))
+                    oem.set(
+                        container.getName(),
+                        dcChemCompAtom=container.getObj("chem_comp_atom"),
+                        dcChemCompBond=container.getObj("chem_comp_bond"),
+                    )
                     oem.build3D(coordType="model")
                     self.__lfh.write("Title              = %s\n" % oem.getTitle())
                     self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
@@ -105,15 +115,17 @@ class OeBuildMolTests(unittest.TestCase):
                 ok = myReader.read(pdbxFilePath=pth)
                 myReader.write(pdbxFilePath=os.path.join(self.__testoutput, "TMP.cif"))
                 for container in myReader.getContainerList():
-                    oem.set(container.getName(), dcChemCompAtom=container.getObj("chem_comp_atom"), dcChemCompBond=container.getObj("chem_comp_bond"))
+                    oem.set(
+                        container.getName(),
+                        dcChemCompAtom=container.getObj("chem_comp_atom"),
+                        dcChemCompBond=container.getObj("chem_comp_bond"),
+                    )
                     oem.build2D()
                     self.__lfh.write("Title              = %s\n" % oem.getTitle())
                     self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
                     self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
                     oeS = oem.serialize()
-                    #
                     self.__lfh.write("Serialized string length = %d\n" % len(oeS))
-                    #
                     oemD = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
                     ok = oemD.deserialize(oeS)
                     self.__lfh.write("Deserialized status = %s\n" % ok)
@@ -137,15 +149,17 @@ class OeBuildMolTests(unittest.TestCase):
                 ok = myReader.read(pdbxFilePath=pth)
                 myReader.write(pdbxFilePath=os.path.join(self.__testoutput, "TMP.cif"))
                 for container in myReader.getContainerList():
-                    oem.set(container.getName(), dcChemCompAtom=container.getObj("chem_comp_atom"), dcChemCompBond=container.getObj("chem_comp_bond"))
+                    oem.set(
+                        container.getName(),
+                        dcChemCompAtom=container.getObj("chem_comp_atom"),
+                        dcChemCompBond=container.getObj("chem_comp_bond"),
+                    )
                     oem.build3D(coordType="model")
                     self.__lfh.write("Title              = %s\n" % oem.getTitle())
                     self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
                     self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
                     oeS = oem.serialize()
-                    #
                     self.__lfh.write("Serialized string length = %d\n" % len(oeS))
-                    #
                     oemD = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
                     ok = oemD.deserialize(oeS)
                     self.__lfh.write("Deserialized status = %s\n" % ok)

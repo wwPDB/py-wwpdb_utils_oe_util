@@ -11,6 +11,7 @@
 An example of generating 2D chemical diagrams in svg format from chemical component definition.
 
 """
+
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
@@ -49,12 +50,19 @@ class OeDepictTests(unittest.TestCase):
             oeMolTitleList = self.__makeFromIdList(idList=self.__idList)
             if self.__verbose:
                 self.__lfh.write("molTitleList length is %d\n" % len(oeMolTitleList))
-            #
             for ccId, mol, title in oeMolTitleList:
                 imagePath = ccId + ".svg"
                 oed = OeDepict(verbose=self.__verbose, log=self.__lfh)
                 oed.setMolTitleList([(ccId, mol, title)])
-                oed.setDisplayOptions(imageX=250, imageY=250, labelAtomName=True, labelAtomCIPStereo=True, labelAtomIndex=False, labelBondIndex=False, bondDisplayWidth=0.5)
+                oed.setDisplayOptions(
+                    imageX=250,
+                    imageY=250,
+                    labelAtomName=True,
+                    labelAtomCIPStereo=True,
+                    labelAtomIndex=False,
+                    labelBondIndex=False,
+                    bondDisplayWidth=0.5,
+                )
                 oed.setGridOptions(rows=1, cols=1)
                 oed.prepare()
                 oed.write(imagePath)
@@ -88,4 +96,3 @@ def suiteDepict():
 if __name__ == "__main__":
     mySuite2 = suiteDepict()
     unittest.TextTestRunner(verbosity=2).run(mySuite2)
-    #

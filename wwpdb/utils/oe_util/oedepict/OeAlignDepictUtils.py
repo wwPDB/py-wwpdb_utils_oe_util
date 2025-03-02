@@ -13,6 +13,7 @@
 Classes to depict aligned 2D chemical diagrams.
 
 """
+
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
@@ -66,38 +67,34 @@ from openeye.oedepict import (
     OEWriteImage,
     OEWriteMultiPageImage,
 )
+
 from wwpdb.utils.cc_dict_util.timeout.TimeoutMultiProc import TimeoutException, timeout
 from wwpdb.utils.oe_util.build.OeChemCompIoUtils import OeChemCompIoUtils
 from wwpdb.utils.oe_util.oedepict.OeDepict import OeDepictBase
 
 
 # Note for pylint testing.  This base class references self._opt and self._param, but it is defined in a child class of a parallel class. We do not init it
-class OeDepictAlignBase(object):
+class OeDepictAlignBase:
     """"""
 
     # pylint: disable=no-member
 
     def __init__(self, verbose=True, log=sys.stderr):
         super(OeDepictAlignBase, self).__init__()
-        #
         self.__verbose = verbose
         # self.__debug = False
         self.__lfh = log
-        #
         self._refId = None
         self._refPath = None
         self._refMol = None
         self._refTitle = None
         self._refImagePath = None
-        #
         self._fitId = None
         self._fitPath = None
         self._fitMol = None
         self._fitTitle = None
         self._fitImagePath = None
-        #
         self._pairMolList = []
-        #
         self._searchType = "default"
         self._minAtomMatchFraction = 0.50
         self._mcss = None
@@ -111,14 +108,12 @@ class OeDepictAlignBase(object):
         try:
             self._refId = ccId
             self._refMol = oeMol
-            #
             if title is not None:
                 self._refMol.SetTitle(title)
                 self._refTitle = title
             else:
                 self._refMol.SetTitle(self._refId)
                 self._refTitle = None
-            #
             self._refImagePath = imagePath if imagePath is not None else self._refId + ".svg"
             return True
         except:  # noqa: E722 pylint: disable=bare-except
@@ -126,7 +121,9 @@ class OeDepictAlignBase(object):
                 traceback.print_exc(file=self.__lfh)
         return False
 
-    def setRefId(self, ccId, title=None, imagePath=None, suppressHydrogens=False, cachePath="/data/components/ligand-dict-v3"):
+    def setRefId(
+        self, ccId, title=None, imagePath=None, suppressHydrogens=False, cachePath="/data/components/ligand-dict-v3"
+    ):
         """Set the query reference molecule for MCSS comparison using the input chemical component ID.
         It is assumed that the definition for this ID can be obtained from the chemical component
         repository (in cachePath).
@@ -143,7 +140,9 @@ class OeDepictAlignBase(object):
             ccIdU = ccId.upper()
             self._refPath = os.path.join(cachePath, ccIdU[0], ccIdU, ccIdU + ".cif")
 
-            _id, self._refMol, _refIsoSMILES = self.__makeMolfromCCDef(path=self._refPath, suppressHydrogens=suppressHydrogens)
+            _id, self._refMol, _refIsoSMILES = self.__makeMolfromCCDef(
+                path=self._refPath, suppressHydrogens=suppressHydrogens
+            )
             #
             # Insert title here -
             if title is not None:
@@ -152,7 +151,6 @@ class OeDepictAlignBase(object):
             else:
                 self._refMol.SetTitle(self._refId)
                 self._refTitle = None
-            #
             self._refImagePath = imagePath if imagePath is not None else self._refId + ".svg"
             return True
         except:  # noqa: E722 pylint: disable=bare-except
@@ -172,7 +170,9 @@ class OeDepictAlignBase(object):
         try:
             self._refPath = ccPath
             self._refId = refId
-            (_rId, self._refMol, _refIsoSMILES) = self.__makeMolfromCCDef(path=self._refPath, suppressHydrogens=suppressHydrogens)
+            (_rId, self._refMol, _refIsoSMILES) = self.__makeMolfromCCDef(
+                path=self._refPath, suppressHydrogens=suppressHydrogens
+            )
 
             # Insert title here -
             if title is not None:
@@ -193,14 +193,12 @@ class OeDepictAlignBase(object):
         try:
             self._fitId = ccId
             self._fitMol = oeMol
-            #
             if title is not None:
                 self._fitMol.SetTitle(title)
                 self._fitTitle = title
             else:
                 self._fitMol.SetTitle(self._fitId)
                 self._fitTitle = None
-            #
             self._fitImagePath = imagePath if imagePath is not None else self._fitId + ".svg"
             return True
         except:  # noqa: E722 pylint: disable=bare-except
@@ -208,7 +206,9 @@ class OeDepictAlignBase(object):
                 traceback.print_exc(file=self.__lfh)
         return False
 
-    def setFitId(self, ccId, title=None, imagePath=None, suppressHydrogens=False, cachePath="/data/components/ligand-dict-v3"):
+    def setFitId(
+        self, ccId, title=None, imagePath=None, suppressHydrogens=False, cachePath="/data/components/ligand-dict-v3"
+    ):
         """Set the test/fit molecule for MCSS comparison using the input chemical component ID.
         It is assumed that the definition for this ID can be obtained from the chemical component
         repository (in cachePath).
@@ -224,7 +224,9 @@ class OeDepictAlignBase(object):
             self._fitId = ccId
             ccIdU = ccId.upper()
             self._fitPath = os.path.join(cachePath, ccIdU[0], ccIdU, ccIdU + ".cif")
-            self._fitId, self._fitMol, _fitIsoSMILES = self.__makeMolfromCCDef(path=self._fitPath, suppressHydrogens=suppressHydrogens)
+            self._fitId, self._fitMol, _fitIsoSMILES = self.__makeMolfromCCDef(
+                path=self._fitPath, suppressHydrogens=suppressHydrogens
+            )
             if title is not None:
                 self._fitMol.SetTitle(title)
                 self._fitTitle = title
@@ -238,7 +240,7 @@ class OeDepictAlignBase(object):
                 traceback.print_exc(file=self.__lfh)
         return False
 
-    def setFitPath(self, fitId, ccPath, title=None, imagePath=None, suppressHydrogens=False):  # pylint: disable=unused-argument
+    def setFitPath(self, fitId, ccPath, title=None, imagePath=None, suppressHydrogens=False):  # noqa: ARG002 pylint: disable=unused-argument
         """Set the test/fit molecule for MCSS comparison using the input file path.
 
         A title and imagePath are optionally provided otherwise the component Id will be used for title and
@@ -247,7 +249,9 @@ class OeDepictAlignBase(object):
         The hydrogen flag can be used to perform the MCSS using only heavy atoms.
         """
         try:
-            (self._fitId, self._fitMol, _fitIsoSMILES) = self.__makeMolfromCCDef(path=ccPath, suppressHydrogens=suppressHydrogens)
+            (self._fitId, self._fitMol, _fitIsoSMILES) = self.__makeMolfromCCDef(
+                path=ccPath, suppressHydrogens=suppressHydrogens
+            )
             if title is not None:
                 self._fitMol.SetTitle(title)
                 self._fitTitle = title
@@ -261,7 +265,9 @@ class OeDepictAlignBase(object):
                 traceback.print_exc(file=self.__lfh)
         return False
 
-    def setFitIdList(self, ccIdList, cachePath="/data/components/ligand-dict-v3", suppressHydrogens=False, imageDirPath="."):
+    def setFitIdList(
+        self, ccIdList, cachePath="/data/components/ligand-dict-v3", suppressHydrogens=False, imageDirPath="."
+    ):
         """Set the list of IDs to be compared with reference molecule by MCSS.
 
         It is assumed that each definition on the list can be obtained from the chemical component
@@ -273,13 +279,16 @@ class OeDepictAlignBase(object):
         self._pairMolList = []
         try:
             for ccId in ccIdList:
-                (refId, refMol, _refIsoSMILES) = self.__makeMolfromCCDef(path=self._refPath, suppressHydrogens=suppressHydrogens)
+                (refId, refMol, _refIsoSMILES) = self.__makeMolfromCCDef(
+                    path=self._refPath, suppressHydrogens=suppressHydrogens
+                )
                 refTitle = refId
                 refImagePath = os.path.join(imageDirPath, refId.upper() + ".svg")
-                #
                 ccIdU = ccId.upper()
                 fitPath = os.path.join(cachePath, ccIdU[0], ccIdU, ccIdU + ".cif")
-                (fitId, fitMol, _fitIsoSMILES) = self.__makeMolfromCCDef(path=fitPath, suppressHydrogens=suppressHydrogens)
+                (fitId, fitMol, _fitIsoSMILES) = self.__makeMolfromCCDef(
+                    path=fitPath, suppressHydrogens=suppressHydrogens
+                )
                 fitTitle = fitId + "/" + refId
                 fitImagePath = os.path.join(imageDirPath, ccIdU + ".svg")
                 self._pairMolList.append((refId, refMol, refTitle, refImagePath, fitId, fitMol, fitTitle, fitImagePath))
@@ -311,7 +320,9 @@ class OeDepictAlignBase(object):
 
             fitImagePath = imagePath if imagePath is not None else fitId + ".svg"
 
-            self._pairMolList.append((self._refId, self._refMol, self._refTitle, self._refImagePath, fitId, fitMol, fitTitle, fitImagePath))
+            self._pairMolList.append(
+                (self._refId, self._refMol, self._refTitle, self._refImagePath, fitId, fitMol, fitTitle, fitImagePath)
+            )
 
             return True
         except:  # noqa: E722 pylint: disable=bare-except
@@ -319,7 +330,9 @@ class OeDepictAlignBase(object):
                 traceback.print_exc(file=self.__lfh)
         return False
 
-    def setPairIdList(self, pairIdList, cachePath="/data/components/ligand-dict-v3", suppressHydrogens=False, imageDirPath="."):
+    def setPairIdList(
+        self, pairIdList, cachePath="/data/components/ligand-dict-v3", suppressHydrogens=False, imageDirPath="."
+    ):
         """Set the list of ID pairs to be aligned by MCSS.
 
         It is assumed that each definition on the list can be obtained from the chemical component
@@ -328,18 +341,19 @@ class OeDepictAlignBase(object):
         From the input pair ID list build the internal pair list (self._pairMolList).
         """
         self._pairMolList = []
-        #
         try:
             for refId, fitId in pairIdList:
                 ccIdU = refId.upper()
                 refPath = os.path.join(cachePath, ccIdU[0], ccIdU, ccIdU + ".cif")
-                (_rId, refMol, _refIsoSMILES) = self.__makeMolfromCCDef(path=refPath, suppressHydrogens=suppressHydrogens)
+                (_rId, refMol, _refIsoSMILES) = self.__makeMolfromCCDef(
+                    path=refPath, suppressHydrogens=suppressHydrogens
+                )
                 refImagePath = os.path.join(imageDirPath, ccIdU + ".svg")
-                #
                 ccIdU = fitId.upper()
                 fitPath = os.path.join(cachePath, ccIdU[0], ccIdU, ccIdU + ".cif")
-                (_fId, fitMol, _fitIsoSMILES) = self.__makeMolfromCCDef(path=fitPath, suppressHydrogens=suppressHydrogens)
-                #
+                (_fId, fitMol, _fitIsoSMILES) = self.__makeMolfromCCDef(
+                    path=fitPath, suppressHydrogens=suppressHydrogens
+                )
                 refTitle = refId + "/" + fitId
                 fitTitle = fitId + "/" + refId
                 fitImagePath = os.path.join(imageDirPath, ccIdU + ".svg")
@@ -362,18 +376,31 @@ class OeDepictAlignBase(object):
 
         try:
             for fitId, fitPath, title in fitPathTupList:
-                fitId = fitId.upper()
-                (_fId, fitMol, _fitIsoSMILES) = self.__makeMolfromCCDef(path=fitPath, suppressHydrogens=suppressHydrogens)
+                fitIdUc = fitId.upper()
+                (_fId, fitMol, _fitIsoSMILES) = self.__makeMolfromCCDef(
+                    path=fitPath, suppressHydrogens=suppressHydrogens
+                )
                 if title is not None:
                     fitMol.SetTitle(title)
                     fitTitle = title
                 else:
-                    fitMol.SetTitle(fitId)
-                    fitTitle = fitId + "/" + self._refId
+                    fitMol.SetTitle(fitIdUc)
+                    fitTitle = fitIdUc + "/" + self._refId
 
-                fitImagePath = imagePath if imagePath is not None else fitId + ".svg"
+                fitImagePath = imagePath if imagePath is not None else fitIdUc + ".svg"
 
-                self._pairMolList.append((self._refId, self._refMol, self._refTitle, self._refImagePath, fitId, fitMol, fitTitle, fitImagePath))
+                self._pairMolList.append(
+                    (
+                        self._refId,
+                        self._refMol,
+                        self._refTitle,
+                        self._refImagePath,
+                        fitIdUc,
+                        fitMol,
+                        fitTitle,
+                        fitImagePath,
+                    )
+                )
 
             return True
         except:  # noqa: E722 pylint: disable=bare-except
@@ -397,13 +424,11 @@ class OeDepictAlignBase(object):
                 self.__lfh.write("Creating OEMOL for %s  SMILES: %s  PATH: %s\n" % (ccId, isoSmiles, path))
             if suppressHydrogens:
                 return (ccId, oem.getGraphMolSuppressH(), isoSmiles)
-            else:
-                return (ccId, oem.getMol(), isoSmiles)
+            return (ccId, oem.getMol(), isoSmiles)
         except:  # noqa: E722 pylint: disable=bare-except
             if self.__verbose:
                 traceback.print_exc(file=self.__lfh)
         return (None, None, None)
-        #
 
     def setSearchType(self, sType="default"):
         self._searchType = sType
@@ -446,7 +471,6 @@ class OeDepictAlignBase(object):
 
     def _setHighlightStyleRef(self, matchObj, refMol):
         refdisp = OE2DMolDisplay(refMol, self._opts)
-        #
         optInverseFit = False
         if self._params["highlightStyleRef"] == "ballAndStick":
             hstyle = OEHighlightStyle_BallAndStick
@@ -479,11 +503,12 @@ class OeDepictAlignBase(object):
         else:
             myHighLightNotMatchColor = OEBlueTint
 
-        #
         matchedatoms = OEIsAtomMember(matchObj.GetPatternAtoms())
         matchedbonds = OEIsBondMember(matchObj.GetPatternBonds())
         if optInverseFit:
-            OEAddHighlighting(refdisp, myHighLightNotMatchColor, hstyle, OENotAtom(matchedatoms), OENotBond(matchedbonds))
+            OEAddHighlighting(
+                refdisp, myHighLightNotMatchColor, hstyle, OENotAtom(matchedatoms), OENotBond(matchedbonds)
+            )
         else:
             OEAddHighlighting(refdisp, myHighLightMatchColor, hstyle, matchedatoms, matchedbonds)
 
@@ -531,7 +556,9 @@ class OeDepictAlignBase(object):
         matchedbonds = OEIsBondMember(matchObj.GetTargetBonds())
 
         if optInverseFit:
-            OEAddHighlighting(fitdisp, myHighLightNotMatchColor, hstyle, OENotAtom(matchedatoms), OENotBond(matchedbonds))
+            OEAddHighlighting(
+                fitdisp, myHighLightNotMatchColor, hstyle, OENotAtom(matchedatoms), OENotBond(matchedbonds)
+            )
         else:
             OEAddHighlighting(fitdisp, myHighLightMatchColor, hstyle, matchedatoms, matchedbonds)
 
@@ -549,11 +576,9 @@ class OeDepictMCSAlignMulti(OeDepictAlignBase, OeDepictBase):
 
     def __init__(self, verbose=False, log=sys.stderr):
         super(OeDepictMCSAlignMulti, self).__init__(verbose=verbose, log=log)
-        #
         self.__debug = False
         self.__verbose = verbose
         self.__lfh = log
-        #
         self.__grid = None
         self.__gridRows = None
         self.__gridCols = None
@@ -569,7 +594,7 @@ class OeDepictMCSAlignMulti(OeDepictAlignBase, OeDepictBase):
         except TimeoutException:
             self.__lfh.write("+OeDepictMCSAlignMulti.alignPairListMulti timeout exception\n")
             self.__lfh.write("+OeDepictMCSAlignMulti.alignPairListMulti no output written to %r\n" % imagePath)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             self.__lfh.write("+OeDepictMCSAlignMulti.alignPairListMulti general exception %s\n" % str(e))
             if self.__verbose:
                 traceback.print_exc(file=self.__lfh)
@@ -582,7 +607,7 @@ class OeDepictMCSAlignMulti(OeDepictAlignBase, OeDepictBase):
         except TimeoutException:
             self.__lfh.write("+OeDepictMCSAlignMulti.alignOneWithListMulti timeout exception\n")
             self.__lfh.write("+OeDepictMCSAlignMulti.alignOneWithListMulti no output written to %r\n" % imagePath)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             self.__lfh.write("+OeDepictMCSAlignMulti.alignOneWithListMulti general exception here %s\n" % str(e))
             if self.__verbose:
                 traceback.print_exc(file=self.__lfh)
@@ -590,10 +615,8 @@ class OeDepictMCSAlignMulti(OeDepictAlignBase, OeDepictBase):
 
     def __setupImageMulti(self):
         """Internal method to configure a multipage image."""
-        #
         self.__gridRows = self._params["gridRows"]
         self.__gridCols = self._params["gridCols"]
-        #
         if self._params["pageOrientation"] == "landscape":
             self.__multi = OEMultiPageImageFile(OEPageOrientation_Landscape, OEPageSize_US_Letter)
         else:
@@ -626,25 +649,21 @@ class OeDepictMCSAlignMulti(OeDepictAlignBase, OeDepictBase):
 
         Image Output is in multipage layout.
         """
-        #
         self.__setupImageMulti()
-        #
         atomMap = []
         firstOne = True
         iCount = 0
-        for (refId, refMol, _refTitle, _refImagePath, fitId, fitMol, fitTitle, _fitImagePath) in self._pairMolList:
-            iCount += 1
+        for refId, refMol, _refTitle, _refImagePath, fitId, fitMol, fitTitle, _fitImagePath in self._pairMolList:
+            iCount += 1  # noqa: SIM113
             self.__lfh.write(
-                "+OeDepictMCSAlignMulti.__alignListMultiWorker Starting match pair refId %s fitId %s count %d of %d\n" % (refId, fitId, iCount, len(self._pairMolList))
+                "+OeDepictMCSAlignMulti.__alignListMultiWorker Starting match pair refId %s fitId %s count %d of %d\n"
+                % (refId, fitId, iCount, len(self._pairMolList))
             )
 
-            #
             OEPrepareDepiction(refMol)
             self._setupMCSS(refMol)
-            #
             fitMol.SetTitle(fitTitle)
             OEPrepareDepiction(fitMol)
-            #
             nAtomsRef = refMol.NumAtoms()
             nAtomsFit = fitMol.NumAtoms()
             minAtoms = min(nAtomsRef, nAtomsFit)
@@ -658,17 +677,21 @@ class OeDepictMCSAlignMulti(OeDepictAlignBase, OeDepictBase):
 
             unique = True
             self.__lfh.write(
-                "+OeDepictMCSAlignMulti.__alignListMultiWorker refId %s fitId %s nAtomsRef %d nAtomsFit %d mcssMinAtoms %d\n" % (refId, fitId, nAtomsRef, nAtomsFit, mcssMinAtoms)
+                "+OeDepictMCSAlignMulti.__alignListMultiWorker refId %s fitId %s nAtomsRef %d nAtomsFit %d mcssMinAtoms %d\n"
+                % (refId, fitId, nAtomsRef, nAtomsFit, mcssMinAtoms)
             )
             self._miter = self._mcss.Match(fitMol, unique)
 
-            self.__lfh.write("+OeDepictMCSAlignMulti.__alignListMultiWorker mcss match completed for refId %s fitId %s\n" % (refId, fitId))
+            self.__lfh.write(
+                "+OeDepictMCSAlignMulti.__alignListMultiWorker mcss match completed for refId %s fitId %s\n"
+                % (refId, fitId)
+            )
             if self._miter.IsValid():
                 match = self._miter.Target()
                 OEPrepareAlignedDepiction(fitMol, self._mcss.GetPattern(), match)
 
                 # Depict reference molecule with MCS highlighting
-                if (firstOne and (layout in ["list"])) or (layout in ["pairs"]):
+                if (firstOne and (layout == "list")) or (layout == "pairs"):
                     firstOne = False
                     refdisp = self._setHighlightStyleRef(matchObj=match, refMol=self._mcss.GetPattern())
                     if not self.__citer.IsValid():
@@ -693,12 +716,14 @@ class OeDepictMCSAlignMulti(OeDepictAlignBase, OeDepictBase):
                 for mAt in match.GetAtoms():
                     atomMap.append((refId, mAt.pattern.GetName(), fitId, mAt.target.GetName()))
 
-                self.__lfh.write("+OeDepictMCSAlignMulti.__alignListMultiWorker mcss match completed for refId %s fitId %s total map length %d \n" % (refId, fitId, len(atomMap)))
+                self.__lfh.write(
+                    "+OeDepictMCSAlignMulti.__alignListMultiWorker mcss match completed for refId %s fitId %s total map length %d \n"
+                    % (refId, fitId, len(atomMap))
+                )
 
         self.__lfh.write("+OeDepictMCSAlignMulti.__alignListMultiWorker writing image %s\n" % imagePath)
         OEWriteMultiPageImage(imagePath, self.__multi)
         self.__lfh.write("+OeDepictMCSAlignMulti.__alignListMultiWorker completed with map lenth %d\n" % len(atomMap))
-        #
         return atomMap
 
 
@@ -712,18 +737,15 @@ class OeDepictMCSAlign(OeDepictAlignBase, OeDepictBase):
 
     def __init__(self, verbose=False, log=sys.stderr):
         super(OeDepictMCSAlign, self).__init__(verbose=verbose, log=log)
-        #
         self.__debug = True
         # self.__verbose = verbose
         self.__lfh = log
-        #
         self.__image = None
         self.__grid = None
         self.__citer = None
 
     def __setupImage(self):
         """Internal method to configure a single pair alignment image."""
-        #
         self.__image = OEImage(self._params["imageSizeX"], self._params["imageSizeY"])
         rows = self._params["gridRows"]
         cols = self._params["gridCols"]
@@ -737,8 +759,6 @@ class OeDepictMCSAlign(OeDepictAlignBase, OeDepictBase):
         self._assignDisplayOptions()
         self.__citer = self.__grid.GetCells()
 
-    #
-
     def alignPair(self, imagePath="single-pair.png"):
         """Depict a single aligned ref/fit molecule pair or the first ref/fit molecule pair on the
         current _pairMolList.  Display options set for a single grid row with two columns.
@@ -746,7 +766,9 @@ class OeDepictMCSAlign(OeDepictAlignBase, OeDepictBase):
         self._params["gridCols"] = 2
         self._params["gridRows"] = 1
         if len(self._pairMolList) < 1:
-            self._pairMolList.append((self._refId, self._refMol, self._refTitle, None, self._fitId, self._fitMol, self._fitTitle, None))
+            self._pairMolList.append(
+                (self._refId, self._refMol, self._refTitle, None, self._fitId, self._fitMol, self._fitTitle, None)
+            )
         return self.__alignListWorker(imagePath=imagePath, layout="pairs")
 
     def alignPairList(self, imagePath="single-pair-list.png"):
@@ -766,22 +788,16 @@ class OeDepictMCSAlign(OeDepictAlignBase, OeDepictBase):
 
         Output image is a single-page with grid layout.
         """
-        #
         self.__setupImage()
-        #
         atomMap = []
 
         firstOne = True
 
-        for (refId, refMol, _refTitle, _refImagePath, fitId, fitMol, fitTitle, _fitImagePath) in self._pairMolList:
-            #
+        for refId, refMol, _refTitle, _refImagePath, fitId, fitMol, fitTitle, _fitImagePath in self._pairMolList:
             OEPrepareDepiction(refMol)
             self._setupMCSS(refMol)
-            #
             fitMol.SetTitle(fitTitle)
             OEPrepareDepiction(fitMol)
-            #
-            #
             nAtomsRef = refMol.NumAtoms()
             nAtomsFit = fitMol.NumAtoms()
             minAtoms = min(nAtomsRef, nAtomsFit)
@@ -800,7 +816,7 @@ class OeDepictMCSAlign(OeDepictAlignBase, OeDepictBase):
                 OEPrepareAlignedDepiction(fitMol, self._mcss.GetPattern(), match)
 
                 # Depict reference molecule with MCS highlighting
-                if (firstOne and (layout in ["list"])) or (layout in ["pairs"]):
+                if (firstOne and (layout == "list")) or (layout == "pairs"):
                     firstOne = False
                     refdisp = self._setHighlightStyleRef(matchObj=match, refMol=self._mcss.GetPattern())
                     if not self.__citer.IsValid():
@@ -845,11 +861,9 @@ class OeDepictMCSAlignSingle(OeDepictAlignBase, OeDepictBase):
         # self.__lfh = log
         self.__imageRef = None
         self.__imageFit = None
-        #
 
     def __setupImage(self):
         """Internal method to configure a single page image."""
-        #
         self.__imageRef = OEImage(self._params["imageSizeX"], self._params["imageSizeY"])
         self.__imageFit = OEImage(self._params["imageSizeX"], self._params["imageSizeY"])
         self._opts = OE2DMolDisplayOptions(self.__imageRef.GetWidth(), self.__imageRef.GetHeight(), OEScale_AutoScale)
@@ -860,7 +874,18 @@ class OeDepictMCSAlignSingle(OeDepictAlignBase, OeDepictBase):
         current _pairMolList.  Display options set for a single grid row with two columns.
         """
         if len(self._pairMolList) < 1:
-            self._pairMolList.append((self._refId, self._refMol, self._refTitle, self._refImagePath, self._fitId, self._fitMol, self._fitTitle, self._fitImagePath))
+            self._pairMolList.append(
+                (
+                    self._refId,
+                    self._refMol,
+                    self._refTitle,
+                    self._refImagePath,
+                    self._fitId,
+                    self._fitMol,
+                    self._fitTitle,
+                    self._fitImagePath,
+                )
+            )
         return self.__alignListWorker()
 
     def alignPairList(self):
@@ -879,19 +904,15 @@ class OeDepictMCSAlignSingle(OeDepictAlignBase, OeDepictBase):
 
         Output image is a single-page with grid layout.
         """
-        #
         atomMap = []
         firstOne = True
 
-        for (refId, refMol, _refTitle, refImagePath, fitId, fitMol, _fitTitle, fitImagePath) in self._pairMolList:
-            #
+        for refId, refMol, _refTitle, refImagePath, fitId, fitMol, _fitTitle, fitImagePath in self._pairMolList:
             self.__setupImage()
-            #
             OEPrepareDepiction(refMol)
             self._setupMCSS(refMol)
 
             OEPrepareDepiction(fitMol)
-            #
             nAtomsRef = refMol.NumAtoms()
             nAtomsFit = fitMol.NumAtoms()
             minAtoms = min(nAtomsRef, nAtomsFit)
@@ -947,7 +968,6 @@ class OeTestMCSAlign(OeDepictAlignBase):
         """
         atomMap = []
         self._setupMCSS(self._refMol)
-        #
         nAtomsRef = self._refMol.NumAtoms()
         nAtomsFit = self._fitMol.NumAtoms()
         minAtoms = min(nAtomsRef, nAtomsFit)
@@ -1002,11 +1022,8 @@ class OeTestMCSAlign(OeDepictAlignBase):
         unique = True
         atomMap = []
         self._setupMCSS(self._refMol)
-        #
         nAtomsRef = self._refMol.NumAtoms()
         nAtomsFit = self._fitMol.NumAtoms()
-        #
-        #
         minAtoms = min(nAtomsRef, nAtomsFit)
         self._mcss.SetMCSFunc(OEMCSMaxAtoms())
         self._mcss.SetMinAtoms(int(minAtoms * self._minAtomMatchFraction))
@@ -1018,7 +1035,10 @@ class OeTestMCSAlign(OeDepictAlignBase):
             for mAt in match.GetAtoms():
                 atomMap.append((self._refId, mAt.pattern.GetName(), self._fitId, mAt.target.GetName()))
 
-        self.__lfh.write("+OeTestMCSAlign.doTestAlign nAtomsRef %d nAtomsFit %d match length %d \n" % (nAtomsRef, nAtomsFit, len(atomMap)))
+        self.__lfh.write(
+            "+OeTestMCSAlign.doTestAlign nAtomsRef %d nAtomsFit %d match length %d \n"
+            % (nAtomsRef, nAtomsFit, len(atomMap))
+        )
 
         return atomMap
 
@@ -1031,21 +1051,18 @@ class OeTestMCSAlign(OeDepictAlignBase):
         unique = True
         atomMap = []
         self._setupMCSS(self._refMol)
-        #
         nAtomsRef = self._refMol.NumAtoms()
         nAtomsFit = self._fitMol.NumAtoms()
-        #
         atomRefD = self.__getAtomIndex(self._refMol)
         atomFitD = self.__getAtomIndex(self._fitMol)
-        #
         chgRefD = self.__getChargeIndex(self._refMol)
         chgFitD = self.__getChargeIndex(self._fitMol)
-        #
         minAtoms = min(nAtomsRef, nAtomsFit)
-        #
         self._mcss.SetMaxMatches(self.__maxMatches)
         nlim = OEGetMCSExhaustiveSearchTruncationLimit()
-        self.__lfh.write("+OeTestMCSAlign.doAlignWithAnal search limit %d max matches %d \n" % (nlim, self.__maxMatches))
+        self.__lfh.write(
+            "+OeTestMCSAlign.doAlignWithAnal search limit %d max matches %d \n" % (nlim, self.__maxMatches)
+        )
         self._mcss.SetMCSFunc(OEMCSMaxAtoms())
         self._mcss.SetMinAtoms(int(minAtoms * self._minAtomMatchFraction))
         unique = False
@@ -1059,7 +1076,10 @@ class OeTestMCSAlign(OeDepictAlignBase):
                 atomMap.append((self._refId, mAt.pattern.GetName(), self._fitId, mAt.target.GetName()))
                 atomRefMatchD[mAt.pattern.GetName()] = mAt.target.GetName().strip()
                 atomFitMatchD[mAt.target.GetName()] = mAt.pattern.GetName().strip()
-        self.__lfh.write("+OeTestMCSAlign.doAlignWithAnal nAtomsRef %d nAtomsFit %d match length %d \n" % (nAtomsRef, nAtomsFit, len(atomMap)))
+        self.__lfh.write(
+            "+OeTestMCSAlign.doAlignWithAnal nAtomsRef %d nAtomsFit %d match length %d \n"
+            % (nAtomsRef, nAtomsFit, len(atomMap))
+        )
 
         #
         # Get unmapped reference and fit atoms -
@@ -1069,20 +1089,15 @@ class OeTestMCSAlign(OeDepictAlignBase):
         for atN in atomRefD:
             if atN not in atomRefMatchD:
                 uRefAtomList.append(atN)
-        #
         if len(uRefAtomList) > 0:
             uRefNList = self.__getNeighbors(self._refMol, uRefAtomList)
-        #
         uFitAtomList = []
         uFitNList = []
         for atN in atomFitD:
             if atN not in atomFitMatchD:
                 uFitAtomList.append(atN)
-        #
-        #
         if len(uFitAtomList) > 0:
             uFitNList = self.__getNeighbors(self._fitMol, uFitAtomList)
-        #
         chgDifRefD = {}
         for atN0 in chgRefD:
             if atN0 in atomRefMatchD:
@@ -1090,7 +1105,6 @@ class OeTestMCSAlign(OeDepictAlignBase):
                 # if ((atN not in chgFitD) or (chgRefD[atN0] != chgFitD[atN])):
                 if chgRefD[atN0] != chgFitD[atN]:
                     chgDifRefD[atN] = chgRefD[atN0]
-        #
         chgDifFitD = {}
         for atN0 in chgFitD:
             if atN0 in atomFitMatchD:
@@ -1110,11 +1124,8 @@ class OeTestMCSAlign(OeDepictAlignBase):
 
         """
         atomMap = []
-        for (refId, refMol, _refTitle, _refImagePath, fitId, fitMol, _fitTitle, _fitImagePath) in self._pairMolList:
-            #
+        for refId, refMol, _refTitle, _refImagePath, fitId, fitMol, _fitTitle, _fitImagePath in self._pairMolList:
             self._setupMCSS(refMol)
-            #
-            #
             nAtomsRef = refMol.NumAtoms()
             nAtomsFit = fitMol.NumAtoms()
             minAtoms = min(nAtomsRef, nAtomsFit)

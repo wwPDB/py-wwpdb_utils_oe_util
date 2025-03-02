@@ -15,6 +15,7 @@ A collection of tests for the OEAlignDepictUtils and related classes which perfo
 MCSS comparison and depiction.
 
 """
+
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
@@ -22,15 +23,13 @@ __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.01"
 
 
-import sys
-import unittest
-import traceback
-import platform
+import builtins
 import os
 import os.path
-
-if sys.version_info[0] < 3:
-    from io import open as open
+import platform
+import sys
+import traceback
+import unittest
 
 try:
     from openeye.oechem import OEFloatArray  # noqa: F401 pylint: disable=unused-import
@@ -40,7 +39,12 @@ except ImportError:
     skiptests = True
 
 if not skiptests:
-    from wwpdb.utils.oe_util.oedepict.OeAlignDepictUtils import OeDepictMCSAlign, OeDepictMCSAlignMulti, OeDepictMCSAlignSingle, OeTestMCSAlign
+    from wwpdb.utils.oe_util.oedepict.OeAlignDepictUtils import (
+        OeDepictMCSAlign,
+        OeDepictMCSAlignMulti,
+        OeDepictMCSAlignSingle,
+        OeTestMCSAlign,
+    )
 
 
 @unittest.skipIf(skiptests, "Could not import openeye")
@@ -48,7 +52,6 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
     def setUp(self):
         self.__lfh = sys.stderr
         self.__verbose = True
-        #
         self.__here = os.path.abspath(os.path.dirname(__file__))
         self.__examples = os.path.join(self.__here, "examples")
         self.__testoutput = os.path.join(self.__here, "test-output", platform.python_version())
@@ -58,12 +61,9 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
         # Chemical component repository path -
         self.__topCachePath = os.path.join(self.__here, "ligand-dict-v3")
         self.__rnaPairFile = os.path.join(self.__examples, "rna-linking-components.txt")
-        #
         self.__refId = "C"
-        #
         self.__idList = ["cg1", "atp", "gtp", "A", "C", "G", "DG"]
         self.__pairIdList = [("c", "cg1"), ("c", "atp"), ("c", "gtp"), ("c", "A"), ("c", "C"), ("c", "G"), ("c", "DG")]
-        #
         self.__refPathTup = ("A", os.path.join(self.__datadir, "A.cif"), os.path.join(self.__testoutput, "A-ref.svg"))
         self.__fitPathTupList = [
             ("A", os.path.join(self.__datadir, "A.cif"), os.path.join(self.__testoutput, "A-fit.svg")),
@@ -71,14 +71,13 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
             ("ATP", os.path.join(self.__datadir, "ATP.cif"), os.path.join(self.__testoutput, "ATP-fit.svg")),
             ("GTP", os.path.join(self.__datadir, "GTP.cif"), os.path.join(self.__testoutput, "GTP-fit.svg")),
         ]
-        #
 
     def tearDown(self):
         pass
 
     def __readPairList(self, fn="./examples/rna-linking-components.txt"):
         pairList = []
-        ifh = open(fn, "r", encoding="utf-8")
+        ifh = builtins.open(fn, encoding="utf-8")
         for line in ifh:
             fields = line.split()
             pairList.append((fields[1], fields[0]))
@@ -91,7 +90,12 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
         try:
             oed = OeDepictMCSAlign(verbose=self.__verbose, log=self.__lfh)
             oed.setDisplayOptions(
-                labelAtomName=True, labelAtomCIPStereo=True, labelAtomIndex=False, labelBondIndex=False, highlightStyleFit="ballAndStickInverse", bondDisplayWidth=0.5
+                labelAtomName=True,
+                labelAtomCIPStereo=True,
+                labelAtomIndex=False,
+                labelBondIndex=False,
+                highlightStyleFit="ballAndStickInverse",
+                bondDisplayWidth=0.5,
             )
 
             oed.setRefId(self.__refId, cachePath=self.__topCachePath)
@@ -100,7 +104,7 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
                 fName = os.path.join(self.__testoutput, "ref-" + self.__refId + "-trg-" + fitId + ".svg")
                 aML = oed.alignPair(imagePath=fName)
                 if len(aML) > 0:
-                    for (rCC, rAt, tCC, tAt) in aML:
+                    for rCC, rAt, tCC, tAt in aML:
                         self.__lfh.write("%5s %-5s %5s %-5s\n" % (rCC, rAt, tCC, tAt))
         except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
@@ -126,7 +130,7 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
             imageFile = os.path.join(self.__testoutput, "list-example-mcs-alignment.pdf")
             aML = oed.alignOneWithListMulti(imagePath=imageFile)
             if len(aML) > 0:
-                for (rCC, rAt, tCC, tAt) in aML:
+                for rCC, rAt, tCC, tAt in aML:
                     self.__lfh.write("%5s %-5s %5s %-5s\n" % (rCC, rAt, tCC, tAt))
 
         except:  # noqa: E722 pylint: disable=bare-except
@@ -153,7 +157,7 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
             imageFile = os.path.join(self.__testoutput, "pair-list-example-mcs-alignment-portrait.pdf")
             aML = oed.alignPairListMulti(imagePath=imageFile)
             if len(aML) > 0:
-                for (rCC, rAt, tCC, tAt) in aML:
+                for rCC, rAt, tCC, tAt in aML:
                     self.__lfh.write("%5s %-5s %5s %-5s\n" % (rCC, rAt, tCC, tAt))
         except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
@@ -167,19 +171,23 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
             oed = OeDepictMCSAlignMulti(verbose=self.__verbose, log=self.__lfh)
             oed.setPairIdList(pairIdList, cachePath=self.__topCachePath)
             oed.setDisplayOptions(
-                labelAtomName=True, labelAtomCIPStereo=True, labelAtomIndex=False, labelBondIndex=False, highlightStyleFit="ballAndStickInverse", bondDisplayWidth=0.5
+                labelAtomName=True,
+                labelAtomCIPStereo=True,
+                labelAtomIndex=False,
+                labelBondIndex=False,
+                highlightStyleFit="ballAndStickInverse",
+                bondDisplayWidth=0.5,
             )
 
             imageFile = os.path.join(self.__testoutput, "rna-modified-pair-alignment.pdf")
             aML = oed.alignPairListMulti(imagePath=imageFile)
             if len(aML) > 0:
-                for (rCC, rAt, tCC, tAt) in aML:
+                for rCC, rAt, tCC, tAt in aML:
                     self.__lfh.write("%5s %-5s %5s %-5s\n" % (rCC, rAt, tCC, tAt))
         except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
-    #
     def testMCSAlignAtomMap(self):
         """Test case -  match test with return of atom maps"""
         self.__lfh.write("\nStarting OeAlignDepictUtilsTests testMCSAlignAtomMap\n")
@@ -204,8 +212,18 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
         try:
             oed = OeDepictMCSAlign(verbose=self.__verbose, log=self.__lfh)
             oed.setSearchType(sType="relaxed")
-            oed.setRefPath(refId="PRD_000225", ccPath=os.path.join(self.__examples, "PRDCC_000225.cif"), title="PRD_000225", suppressHydrogens=False)
-            oed.setFitPath(fitId="LD_LDI_990", ccPath=os.path.join(self.__examples, "L_LDI_990_.comp.cif"), title="L_LDI_990", suppressHydrogens=False)
+            oed.setRefPath(
+                refId="PRD_000225",
+                ccPath=os.path.join(self.__examples, "PRDCC_000225.cif"),
+                title="PRD_000225",
+                suppressHydrogens=False,
+            )
+            oed.setFitPath(
+                fitId="LD_LDI_990",
+                ccPath=os.path.join(self.__examples, "L_LDI_990_.comp.cif"),
+                title="L_LDI_990",
+                suppressHydrogens=False,
+            )
             fName = os.path.join(self.__testoutput, "relaxed-fit.svg")
             oed.setDisplayOptions(
                 imageSizeX=2000,
@@ -219,7 +237,7 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
             )
             aML = oed.alignPair(imagePath=fName)
             if len(aML) > 0:
-                for (rCC, rAt, tCC, tAt) in aML:
+                for rCC, rAt, tCC, tAt in aML:
                     self.__lfh.write("%5s %-5s %5s %-5s\n" % (rCC, rAt, tCC, tAt))
         except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
@@ -244,7 +262,7 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
             imageFile = os.path.join(self.__testoutput, "mcs-align-with-list-multi.pdf")
             aML = oed.alignOneWithListMulti(imagePath=imageFile)
             if len(aML) > 0:
-                for (rCC, rAt, tCC, tAt) in aML:
+                for rCC, rAt, tCC, tAt in aML:
                     self.__lfh.write("%5s %-5s %5s %-5s\n" % (rCC, rAt, tCC, tAt))
 
         except:  # noqa: E722 pylint: disable=bare-except
@@ -272,7 +290,7 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
             imageFile = os.path.join(self.__testoutput, "mcs-align-with-list-single.svg")
             aML = oed.alignOneWithList(imagePath=imageFile)
             if len(aML) > 0:
-                for (rCC, rAt, tCC, tAt) in aML:
+                for rCC, rAt, tCC, tAt in aML:
                     self.__lfh.write("%5s %-5s %5s %-5s\n" % (rCC, rAt, tCC, tAt))
 
         except:  # noqa: E722 pylint: disable=bare-except
@@ -300,7 +318,7 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
             oed.setPairIdList(self.__pairIdList, cachePath=self.__topCachePath)
             aML = oed.alignOneWithList()
             if len(aML) > 0:
-                for (rCC, rAt, tCC, tAt) in aML:
+                for rCC, rAt, tCC, tAt in aML:
                     self.__lfh.write("%5s %-5s %5s %-5s\n" % (rCC, rAt, tCC, tAt))
 
         except:  # noqa: E722 pylint: disable=bare-except
@@ -318,7 +336,6 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
         try:
             # Use inverse  highlighting of matching/non-matching atoms/bonds -
             hOpt = "inverse"
-            #
             oed = OeDepictMCSAlignSingle(verbose=self.__verbose, log=self.__lfh)
             if hOpt == "inverse":
                 oed.setDisplayOptions(
@@ -355,7 +372,9 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
                     bondDisplayWidth=1.0,
                 )
 
-            oed.setRefPath(self.__refPathTup[0], self.__refPathTup[1], title=self.__refPathTup[0], imagePath=self.__refPathTup[2])
+            oed.setRefPath(
+                self.__refPathTup[0], self.__refPathTup[1], title=self.__refPathTup[0], imagePath=self.__refPathTup[2]
+            )
             for fitPathTup in self.__fitPathTupList:
                 oed.addFitPath(fitPathTup[0], fitPathTup[1], title=fitPathTup[0], imagePath=fitPathTup[2])
 
@@ -364,7 +383,7 @@ class OeAlignDepictUtilsTests(unittest.TestCase):
             # Write out no atom correspondences --
             #
             if len(aML) > 0:
-                for (rCC, rAt, tCC, tAt) in aML:
+                for rCC, rAt, tCC, tAt in aML:
                     self.__lfh.write("%5s %-5s %5s %-5s\n" % (rCC, rAt, tCC, tAt))
 
         except:  # noqa: E722 pylint: disable=bare-except
@@ -403,16 +422,13 @@ def suiteAlignWithListSingle():
 
 
 if __name__ == "__main__":
-    #
     mySuite1 = suiteAlignPair()
     unittest.TextTestRunner(verbosity=2).run(mySuite1)
-    #
     mySuite1 = suiteAlignWithList()
     unittest.TextTestRunner(verbosity=2).run(mySuite1)
 
     mySuite1 = suiteAlignTypeTests()
     unittest.TextTestRunner(verbosity=2).run(mySuite1)
-    #
     mySuite1 = suiteAlignWithListSingle()
     unittest.TextTestRunner(verbosity=2).run(mySuite1)
 
