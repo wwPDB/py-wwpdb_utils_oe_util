@@ -8,7 +8,7 @@
 #
 ##
 """
- Tests for standardizing descriptors -
+Tests for standardizing descriptors -
 
 """
 
@@ -40,7 +40,6 @@ logger = logging.getLogger()
 @unittest.skipIf(skiptests, "Requires openeye library")
 class OeDescriptorUtilsTests(unittest.TestCase):
     def setUp(self):
-        #
         self.__gtpSmilesList = [
             "O=P(O)(O)OP(=O)(O)OP(=O)(O)OCC3OC(n2cnc1c2N=C(N)NC1=O)C(O)C3O",
             "NC1=Nc2n(cnc2C(=O)N1)[C@@H]3O[C@H](CO[P@@](O)(=O)O[P@@](O)(=O)O[P](O)(O)=O)[C@@H](O)[C@H]3O",
@@ -70,9 +69,10 @@ class OeDescriptorUtilsTests(unittest.TestCase):
         except Exception as e:
             logger.exception("Error '%s' occured. Arguments %s.", str(e), e.args)
             self.fail()
-        #
         endTime = time.time()
-        logger.info("Completed at %s (%.2f seconds)", time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime)
+        logger.info(
+            "Completed at %s (%.2f seconds)", time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime
+        )
 
 
 def testSmilesConversionSuite():

@@ -41,8 +41,6 @@ jobs:
     - download: current
       artifact: ${{ format('sw_{0}_{1}', parameters.tox,  parameters.os) }}
 
-    - download: current
-      artifact: ${{ format('sw_u_{0}_{1}', parameters.tox,  parameters.os) }}
     #
     - script: ls -lR $(Pipeline.Workspace)/${{ format('sw_{0}_{1}', parameters.tox, parameters.os) }}
       displayName: "Listing of downloaded artifacts"
@@ -57,11 +55,6 @@ jobs:
         secureFile: 'PYPIRC-AZURE'
 
     - ${{ if startsWith(parameters.os, 'linux') }}:
-      - script: twine upload --verbose --skip-existing -r pypi  --config-file $(pypicred.secureFilePath) $(Pipeline.Workspace)/${{ format('sw_u_{0}_{1}', parameters.tox, parameters.os) }}/*
-        displayName: "Linux upload sdist and source wheel to PyPi ..."
-        continueOnError: true
-    #
-    - ${{ if startsWith(parameters.os, 'macos') }}:
       - script: twine upload --verbose --skip-existing -r pypi  --config-file $(pypicred.secureFilePath) $(Pipeline.Workspace)/${{ format('sw_{0}_{1}', parameters.tox, parameters.os) }}/*
-        displayName: "Mac upload sdist and binary wheel to PyPi ..."
+        displayName: "Linux upload sdist and source wheel to PyPi ..."
         continueOnError: true

@@ -14,6 +14,7 @@
 A collection of tests for the OEDepict and related classes.
 
 """
+
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
@@ -21,13 +22,13 @@ __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.01"
 
 
-import sys
-import unittest
-import platform
-import traceback
+import fnmatch
 import os
 import os.path
-import fnmatch
+import platform
+import sys
+import traceback
+import unittest
 
 try:
     from openeye.oechem import OEFloatArray  # noqa: F401 pylint: disable=unused-import
@@ -37,9 +38,9 @@ except ImportError:
     skiptests = True
 
 if not skiptests:
-    from wwpdb.utils.oe_util.oedepict.OeDepict import OeDepict, OeDepictMultiPage
-    from wwpdb.utils.oe_util.build.OeChemCompIoUtils import OeChemCompIoUtils
     from wwpdb.utils.oe_util.build.OeBuildMol import OeBuildMol
+    from wwpdb.utils.oe_util.build.OeChemCompIoUtils import OeChemCompIoUtils
+    from wwpdb.utils.oe_util.oedepict.OeDepict import OeDepict, OeDepictMultiPage
 
 
 @unittest.skipIf(skiptests, "Cannot import openeye.oechem for tests")
@@ -129,10 +130,9 @@ class OeDepictTests(unittest.TestCase):
         if excludeDirs is None:
             excludeDirs = []
         pathList = []
-        #
         try:
             names = os.listdir(topPath)
-        except os.error:
+        except OSError:
             return pathList
 
         # expand pattern
@@ -150,7 +150,9 @@ class OeDepictTests(unittest.TestCase):
             if recurse:
                 # recursively scan directories
                 if os.path.isdir(fullname) and not os.path.islink(fullname) and (name not in excludeDirs):
-                    pathList.extend(self.__getPathList(topPath=fullname, pattern=pattern, excludeDirs=excludeDirs, recurse=recurse))
+                    pathList.extend(
+                        self.__getPathList(topPath=fullname, pattern=pattern, excludeDirs=excludeDirs, recurse=recurse)
+                    )
 
         return pathList
 
@@ -164,14 +166,20 @@ class OeDepictTests(unittest.TestCase):
             oeMolTitleList = list(oeMolTitleZip)
             if self.__verbose:
                 self.__lfh.write("molTitleList length is %d\n" % len(oeMolTitleList))
-            #
             for ccId, mol, title in oeMolTitleList:
                 # dirPath, fName = os.path.split(title)
                 imagePath = os.path.join(self.__testoutput, ccId + ".svg")
                 oed = OeDepict(verbose=self.__verbose, log=self.__lfh)
-                title = ""
+                title = ""  # noqa: PLC0414,PLW2901
                 oed.setMolTitleList([(ccId, mol, title)])
-                oed.setDisplayOptions(labelAtomName=False, labelAtomCIPStereo=True, labelAtomIndex=False, labelBondIndex=False, cellBorders=False, bondDisplayWidth=0.5)
+                oed.setDisplayOptions(
+                    labelAtomName=False,
+                    labelAtomCIPStereo=True,
+                    labelAtomIndex=False,
+                    labelBondIndex=False,
+                    cellBorders=False,
+                    bondDisplayWidth=0.5,
+                )
                 oed.setGridOptions(rows=1, cols=1)
                 oed.prepare()
                 oed.write(imagePath)
@@ -183,18 +191,25 @@ class OeDepictTests(unittest.TestCase):
         """Test case -  get, read, build OE molecule, and depict the molecule."""
         self.__lfh.write("\nStarting OeDepictTests testDepictPrdCCPathList\n")
         try:
-            ccPathList = self.__getPathList(topPath=self.__pathPrdChemCompCVS, pattern="*.cif", excludeDirs=["CVS", "REMOVED", "FULL"])
+            ccPathList = self.__getPathList(
+                topPath=self.__pathPrdChemCompCVS, pattern="*.cif", excludeDirs=["CVS", "REMOVED", "FULL"]
+            )
             oeMolTitleZip = self.__testMakeFromFiles(pathList=ccPathList)
             oeMolTitleList = list(oeMolTitleZip)
             if self.__verbose:
                 self.__lfh.write("molTitleList length is %d\n" % len(oeMolTitleList))
-            #
             for ccId, mol, title in oeMolTitleList:
                 _dirPath, fName = os.path.split(title)
                 imagePath = os.path.join(self.__testoutput, fName[:-4] + ".svg")
                 oed = OeDepict(verbose=self.__verbose, log=self.__lfh)
                 oed.setMolTitleList([(ccId, mol, title)])
-                oed.setDisplayOptions(labelAtomName=False, labelAtomCIPStereo=True, labelAtomIndex=False, labelBondIndex=False, bondDisplayWidth=0.5)
+                oed.setDisplayOptions(
+                    labelAtomName=False,
+                    labelAtomCIPStereo=True,
+                    labelAtomIndex=False,
+                    labelBondIndex=False,
+                    bondDisplayWidth=0.5,
+                )
                 oed.setGridOptions(rows=1, cols=1)
                 oed.prepare()
                 oed.write(imagePath)
@@ -209,7 +224,15 @@ class OeDepictTests(unittest.TestCase):
             oeMolTitleList = self.__testMakeFromIds(self.__idList)
             oed = OeDepict(verbose=self.__verbose, log=self.__lfh)
             oed.setMolTitleList(oeMolTitleList)
-            oed.setDisplayOptions(imageX=1000, imageY=1000, labelAtomName=True, labelAtomCIPStereo=True, labelAtomIndex=False, labelBondIndex=False, bondDisplayWidth=0.5)
+            oed.setDisplayOptions(
+                imageX=1000,
+                imageY=1000,
+                labelAtomName=True,
+                labelAtomCIPStereo=True,
+                labelAtomIndex=False,
+                labelBondIndex=False,
+                bondDisplayWidth=0.5,
+            )
             oed.setGridOptions(rows=2, cols=2)
             oed.prepare()
             oed.write(os.path.join(self.__testoutput, "myIdListtest.png"))
@@ -224,7 +247,15 @@ class OeDepictTests(unittest.TestCase):
             oeMolTitleList = self.__testMakeFromFiles(self.__pathList)
             oed = OeDepict(verbose=self.__verbose, log=self.__lfh)
             oed.setMolTitleList(oeMolTitleList)
-            oed.setDisplayOptions(imageX=1500, imageY=1500, labelAtomName=True, labelAtomCIPStereo=True, labelAtomIndex=False, labelBondIndex=False, bondDisplayWidth=0.5)
+            oed.setDisplayOptions(
+                imageX=1500,
+                imageY=1500,
+                labelAtomName=True,
+                labelAtomCIPStereo=True,
+                labelAtomIndex=False,
+                labelBondIndex=False,
+                bondDisplayWidth=0.5,
+            )
             oed.setGridOptions(rows=3, cols=3)
             oed.prepare()
             oed.write(os.path.join(self.__testoutput, "pathListtest.png"))
@@ -252,7 +283,14 @@ class OeDepictTests(unittest.TestCase):
             oeMolTitleList = self.__testMakeFromFiles(self.__pathList)
             oed = OeDepictMultiPage(verbose=self.__verbose, log=self.__lfh)
             oed.setMolTitleList(oeMolTitleList)
-            oed.setDisplayOptions(pageOrientation="Portrait", labelAtomName=True, labelAtomCIPStereo=True, labelAtomIndex=False, labelBondIndex=False, bondDisplayWidth=0.5)
+            oed.setDisplayOptions(
+                pageOrientation="Portrait",
+                labelAtomName=True,
+                labelAtomCIPStereo=True,
+                labelAtomIndex=False,
+                labelBondIndex=False,
+                bondDisplayWidth=0.5,
+            )
             oed.setGridOptions(rows=2, cols=1)
             oed.prepare()
             oed.write(os.path.join(self.__testoutput, "multiPathListtest.pdf"))
@@ -267,7 +305,13 @@ class OeDepictTests(unittest.TestCase):
             oeMolTitleList = self.__testMakeFromFiles(self.__pathList2)
             oed = OeDepictMultiPage(verbose=self.__verbose, log=self.__lfh)
             oed.setMolTitleList(oeMolTitleList)
-            oed.setDisplayOptions(labelAtomName=True, labelAtomCIPStereo=True, labelAtomIndex=False, labelBondIndex=False, bondDisplayWidth=0.5)
+            oed.setDisplayOptions(
+                labelAtomName=True,
+                labelAtomCIPStereo=True,
+                labelAtomIndex=False,
+                labelBondIndex=False,
+                bondDisplayWidth=0.5,
+            )
             oed.prepare()
             oed.write(os.path.join(self.__testoutput, "myErrortest.pdf"))
         except:  # noqa: E722 pylint: disable=bare-except
@@ -281,11 +325,16 @@ class OeDepictTests(unittest.TestCase):
             oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
             if oem.importFile(self.__sdfFilePath, type="3D"):
                 self.__lfh.write("Title              = %s\n" % oem.getTitle())
-            #
             imagePath = os.path.join(self.__testoutput, "ATP.svg")
             oed = OeDepict(verbose=self.__verbose, log=self.__lfh)
             oed.setMolTitleList([("ATP", oem, "Title for ATP")])
-            oed.setDisplayOptions(labelAtomName=True, labelAtomCIPStereo=True, labelAtomIndex=False, labelBondIndex=False, bondDisplayWidth=0.5)
+            oed.setDisplayOptions(
+                labelAtomName=True,
+                labelAtomCIPStereo=True,
+                labelAtomIndex=False,
+                labelBondIndex=False,
+                bondDisplayWidth=0.5,
+            )
             oed.setGridOptions(rows=1, cols=1)
             oed.prepare()
             oed.write(imagePath)
@@ -304,7 +353,13 @@ class OeDepictTests(unittest.TestCase):
 
             oed = OeDepict(verbose=self.__verbose, log=self.__lfh)
             oed.setMolTitleList([("benzene", oem, "Title for benzene")])
-            oed.setDisplayOptions(labelAtomName=False, labelAtomCIPStereo=True, labelAtomIndex=False, labelBondIndex=False, bondDisplayWidth=1.0)
+            oed.setDisplayOptions(
+                labelAtomName=False,
+                labelAtomCIPStereo=True,
+                labelAtomIndex=False,
+                labelBondIndex=False,
+                bondDisplayWidth=1.0,
+            )
             oed.setGridOptions(rows=1, cols=1)
             oed.prepare()
             oed.write(imagePath)
@@ -356,10 +411,8 @@ if __name__ == "__main__":
     # unittest.main()
     mySuite1 = suiteDepictMulti()
     unittest.TextTestRunner(verbosity=2).run(mySuite1)
-    #
     mySuite2 = suiteDepict()
     unittest.TextTestRunner(verbosity=2).run(mySuite2)
-    #
     mySuite3 = suiteDepictPrd()
     unittest.TextTestRunner(verbosity=2).run(mySuite3)
 

@@ -11,6 +11,7 @@
 A collection of tests for the OEDepictAlignUtils class with FAMILY PRD data -
 
 """
+
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
@@ -18,16 +19,14 @@ __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.01"
 
 
-import sys
-import unittest
-import traceback
-import platform
-import time
+import builtins
 import os
 import os.path
-
-if sys.version_info[0] < 3:
-    from io import open as open
+import platform
+import sys
+import time
+import traceback
+import unittest
 
 try:
     from openeye.oechem import OEFloatArray  # noqa: F401 pylint: disable=unused-import
@@ -38,6 +37,7 @@ except ImportError:
 
 if not skiptests:
     from mmcif_utils.bird.PdbxBirdIndex import PdbxBirdIndex
+
     from wwpdb.utils.oe_util.build.OeChemCompIoUtils import OeChemCompIoUtils
     from wwpdb.utils.oe_util.oedepict.OeAlignDepictUtils import OeDepictMCSAlignMulti
     from wwpdb.utils.oe_util.oedepict.OeDepict import OeDepictMultiPage
@@ -66,7 +66,9 @@ class OeBirdDepictTests(unittest.TestCase):
         afD = {}
         pD = {}
         try:
-            bI = PdbxBirdIndex(indexPath=os.path.join(self.__testoutput, "bird-index.pic"), verbose=self.__verbose, log=self.__lfh)
+            bI = PdbxBirdIndex(
+                indexPath=os.path.join(self.__testoutput, "bird-index.pic"), verbose=self.__verbose, log=self.__lfh
+            )
             familyIdL = bI.getFamilyList()
             for familyId in familyIdL:
                 prdIdList = bI.getPrdIdList(familyId)
@@ -81,7 +83,7 @@ class OeBirdDepictTests(unittest.TestCase):
                         fD[familyId].append((familyId, prdId, ccId, ccPath))
                         pD[prdId] = (ccId, ccPath)
 
-            ifh = open(self.__altFamilyIndexPath, "r", encoding="utf-8")
+            ifh = builtins.open(self.__altFamilyIndexPath, encoding="utf-8")
             for line in ifh:
                 fields = line.split()
                 fId = fields[0].strip()
@@ -131,14 +133,22 @@ class OeBirdDepictTests(unittest.TestCase):
 
                     aML = oed.alignOneWithListMulti(imagePath=imageFileName)
                     if len(aML) > 0:
-                        for (rCC, rAt, tCC, tAt) in aML:
+                        for rCC, rAt, tCC, tAt in aML:
                             self.__lfh.write("%5s %-5s %5s %-5s\n" % (rCC, rAt, tCC, tAt))
                 else:
                     oeU = OeChemCompIoUtils(verbose=self.__verbose, log=self.__lfh)
                     oemList = oeU.getFromPathList([refCcPath], use3D=False)
                     oed = OeDepictMultiPage(verbose=self.__verbose, log=self.__lfh)
                     oed.setMolTitleList([(refPrdId, oemList[0], refPrdId)])
-                    oed.setDisplayOptions(labelAtomName=False, labelAtomCIPStereo=True, labelAtomIndex=False, labelBondIndex=False, gridRows=3, gridCols=3, bondDisplayWidth=0.5)
+                    oed.setDisplayOptions(
+                        labelAtomName=False,
+                        labelAtomCIPStereo=True,
+                        labelAtomIndex=False,
+                        labelBondIndex=False,
+                        gridRows=3,
+                        gridCols=3,
+                        bondDisplayWidth=0.5,
+                    )
                     oed.prepare()
                     oed.write(imageFileName)
         except:  # noqa: E722 pylint: disable=bare-except
@@ -149,7 +159,7 @@ class OeBirdDepictTests(unittest.TestCase):
         """Test case -  aligned family members --"""
         self.__lfh.write("\nStarting OeBirdDepictTests testFamilyDepictionHTMLIndex\n")
         tS = time.strftime("%Y %m %d %H:%M:%S", time.localtime())
-        ofh = open("index.html", "w", encoding="utf-8")
+        ofh = builtins.open("index.html", "w", encoding="utf-8")
         ofh.write("<html>\n")
         ofh.write("<body>\n")
         ofh.write("<h4>Index of family chemical diagrams produced on: %s</h4>\n" % tS)
@@ -164,7 +174,9 @@ class OeBirdDepictTests(unittest.TestCase):
                 (familyId, _refPrdId, _refCcId, _refCcPath) = fmList[0]
                 imageFileName = familyId + "-members.pdf"
                 if os.access(imageFileName, os.R_OK):
-                    ofh.write('<li> <a href="%s">%s</a> with %2d members.</li>\n' % (imageFileName, familyId, len(fmList)))
+                    ofh.write(
+                        '<li> <a href="%s">%s</a> with %2d members.</li>\n' % (imageFileName, familyId, len(fmList))
+                    )
             ofh.write("</ul>\n")
             ofh.write("</body>\n")
             ofh.write("</html>\n")

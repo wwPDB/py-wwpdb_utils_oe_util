@@ -12,6 +12,7 @@
 Classes to build OE molecule objects from chemical component model instances.
 
 """
+
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
@@ -22,22 +23,30 @@ __version__ = "V0.01"
 import sys
 import traceback
 
-from mmcif_utils.chemcomp.PdbxChemCompModel import (PdbxChemCompModel,
-                                                    PdbxChemCompModelAtom,
-                                                    PdbxChemCompModelBond)
+from mmcif_utils.chemcomp.PdbxChemCompModel import PdbxChemCompModel, PdbxChemCompModelAtom, PdbxChemCompModelBond
 from mmcif_utils.chemcomp.PdbxChemCompModelIo import PdbxChemCompModelIo
-from openeye.oechem import (OE3DToInternalStereo, OEAroModelOpenEye,
-                            OEAssignAromaticFlags, OECreateCanSmiString,
-                            OECreateInChI, OECreateInChIKey,
-                            OECreateIsoSmiString, OEFindRingAtomsAndBonds,
-                            OEFormat_OEB, OEMol, OEMolecularFormula,
-                            OEPerceiveCIPStereo, OESuppressHydrogens,
-                            OEWriteMolecule, oemolistream, oemolostream)
+from openeye.oechem import (
+    OE3DToInternalStereo,
+    OEAroModelOpenEye,
+    OEAssignAromaticFlags,
+    OECreateCanSmiString,
+    OECreateInChI,
+    OECreateInChIKey,
+    OECreateIsoSmiString,
+    OEFindRingAtomsAndBonds,
+    OEFormat_OEB,
+    OEMol,
+    OEMolecularFormula,
+    OEPerceiveCIPStereo,
+    OESuppressHydrogens,
+    OEWriteMolecule,
+    oemolistream,
+    oemolostream,
+)
 
 
-class OeBuildModelMol(object):
-    ''' Utility methods for constructing OEMols from chemical component model instances.
-    '''
+class OeBuildModelMol:
+    """Utility methods for constructing OEMols from chemical component model instances."""
 
     def __init__(self, verbose=True, log=sys.stderr):
         self.__verbose = verbose
@@ -70,15 +79,15 @@ class OeBuildModelMol(object):
         try:
             ccm = PdbxChemCompModelIo(verbose=self.__verbose, log=self.__lfh)
             ccm.setFilePath(modelPath)
-            ccDL = ccm.getAttribDictList(catName='pdbx_chem_comp_model')
+            ccDL = ccm.getAttribDictList(catName="pdbx_chem_comp_model")
             cmp = PdbxChemCompModel(ccDL[0], self.__verbose, self.__lfh)
             self.__modelId = cmp.getId()
             self.__ccId = cmp.getCompId()
 
-            self.__ccAtomDL = ccm.getAttribDictList(catName='pdbx_chem_comp_model_atom')
-            self.__ccBondDL = ccm.getAttribDictList(catName='pdbx_chem_comp_model_bond')
+            self.__ccAtomDL = ccm.getAttribDictList(catName="pdbx_chem_comp_model_atom")
+            self.__ccBondDL = ccm.getAttribDictList(catName="pdbx_chem_comp_model_bond")
             return self.__modelId
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             self.__lfh.write("OeBuildModelMol(setChemCompModelPath) Fails for %s %s\n" % (modelPath, str(e)))
             traceback.print_exc(file=self.__lfh)
         return None
@@ -88,25 +97,25 @@ class OeBuildModelMol(object):
         self.__eD = {}
 
     def serialize(self):
-        """ Create a string representing the content of the current OE molecule.   This
-            serialization uses the OE internal binary format.
+        """Create a string representing the content of the current OE molecule.   This
+        serialization uses the OE internal binary format.
         """
         oms = oemolostream()
         oms.SetFormat(OEFormat_OEB)
         oms.openstring()
         OEWriteMolecule(oms, self.__oeMol)
-        if (self.__debug):
+        if self.__debug:
             self.__lfh.write("OeBuildModelMol(Serialize) SMILES %s\n" % OECreateCanSmiString(self.__oeMol))
             self.__lfh.write("OeBuildModelMol(Serialize) atoms = %d\n" % self.__oeMol.NumAtoms())
         return oms.GetString()
 
     def deserialize(self, oeS):
-        """ Reconstruct an OE molecule from the input string serialization (OE binary).
+        """Reconstruct an OE molecule from the input string serialization (OE binary).
 
-            The deserialized molecule is used to initialize the internal OE molecule
-            within this object.
+        The deserialized molecule is used to initialize the internal OE molecule
+        within this object.
 
-            Returns True for success or False otherwise.
+        Returns True for success or False otherwise.
         """
         self.__clear()
         ims = oemolistream()
@@ -117,29 +126,25 @@ class OeBuildModelMol(object):
         mList = []
         # for mol in ims.GetOEGraphMols():
         for mol in ims.GetOEMols():
-            if (self.__debug):
+            if self.__debug:
                 self.__lfh.write("OeBuildModelMol(deserialize) SMILES %s\n" % OECreateCanSmiString(mol))
                 self.__lfh.write("OeBuildModelMol(deserialize) title  %s\n" % mol.GetTitle())
                 self.__lfh.write("OeBuildModelMol(deserialize) atoms  %d\n" % mol.NumAtoms())
             # mList.append(OEGraphMol(mol))
             mList.append(OEMol(mol))
             nmol += 1
-        #
         if nmol >= 1:
             self.__oeMol = mList[0]
             self.__ccId = self.__oeMol.GetTitle()
-            #
-            if (self.__debug):
+            if self.__debug:
                 self.__lfh.write("OeBuildModelMol(deserialize) mols  %d\n" % nmol)
                 self.__lfh.write("OeBuildModelMol(deserialize) id %s\n" % self.__ccId)
                 self.__lfh.write("OeBuildModelMol(deserialize) atoms  %d\n" % self.__oeMol.NumAtoms())
             return True
-        else:
-            return False
+        return False
 
     def getElementCounts(self):
-        """ Get the dictionary of element counts (eg. eD[iAtNo]=iCount).
-        """
+        """Get the dictionary of element counts (eg. eD[iAtNo]=iCount)."""
         if len(self.__eD) == 0:
             # calculate from current oeMol
             try:
@@ -163,11 +168,9 @@ class OeBuildModelMol(object):
             return False
 
     def __build3D(self):
-        """ Build OE molecule using model instance 3D coordinates and OE stereo perception.
-        """
+        """Build OE molecule using model instance 3D coordinates and OE stereo perception."""
         self.__clear()
         self.__oeMol = OEMol()
-        #
         self.__oeMol.SetTitle(self.__modelId)
         aL = []
 
@@ -209,8 +212,10 @@ class OeBuildModelMol(object):
             # if (self.__verbose):
             #    self.__lfh.write("CC %s Atom - %s cTup %r\n" % (self.__ccId,atName,cTup))
             self.__oeMol.SetCoords(oeAt, cTup)
-            if (self.__debug):
-                self.__lfh.write("Atom - %s type %s atno %d isotope %d fc %d (xyz) %r\n" % (atName, atType, atNo, isotope, fc, cTup))
+            if self.__debug:
+                self.__lfh.write(
+                    "Atom - %s type %s atno %d isotope %d fc %d (xyz) %r\n" % (atName, atType, atNo, isotope, fc, cTup)
+                )
             aL.append(oeAt)
 
         for d in self.__ccBondDL:
@@ -221,7 +226,7 @@ class OeBuildModelMol(object):
             iType = ccBnd.getIntegerType()
             #
             # arFlag=ccBnd.isAromatic()
-            if (self.__debug):
+            if self.__debug:
                 self.__lfh.write(" %s %d -- %s %d (%d)\n" % (at1, iat1, at2, iat2, iType))
 
             oeBnd = self.__oeMol.NewBond(aL[iat1], aL[iat2], iType)  # noqa: F841 pylint: disable=unused-variable
@@ -244,59 +249,48 @@ class OeBuildModelMol(object):
         self.updateCIPStereoOE()
 
     def updateCIPStereoOE(self):
-        """ OE perception of CIP stereo -
-        """
+        """OE perception of CIP stereo -"""
         for atom in self.__oeMol.GetAtoms():
             OEPerceiveCIPStereo(self.__oeMol, atom)
 
         for bond in self.__oeMol.GetBonds():
-            if (bond.GetOrder() == 2):
+            if bond.GetOrder() == 2:
                 OEPerceiveCIPStereo(self.__oeMol, bond)
 
     def getGraphMolSuppressH(self):
-        """ Return the current constructed OE molecule with hydrogens suppressed.
-        """
+        """Return the current constructed OE molecule with hydrogens suppressed."""
         # OESuppressHydrogens(self.__oeMol, retainPolar=False,retainStereo=True,retainIsotope=True)
         OESuppressHydrogens(self.__oeMol)
         return self.__oeMol
 
     def getMol(self):
-        """ Return the current constructed OE molecule.
-        """
+        """Return the current constructed OE molecule."""
         return self.__oeMol
 
     def getCanSMILES(self):
-        """ Return the cannonical SMILES string derived from the current OD molecule.
-        """
+        """Return the cannonical SMILES string derived from the current OD molecule."""
         return OECreateCanSmiString(self.__oeMol)
 
     def getIsoSMILES(self):
-        """ Return the cannonical stereo SMILES string derived from the current OE molecule.
-        """
+        """Return the cannonical stereo SMILES string derived from the current OE molecule."""
         return OECreateIsoSmiString(self.__oeMol)
 
     def getFormula(self):
-        """ Return the Hill order formulat  derived from the current OE molecule.
-        """
+        """Return the Hill order formulat  derived from the current OE molecule."""
         return OEMolecularFormula(self.__oeMol)
 
     def getInChIKey(self):
-        """ Return the InChI key derived from the current OE molecule.
-        """
+        """Return the InChI key derived from the current OE molecule."""
         return OECreateInChIKey(self.__oeMol)
 
     def getInChI(self):
-        """ Return the InChI string derived from the current OE molecule.
-        """
+        """Return the InChI string derived from the current OE molecule."""
         return OECreateInChI(self.__oeMol)
 
     def getTitle(self):
-        """ Return the title assigned to the current OE molecule
-        """
+        """Return the title assigned to the current OE molecule"""
         return self.__oeMol.GetTitle()
 
     def getCoords(self):
-        """  Return coordinate list if a 3D molecule is built -- otherwise an empty list --
-
-        """
+        """Return coordinate list if a 3D molecule is built -- otherwise an empty list --"""
         return self.__molXyzL

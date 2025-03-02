@@ -11,6 +11,7 @@
 Utilities to standardize chemical descriptors
 
 """
+
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
@@ -24,21 +25,18 @@ from openeye import oechem
 logger = logging.getLogger(__name__)
 
 
-class OeDescriptorUtils(object):
-    ''' Utilities to standardize chemical descriptors
-    '''
+class OeDescriptorUtils:
+    """Utilities to standardize chemical descriptors"""
 
     def __init__(self):
         pass
-        #
 
-    def standardizeSmiles(self, smiles, type="ISOMERIC"):  # pylint: disable=redefined-builtin
-        """ Return a standardized SMILES (type) or None
-        """
+    def standardizeSmiles(self, smiles, type="ISOMERIC"):  # noqa: A002 pylint: disable=redefined-builtin
+        """Return a standardized SMILES (type) or None"""
         smilesOut = None
         try:
             mol = oechem.OEGraphMol()
-            if (oechem.OEParseSmiles(mol, smiles) == 1):
+            if oechem.OEParseSmiles(mol, smiles) == 1:
                 oechem.OEAssignAromaticFlags(mol)
                 if type == "CANNONICAL":
                     smilesOut = oechem.OECreateCanSmiString(mol)
