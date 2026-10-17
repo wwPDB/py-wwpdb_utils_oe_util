@@ -22,6 +22,7 @@ __version__ = "V0.01"
 
 
 import sys
+from typing import Any, Dict, Iterable, Optional, TextIO, Tuple
 
 from openeye.oechem import OEBlack, OEDarkBlue, OEDarkGreen
 from openeye.oedepict import (
@@ -49,15 +50,21 @@ from openeye.oedepict import (
     OEWriteMultiPageImage,
 )
 
+from wwpdb.utils.oe_util.build.OeBuildMol import OeBuildMol
 
-class LabelAtoms(OEDisplayAtomPropBase):
-    def __init__(self):
+# (ccId, oeMol, titleString)
+MolTitleTuple = Tuple[str, OeBuildMol, str]
+
+
+class LabelAtoms(OEDisplayAtomPropBase):  # type: ignore[misc]  # OpenEye base class is untyped (Any)
+    def __init__(self) -> None:
         OEDisplayAtomPropBase.__init__(self)
 
-    def __call__(self, atom):
-        return atom.GetName()
+    def __call__(self, atom: Any) -> str:
+        name: str = atom.GetName()
+        return name
 
-    def CreateCopy(self):
+    def CreateCopy(self) -> Any:
         # __disown__ is required to allow C++ to take
         # ownsership of this object and its memory
         copy = LabelAtoms()
@@ -67,18 +74,18 @@ class LabelAtoms(OEDisplayAtomPropBase):
 class OeDepictBase:
     """Base class for 2D depictions in single and multi-page format."""
 
-    def __init__(self, verbose=True, log=sys.stderr):  # noqa: ARG002 pylint: disable=unused-argument
+    def __init__(self, verbose: bool = True, log: TextIO = sys.stderr) -> None:  # noqa: ARG002 pylint: disable=unused-argument
         super(OeDepictBase, self).__init__()
         # self.__verbose = verbose
         # self.__debug = False
         # self.__lfh = log
         #
-        self._molTitleList = []
-        self._opts = None
+        self._molTitleList: Iterable[MolTitleTuple] = []
+        self._opts: Optional[OE2DMolDisplayOptions] = None
         #
         # internal dictionary of display parameters -
         #
-        self._params = {
+        self._params: Dict[str, Any] = {
             "imageSizeX": 500,
             "imageSizeY": 500,
             "cellBorders": True,
@@ -101,21 +108,22 @@ class OeDepictBase:
             "highLightNotMatchColorFit": "pink",
         }
 
-    def setDisplayOptions(self, **kwargs):
+    def setDisplayOptions(self, **kwargs: Any) -> None:
         self._params.update(kwargs)
 
-    def setGridOptions(self, rows=1, cols=1, cellBorders=True):
+    def setGridOptions(self, rows: int = 1, cols: int = 1, cellBorders: bool = True) -> None:
         self._params["gridRows"] = rows
         self._params["gridCols"] = cols
         self._params["cellBorders"] = cellBorders
 
-    def setMolTitleList(self, oeMolTitleList):
+    def setMolTitleList(self, oeMolTitleList: Iterable[MolTitleTuple]) -> None:
         """Set the list of OE Mols to be depicted as a list of tuples containing
         [(ccId,oeMol,titleString),(ccId,oeMol,titleString),...]
         """
         self._molTitleList = oeMolTitleList
 
-    def _assignDisplayOptions(self):
+    def _assignDisplayOptions(self) -> None:
+        assert self._opts is not None  # would raise AttributeError below anyway
         if self._params["labelAtomCIPStereo"]:
             self._opts.SetAtomStereoStyle(OEAtomStereoStyle_Display_All)
 
@@ -147,16 +155,16 @@ class OeDepictBase:
 class OeDepictMultiPage(OeDepictBase):
     """Create 2D depictions in multipage format from a list of OE molecules and title strings"""
 
-    def __init__(self, verbose=True, log=sys.stderr, useTitle=True):
+    def __init__(self, verbose: bool = True, log: TextIO = sys.stderr, useTitle: bool = True) -> None:
         super(OeDepictMultiPage, self).__init__(verbose=verbose, log=log)
         # self.__verbose = verbose
         # self.__debug = False
         # self.__lfh = log
         self.__useTitle = useTitle
-        self.__multi = None
-        self.__image = None
+        self.__multi: Optional[OEMultiPageImageFile] = None
+        self.__image: Optional[OEImage] = None
 
-    def __setupImage(self):
+    def __setupImage(self) -> None:
         if self._params["pageOrientation"] == "landscape":
             self.__multi = OEMultiPageImageFile(OEPageOrientation_Landscape, OEPageSize_US_Letter)
         else:
@@ -164,8 +172,9 @@ class OeDepictMultiPage(OeDepictBase):
         self.__image = self.__multi.NewPage()
         self._opts = OE2DMolDisplayOptions()
 
-    def prepare(self):
+    def prepare(self) -> None:
         self.__setupImage()
+        assert self.__multi is not None and self._opts is not None  # set by __setupImage
         rows = self._params["gridRows"]
         cols = self._params["gridCols"]
         grid = OEImageGrid(self.__image, rows, cols)
@@ -202,23 +211,23 @@ class OeDepictMultiPage(OeDepictBase):
 
             citer.Next()
 
-    def write(self, imagePath):
+    def write(self, imagePath: str) -> None:
         OEWriteMultiPageImage(imagePath, self.__multi)
 
 
 class OeDepict(OeDepictBase):
     """Create 2D depictions in single-page format from a list of OE molecules & title strings"""
 
-    def __init__(self, verbose=True, log=sys.stderr, useTitle=True):
+    def __init__(self, verbose: bool = True, log: TextIO = sys.stderr, useTitle: bool = True) -> None:
         super(OeDepict, self).__init__(verbose=verbose, log=log)
         # self.__verbose = verbose
         self.__debug = False
         self.__lfh = log
         self.__useTitle = useTitle
-        self.__image = None
-        self.__grid = None
+        self.__image: Optional[OEImage] = None
+        self.__grid: Optional[OEImageGrid] = None
 
-    def __setupImage(self):
+    def __setupImage(self) -> None:
         """Internal method to configure a single page image."""
         self.__image = OEImage(self._params["imageSizeX"], self._params["imageSizeY"])
         self.__grid = OEImageGrid(self.__image, self._params["gridRows"], self._params["gridCols"])
@@ -229,8 +238,9 @@ class OeDepict(OeDepictBase):
             self.__lfh.write("Num columns %d\n" % self.__grid.NumCols())
             self.__lfh.write("Num rows    %d\n" % self.__grid.NumRows())
 
-    def prepare(self):
+    def prepare(self) -> None:
         self.__setupImage()
+        assert self.__grid is not None and self._opts is not None  # set by __setupImage
         # We convert to list as may come in as a python 3 zipobject with is not indexable
         mollist = list(self._molTitleList)
         for idx, cell in enumerate(self.__grid.GetCells()):
@@ -254,5 +264,5 @@ class OeDepict(OeDepictBase):
             if self._params["cellBorders"]:
                 OEDrawBorder(cell, OEPen(OEBlackPen))
 
-    def write(self, imagePath):
+    def write(self, imagePath: str) -> None:
         OEWriteImage(imagePath, self.__image)

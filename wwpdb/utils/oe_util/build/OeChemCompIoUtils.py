@@ -23,6 +23,7 @@ import os
 import os.path
 import sys
 import traceback
+from typing import List, Optional, TextIO
 
 from wwpdb.utils.oe_util.build.OeBuildMol import OeBuildMol
 
@@ -39,15 +40,19 @@ class OeChemCompIoUtils:
     provided to manage the chemical component definition IO
     """
 
-    def __init__(self, topCachePath="/data/components/ligand-dict-v3", verbose=True, log=sys.stderr):
+    def __init__(
+        self, topCachePath: str = "/data/components/ligand-dict-v3", verbose: bool = True, log: TextIO = sys.stderr
+    ) -> None:
         self.__topCachePath = topCachePath
         self.__verbose = verbose
         self.__debug = False
         self.__lfh = log
 
-    def getFromPathList(self, pathList, use3D=True, coordType="model", setTitle=True):
+    def getFromPathList(
+        self, pathList: List[str], use3D: bool = True, coordType: str = "model", setTitle: bool = True
+    ) -> List[OeBuildMol]:
         """Return a list of OE mols constructed from the input pathList of chemical definitions."""
-        oemList = []
+        oemList: List[OeBuildMol] = []
         try:
             for pth in pathList:
                 myReader = PdbxIoAdapter(self.__verbose, self.__lfh)
@@ -79,23 +84,29 @@ class OeChemCompIoUtils:
                 traceback.print_exc(file=self.__lfh)
         return oemList
 
-    def getFromIdList(self, idList, use3D=True, coordType="model", setTitle=True):
+    def getFromIdList(
+        self, idList: List[str], use3D: bool = True, coordType: str = "model", setTitle: bool = True
+    ) -> List[OeBuildMol]:
         """Return a list of OE mols constructed from the input Id of chemical definitions."""
-        pathList = []
+        pathList: List[str] = []
         for ide in idList:
             if len(ide) < 1:
                 continue
             idU = str(ide).upper()
+            hashd: Optional[str]
             if idU.startswith("PRDCC_"):
                 hashd = idU[-1]
                 pth = os.path.join(self.__topCachePath, hashd, idU + ".cif")
             else:
                 hashd = self.__getCcdHash(idU)
+                if hashd is None:
+                    # Unreachable (idU is non-empty); os.path.join() would raise the same TypeError
+                    raise TypeError("expected str, bytes or os.PathLike object, not NoneType")
                 pth = os.path.join(self.__topCachePath, hashd, idU, idU + ".cif")
             pathList.append(pth)
         return self.getFromPathList(pathList, use3D=use3D, coordType=coordType, setTitle=setTitle)
 
-    def __getCcdHash(self, idCode):
+    def __getCcdHash(self, idCode: str) -> Optional[str]:
         """Returns the hash code for a CCD id.  Currently first letter"""
         if not idCode:
             return None

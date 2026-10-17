@@ -19,6 +19,7 @@ __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.01"
 
 import logging
+from typing import Optional
 
 from openeye import oechem
 
@@ -28,12 +29,12 @@ logger = logging.getLogger(__name__)
 class OeDescriptorUtils:
     """Utilities to standardize chemical descriptors"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
-    def standardizeSmiles(self, smiles, type="ISOMERIC"):  # noqa: A002 pylint: disable=redefined-builtin
+    def standardizeSmiles(self, smiles: str, type: str = "ISOMERIC") -> Optional[str]:  # noqa: A002 pylint: disable=redefined-builtin
         """Return a standardized SMILES (type) or None"""
-        smilesOut = None
+        smilesOut: Optional[str] = None
         try:
             mol = oechem.OEGraphMol()
             if oechem.OEParseSmiles(mol, smiles) == 1:

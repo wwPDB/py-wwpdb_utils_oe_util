@@ -22,13 +22,15 @@ __version__ = "V0.01"
 import sys
 import traceback
 import unittest
+from typing import List
 
+from wwpdb.utils.oe_util.build.OeBuildMol import OeBuildMol
 from wwpdb.utils.oe_util.build.OeChemCompIoUtils import OeChemCompIoUtils
-from wwpdb.utils.oe_util.oedepict.OeDepict import OeDepict
+from wwpdb.utils.oe_util.oedepict.OeDepict import MolTitleTuple, OeDepict
 
 
 class OeDepictTests(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.__lfh = sys.stderr
         self.__verbose = True
         # ---------------------------------------------------------------------------------
@@ -40,10 +42,10 @@ class OeDepictTests(unittest.TestCase):
         ##
         self.__idList = ["atp", "gtp", "A", "C", "G", "DG"]
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         pass
 
-    def testDepictIdList(self):
+    def testDepictIdList(self) -> None:
         """Test case -  get, read, build OE molecule, and depict the molecule."""
         self.__lfh.write("\nStarting OeDepictTests testDepictIDList\n")
         try:
@@ -70,24 +72,24 @@ class OeDepictTests(unittest.TestCase):
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
-    def __makeFromIdList(self, idList):
+    def __makeFromIdList(self, idList: List[str]) -> List[MolTitleTuple]:
         """Create OE molecules from the input chemical component definition id list."""
         self.__lfh.write("\nStarting OeDepictTests __makeFromIdList\n")
         try:
-            oemList = []
+            oemList: List[OeBuildMol] = []
             oeU = OeChemCompIoUtils(topCachePath=self.__topCachePath, verbose=self.__verbose, log=self.__lfh)
             oemList = oeU.getFromIdList(idList, use3D=True, coordType="model")
             for oem in oemList:
                 self.__lfh.write("Title              = %s\n" % oem.getTitle())
                 self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
                 self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
-            return zip(idList, oemList, idList)
+            return list(zip(idList, oemList, idList))
         except:  # noqa: E722 pylint: disable=bare-except
             traceback.print_exc(file=self.__lfh)
             self.fail()
 
 
-def suiteDepict():
+def suiteDepict() -> unittest.TestSuite:
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(OeDepictTests("testDepictIdList"))
     return suiteSelect

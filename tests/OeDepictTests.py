@@ -25,10 +25,10 @@ __version__ = "V0.01"
 import fnmatch
 import os
 import os.path
-import platform
 import sys
-import traceback
+import tempfile
 import unittest
+from typing import Any, List, Optional, Tuple
 
 try:
     from openeye.oechem import OEFloatArray  # noqa: F401 pylint: disable=unused-import
@@ -42,18 +42,19 @@ if not skiptests:
     from wwpdb.utils.oe_util.build.OeChemCompIoUtils import OeChemCompIoUtils
     from wwpdb.utils.oe_util.oedepict.OeDepict import OeDepict, OeDepictMultiPage
 
+MolTitleList = List[Tuple[str, Any, str]]
+
 
 @unittest.skipIf(skiptests, "Cannot import openeye.oechem for tests")
 class OeDepictTests(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.__lfh = sys.stderr
         self.__verbose = True
 
         self.__here = os.path.abspath(os.path.dirname(__file__))
         self.__datadir = os.path.join(self.__here, "data")
-        self.__testoutput = os.path.join(self.__here, "test-output", platform.python_version())
-        if not os.path.exists(self.__testoutput):
-            os.makedirs(self.__testoutput)
+        self.__tmpDir = tempfile.TemporaryDirectory()  # pylint: disable=consider-using-with
+        self.__testoutput = self.__tmpDir.name
 
         self.__sdfFilePath = os.path.join(self.__datadir, "ATP.sdf")
         self.__topCachePath = os.path.join(self.__here, "ligand-dict-v3")
@@ -70,66 +71,66 @@ class OeDepictTests(unittest.TestCase):
             os.path.join(self.__topCachePath, "A/A/A.cif"),
         ]
 
-        self.__pathList2 = ["../data/PRD_000027.cif"]
+        # A PRD definition which is not present in the test data
+        self.__pathList2 = [os.path.join(self.__datadir, "PRD_000027.cif")]
         self.__pathPrdChemCompCVS = os.path.join(self.__here, "prdcc-v3")
         self.__pathChemCompCVS = self.__topCachePath
 
-    def tearDown(self):
-        pass
+    def tearDown(self) -> None:
+        self.__tmpDir.cleanup()
 
-    # def __getIdsFromFile(self, fPath):
-    #     ifh = open(fPath, "r")
-    #     idList = []
-    #     for line in ifh:
-    #         idList.append(line[:-1])
-    #     ifh.close()
-    #     return idList
+    def __assertFile(self, path: str, magic: Optional[bytes] = None) -> None:
+        """Assert that the output file exists, is non-empty and optionally starts with magic"""
+        self.assertTrue(os.path.isfile(path), path)
+        self.assertGreater(os.path.getsize(path), 0, path)
+        if magic is not None:
+            with open(path, "rb") as ifh:
+                self.assertEqual(ifh.read(len(magic)), magic, path)
 
-    def __testMakeFromFiles(self, pathList=None):
-        """Test case -  create OE molecules from the input chem comp definition path list."""
-        self.__lfh.write("\nStarting OeDepictTests __testMakeFromFiles\n")
-        if pathList is None:
-            pathList = []
-        try:
-            oemList = []
-            idList = []
-            oeU = OeChemCompIoUtils(topCachePath=self.__pathChemCompCVS, verbose=self.__verbose, log=self.__lfh)
-            oemList = oeU.getFromPathList(pathList, use3D=True, coordType="model")
-            for oem in oemList:
-                title = oem.getTitle()
-                idList.append(title)
-                self.__lfh.write("Title              = %s\n" % title)
-                self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
-                self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
-            return zip(idList, oemList, pathList)
-        except:  # noqa: E722 pylint: disable=bare-except
-            traceback.print_exc(file=self.__lfh)
-            self.fail()
+    def __makeFromFiles(self, pathList: List[str]) -> MolTitleList:
+        """Create OE molecules from the input chem comp definition path list.
 
-    def __testMakeFromIds(self, idList):
-        """Test case -  create OE molecules from the input chem comp definition id list."""
-        self.__lfh.write("\nStarting OeDepictTests __testMakeFromIds\n")
-        try:
-            oemList = []
-            oeU = OeChemCompIoUtils(topCachePath=self.__pathChemCompCVS, verbose=self.__verbose, log=self.__lfh)
-            oemList = oeU.getFromIdList(idList, use3D=True, coordType="ideal")
-            for oem in oemList:
-                self.__lfh.write("Title              = %s\n" % oem.getTitle())
-                self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
-                self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
-            return zip(idList, oemList, idList)
-        except:  # noqa: E722 pylint: disable=bare-except
-            traceback.print_exc(file=self.__lfh)
-            self.fail()
+        Returns a list of (title, molecule, path) tuples.
+        """
+        self.__lfh.write("\nStarting OeDepictTests __makeFromFiles\n")
+        oeU = OeChemCompIoUtils(topCachePath=self.__pathChemCompCVS, verbose=self.__verbose, log=self.__lfh)
+        oemList = oeU.getFromPathList(pathList, use3D=True, coordType="model")
+        idList: List[str] = []
+        for oem in oemList:
+            title = oem.getTitle()
+            idList.append(title)
+            self.__lfh.write("Title              = %s\n" % title)
+            self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
+            self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
+        return list(zip(idList, oemList, pathList))
 
-    def __getPathList(self, topPath, pattern="*", excludeDirs=None, recurse=True):
+    def __makeFromIds(self, idList: List[str]) -> MolTitleList:
+        """Create OE molecules from the input chem comp definition id list.
+
+        Returns a list of (id, molecule, id) tuples.
+        """
+        self.__lfh.write("\nStarting OeDepictTests __makeFromIds\n")
+        oeU = OeChemCompIoUtils(topCachePath=self.__pathChemCompCVS, verbose=self.__verbose, log=self.__lfh)
+        oemList = oeU.getFromIdList(idList, use3D=True, coordType="ideal")
+        self.assertEqual(len(oemList), len(idList))
+        for ccId, oem in zip(idList, oemList):
+            self.assertEqual(oem.getCcId(), ccId.upper())
+            self.assertTrue(oem.getCanSMILES())
+            self.__lfh.write("Title              = %s\n" % oem.getTitle())
+            self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
+            self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
+        return list(zip(idList, oemList, idList))
+
+    def __getPathList(
+        self, topPath: str, pattern: str = "*", excludeDirs: Optional[List[str]] = None, recurse: bool = True
+    ) -> List[str]:
         """Return a list of file paths in the input topPath which satisfy the input search criteria.
 
         This version does not follow symbolic links.
         """
         if excludeDirs is None:
             excludeDirs = []
-        pathList = []
+        pathList: List[str] = []
         try:
             names = os.listdir(topPath)
         except OSError:
@@ -156,232 +157,227 @@ class OeDepictTests(unittest.TestCase):
 
         return pathList
 
-    def testDepictCCIdList(self):
+    def testDepictCCIdList(self) -> None:
         """Test case -  get, read, build OE molecule, and depict the molecule."""
         self.__lfh.write("\nStarting OeDepictTests testDepicCCIdList\n")
-        try:
-            # idList = self.__getIdsFromFile('IDLIST.list')
-            idList = self.__idList
-            oeMolTitleZip = self.__testMakeFromIds(idList)
-            oeMolTitleList = list(oeMolTitleZip)
-            if self.__verbose:
-                self.__lfh.write("molTitleList length is %d\n" % len(oeMolTitleList))
-            for ccId, mol, title in oeMolTitleList:
-                # dirPath, fName = os.path.split(title)
-                imagePath = os.path.join(self.__testoutput, ccId + ".svg")
-                oed = OeDepict(verbose=self.__verbose, log=self.__lfh)
-                title = ""  # noqa: PLC0414,PLW2901
-                oed.setMolTitleList([(ccId, mol, title)])
-                oed.setDisplayOptions(
-                    labelAtomName=False,
-                    labelAtomCIPStereo=True,
-                    labelAtomIndex=False,
-                    labelBondIndex=False,
-                    cellBorders=False,
-                    bondDisplayWidth=0.5,
-                )
-                oed.setGridOptions(rows=1, cols=1)
-                oed.prepare()
-                oed.write(imagePath)
-        except:  # noqa: E722 pylint: disable=bare-except
-            traceback.print_exc(file=self.__lfh)
-            self.fail()
-
-    def testDepictPrdCCPathList(self):
-        """Test case -  get, read, build OE molecule, and depict the molecule."""
-        self.__lfh.write("\nStarting OeDepictTests testDepictPrdCCPathList\n")
-        try:
-            ccPathList = self.__getPathList(
-                topPath=self.__pathPrdChemCompCVS, pattern="*.cif", excludeDirs=["CVS", "REMOVED", "FULL"]
-            )
-            oeMolTitleZip = self.__testMakeFromFiles(pathList=ccPathList)
-            oeMolTitleList = list(oeMolTitleZip)
-            if self.__verbose:
-                self.__lfh.write("molTitleList length is %d\n" % len(oeMolTitleList))
-            for ccId, mol, title in oeMolTitleList:
-                _dirPath, fName = os.path.split(title)
-                imagePath = os.path.join(self.__testoutput, fName[:-4] + ".svg")
-                oed = OeDepict(verbose=self.__verbose, log=self.__lfh)
-                oed.setMolTitleList([(ccId, mol, title)])
-                oed.setDisplayOptions(
-                    labelAtomName=False,
-                    labelAtomCIPStereo=True,
-                    labelAtomIndex=False,
-                    labelBondIndex=False,
-                    bondDisplayWidth=0.5,
-                )
-                oed.setGridOptions(rows=1, cols=1)
-                oed.prepare()
-                oed.write(imagePath)
-        except:  # noqa: E722 pylint: disable=bare-except
-            traceback.print_exc(file=self.__lfh)
-            self.fail()
-
-    def testDepictIdList(self):
-        """Test case -  get, read, build OE molecule, and depict the molecule in a single image."""
-        self.__lfh.write("\nStarting OeDepictTests testDepictIdList\n")
-        try:
-            oeMolTitleList = self.__testMakeFromIds(self.__idList)
+        oeMolTitleList = self.__makeFromIds(self.__idList)
+        self.assertEqual(len(oeMolTitleList), 7)
+        for ccId, mol, _title in oeMolTitleList:
+            imagePath = os.path.join(self.__testoutput, ccId + ".svg")
             oed = OeDepict(verbose=self.__verbose, log=self.__lfh)
-            oed.setMolTitleList(oeMolTitleList)
-            oed.setDisplayOptions(
-                imageX=1000,
-                imageY=1000,
-                labelAtomName=True,
-                labelAtomCIPStereo=True,
-                labelAtomIndex=False,
-                labelBondIndex=False,
-                bondDisplayWidth=0.5,
-            )
-            oed.setGridOptions(rows=2, cols=2)
-            oed.prepare()
-            oed.write(os.path.join(self.__testoutput, "myIdListtest.png"))
-        except:  # noqa: E722 pylint: disable=bare-except
-            traceback.print_exc(file=self.__lfh)
-            self.fail()
-
-    def testDepictPathList(self):
-        """Test case -  get, read, build OE molecule, and depict the molecule."""
-        self.__lfh.write("\nStarting OeDepictTests testDepictPathList\n")
-        try:
-            oeMolTitleList = self.__testMakeFromFiles(self.__pathList)
-            oed = OeDepict(verbose=self.__verbose, log=self.__lfh)
-            oed.setMolTitleList(oeMolTitleList)
-            oed.setDisplayOptions(
-                imageX=1500,
-                imageY=1500,
-                labelAtomName=True,
-                labelAtomCIPStereo=True,
-                labelAtomIndex=False,
-                labelBondIndex=False,
-                bondDisplayWidth=0.5,
-            )
-            oed.setGridOptions(rows=3, cols=3)
-            oed.prepare()
-            oed.write(os.path.join(self.__testoutput, "pathListtest.png"))
-        except:  # noqa: E722 pylint: disable=bare-except
-            traceback.print_exc(file=self.__lfh)
-            self.fail()
-
-    def testDepictIdListMulti(self):
-        """Test case -  get, read, build OE molecule, and depict the molecule."""
-        self.__lfh.write("\nStarting OeDepictTests testDepictIdListMulti\n")
-        try:
-            oeMolTitleList = self.__testMakeFromIds(self.__idList)
-            oed = OeDepictMultiPage(verbose=self.__verbose, log=self.__lfh)
-            oed.setMolTitleList(oeMolTitleList)
-            oed.prepare()
-            oed.write(os.path.join(self.__testoutput, "mulitIdListtest.pdf"))
-        except:  # noqa: E722 pylint: disable=bare-except
-            traceback.print_exc(file=self.__lfh)
-            self.fail()
-
-    def testDepictPathListMulti(self):
-        """Test case -  get, read, build OE molecule, and depict the molecule."""
-        self.__lfh.write("\nStarting OeDepictTests testDepictPathListMulti\n")
-        try:
-            oeMolTitleList = self.__testMakeFromFiles(self.__pathList)
-            oed = OeDepictMultiPage(verbose=self.__verbose, log=self.__lfh)
-            oed.setMolTitleList(oeMolTitleList)
-            oed.setDisplayOptions(
-                pageOrientation="Portrait",
-                labelAtomName=True,
-                labelAtomCIPStereo=True,
-                labelAtomIndex=False,
-                labelBondIndex=False,
-                bondDisplayWidth=0.5,
-            )
-            oed.setGridOptions(rows=2, cols=1)
-            oed.prepare()
-            oed.write(os.path.join(self.__testoutput, "multiPathListtest.pdf"))
-        except:  # noqa: E722 pylint: disable=bare-except
-            traceback.print_exc(file=self.__lfh)
-            self.fail()
-
-    def testDepictWithErrorsMulti(self):
-        """Test case -  depicting missing bits --"""
-        self.__lfh.write("\nStarting OeDepictTests testDepictWithErrorsMulti\n")
-        try:
-            oeMolTitleList = self.__testMakeFromFiles(self.__pathList2)
-            oed = OeDepictMultiPage(verbose=self.__verbose, log=self.__lfh)
-            oed.setMolTitleList(oeMolTitleList)
-            oed.setDisplayOptions(
-                labelAtomName=True,
-                labelAtomCIPStereo=True,
-                labelAtomIndex=False,
-                labelBondIndex=False,
-                bondDisplayWidth=0.5,
-            )
-            oed.prepare()
-            oed.write(os.path.join(self.__testoutput, "myErrortest.pdf"))
-        except:  # noqa: E722 pylint: disable=bare-except
-            traceback.print_exc(file=self.__lfh)
-            self.fail()
-
-    def testDepictOneSDF(self):
-        """Test case -  get, read, build OE molecule from SDF file, and depict the molecule."""
-        self.__lfh.write("\nStarting OeDepictTests testDepictOneSDF\n")
-        try:
-            oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
-            if oem.importFile(self.__sdfFilePath, type="3D"):
-                self.__lfh.write("Title              = %s\n" % oem.getTitle())
-            imagePath = os.path.join(self.__testoutput, "ATP.svg")
-            oed = OeDepict(verbose=self.__verbose, log=self.__lfh)
-            oed.setMolTitleList([("ATP", oem, "Title for ATP")])
-            oed.setDisplayOptions(
-                labelAtomName=True,
-                labelAtomCIPStereo=True,
-                labelAtomIndex=False,
-                labelBondIndex=False,
-                bondDisplayWidth=0.5,
-            )
-            oed.setGridOptions(rows=1, cols=1)
-            oed.prepare()
-            oed.write(imagePath)
-        except:  # noqa: E722 pylint: disable=bare-except
-            traceback.print_exc(file=self.__lfh)
-            self.fail()
-
-    def testDepictSMILES(self):
-        """Test case -  create depiction from SMILES descriptor."""
-        self.__lfh.write("\nStarting OeDepictTests testDepictSMILES\n")
-        try:
-            imagePath = os.path.join(self.__testoutput, "benzene.svg")
-            oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
-            ok = oem.importSmiles("c1ccccc1")
-            self.assertTrue(ok)
-
-            oed = OeDepict(verbose=self.__verbose, log=self.__lfh)
-            oed.setMolTitleList([("benzene", oem, "Title for benzene")])
+            oed.setMolTitleList([(ccId, mol, "")])
             oed.setDisplayOptions(
                 labelAtomName=False,
                 labelAtomCIPStereo=True,
                 labelAtomIndex=False,
                 labelBondIndex=False,
-                bondDisplayWidth=1.0,
+                cellBorders=False,
+                bondDisplayWidth=0.5,
             )
             oed.setGridOptions(rows=1, cols=1)
             oed.prepare()
             oed.write(imagePath)
-        except:  # noqa: E722 pylint: disable=bare-except
-            traceback.print_exc(file=self.__lfh)
-            self.fail()
+            self.__assertFile(imagePath, b"<?xml")
+        self.assertEqual(sorted(os.listdir(self.__testoutput)), sorted(ccId + ".svg" for ccId in self.__idList))
+
+    def testDepictPrdCCPathList(self) -> None:
+        """Test case -  get, read, build OE molecule, and depict the molecule."""
+        self.__lfh.write("\nStarting OeDepictTests testDepictPrdCCPathList\n")
+        ccPathList = self.__getPathList(
+            topPath=self.__pathPrdChemCompCVS, pattern="*.cif", excludeDirs=["CVS", "REMOVED", "FULL"]
+        )
+        self.assertEqual(len(ccPathList), 9)
+        oeMolTitleList = self.__makeFromFiles(pathList=ccPathList)
+        self.assertEqual(len(oeMolTitleList), len(ccPathList))
+        expected: List[str] = []
+        for ccId, mol, title in oeMolTitleList:
+            _dirPath, fName = os.path.split(title)
+            # The molecule title is the PRDCC data block name which matches the file name
+            self.assertEqual(ccId, fName[:-4])
+            self.assertTrue(ccId.startswith("PRDCC_"))
+            imagePath = os.path.join(self.__testoutput, fName[:-4] + ".svg")
+            expected.append(fName[:-4] + ".svg")
+            oed = OeDepict(verbose=self.__verbose, log=self.__lfh)
+            oed.setMolTitleList([(ccId, mol, title)])
+            oed.setDisplayOptions(
+                labelAtomName=False,
+                labelAtomCIPStereo=True,
+                labelAtomIndex=False,
+                labelBondIndex=False,
+                bondDisplayWidth=0.5,
+            )
+            oed.setGridOptions(rows=1, cols=1)
+            oed.prepare()
+            oed.write(imagePath)
+            self.__assertFile(imagePath, b"<?xml")
+        self.assertEqual(sorted(os.listdir(self.__testoutput)), sorted(expected))
+
+    def testDepictIdList(self) -> None:
+        """Test case -  get, read, build OE molecule, and depict the molecule in a single image."""
+        self.__lfh.write("\nStarting OeDepictTests testDepictIdList\n")
+        oeMolTitleList = self.__makeFromIds(self.__idList)
+        oed = OeDepict(verbose=self.__verbose, log=self.__lfh)
+        oed.setMolTitleList(oeMolTitleList)
+        oed.setDisplayOptions(
+            imageX=1000,
+            imageY=1000,
+            labelAtomName=True,
+            labelAtomCIPStereo=True,
+            labelAtomIndex=False,
+            labelBondIndex=False,
+            bondDisplayWidth=0.5,
+        )
+        oed.setGridOptions(rows=2, cols=2)
+        oed.prepare()
+        imagePath = os.path.join(self.__testoutput, "myIdListtest.png")
+        oed.write(imagePath)
+        self.__assertFile(imagePath, b"\x89PNG\r\n\x1a\n")
+
+    def testDepictPathList(self) -> None:
+        """Test case -  get, read, build OE molecule, and depict the molecule."""
+        self.__lfh.write("\nStarting OeDepictTests testDepictPathList\n")
+        oeMolTitleList = self.__makeFromFiles(self.__pathList)
+        self.assertEqual(len(oeMolTitleList), len(self.__pathList))
+        self.assertEqual(
+            [title for title, _mol, _path in oeMolTitleList],
+            ["H2U", "A23", "A", "A2L", "A5O", "AET", "ATP", "DG", "A"],
+        )
+        oed = OeDepict(verbose=self.__verbose, log=self.__lfh)
+        oed.setMolTitleList(oeMolTitleList)
+        oed.setDisplayOptions(
+            imageX=1500,
+            imageY=1500,
+            labelAtomName=True,
+            labelAtomCIPStereo=True,
+            labelAtomIndex=False,
+            labelBondIndex=False,
+            bondDisplayWidth=0.5,
+        )
+        oed.setGridOptions(rows=3, cols=3)
+        oed.prepare()
+        imagePath = os.path.join(self.__testoutput, "pathListtest.png")
+        oed.write(imagePath)
+        self.__assertFile(imagePath, b"\x89PNG\r\n\x1a\n")
+
+    def testDepictIdListMulti(self) -> None:
+        """Test case -  get, read, build OE molecule, and depict the molecule."""
+        self.__lfh.write("\nStarting OeDepictTests testDepictIdListMulti\n")
+        oeMolTitleList = self.__makeFromIds(self.__idList)
+        oed = OeDepictMultiPage(verbose=self.__verbose, log=self.__lfh)
+        oed.setMolTitleList(oeMolTitleList)
+        oed.prepare()
+        imagePath = os.path.join(self.__testoutput, "mulitIdListtest.pdf")
+        oed.write(imagePath)
+        self.__assertFile(imagePath, b"%PDF")
+
+    def testDepictPathListMulti(self) -> None:
+        """Test case -  get, read, build OE molecule, and depict the molecule."""
+        self.__lfh.write("\nStarting OeDepictTests testDepictPathListMulti\n")
+        oeMolTitleList = self.__makeFromFiles(self.__pathList)
+        self.assertEqual(len(oeMolTitleList), len(self.__pathList))
+        oed = OeDepictMultiPage(verbose=self.__verbose, log=self.__lfh)
+        oed.setMolTitleList(oeMolTitleList)
+        oed.setDisplayOptions(
+            pageOrientation="Portrait",
+            labelAtomName=True,
+            labelAtomCIPStereo=True,
+            labelAtomIndex=False,
+            labelBondIndex=False,
+            bondDisplayWidth=0.5,
+        )
+        oed.setGridOptions(rows=2, cols=1)
+        oed.prepare()
+        imagePath = os.path.join(self.__testoutput, "multiPathListtest.pdf")
+        oed.write(imagePath)
+        self.__assertFile(imagePath, b"%PDF")
+
+    def testDepictWithErrorsMulti(self) -> None:
+        """Test case -  depicting missing bits --
+
+        The input definition does not exist, so no molecules are built and an
+        empty multi-page document is written.
+        """
+        self.__lfh.write("\nStarting OeDepictTests testDepictWithErrorsMulti\n")
+        self.assertFalse(os.path.exists(self.__pathList2[0]))
+        oeMolTitleList = self.__makeFromFiles(self.__pathList2)
+        self.assertEqual(oeMolTitleList, [])
+        oed = OeDepictMultiPage(verbose=self.__verbose, log=self.__lfh)
+        oed.setMolTitleList(oeMolTitleList)
+        oed.setDisplayOptions(
+            labelAtomName=True,
+            labelAtomCIPStereo=True,
+            labelAtomIndex=False,
+            labelBondIndex=False,
+            bondDisplayWidth=0.5,
+        )
+        oed.prepare()
+        imagePath = os.path.join(self.__testoutput, "myErrortest.pdf")
+        oed.write(imagePath)
+        self.__assertFile(imagePath, b"%PDF")
+
+    def testDepictOneSDF(self) -> None:
+        """Test case -  get, read, build OE molecule from SDF file, and depict the molecule."""
+        self.__lfh.write("\nStarting OeDepictTests testDepictOneSDF\n")
+        oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
+        self.assertTrue(oem.importFile(self.__sdfFilePath, type="3D"))
+        self.assertEqual(oem.getTitle(), "ATP")
+        self.__lfh.write("Title              = %s\n" % oem.getTitle())
+        imagePath = os.path.join(self.__testoutput, "ATP.svg")
+        oed = OeDepict(verbose=self.__verbose, log=self.__lfh)
+        oed.setMolTitleList([("ATP", oem, "Title for ATP")])
+        oed.setDisplayOptions(
+            labelAtomName=True,
+            labelAtomCIPStereo=True,
+            labelAtomIndex=False,
+            labelBondIndex=False,
+            bondDisplayWidth=0.5,
+        )
+        oed.setGridOptions(rows=1, cols=1)
+        oed.prepare()
+        oed.write(imagePath)
+        self.__assertFile(imagePath, b"<?xml")
+        with open(imagePath, encoding="utf-8") as ifh:
+            self.assertIn("Title for ATP", ifh.read())
+
+    def testDepictSMILES(self) -> None:
+        """Test case -  create depiction from SMILES descriptor."""
+        self.__lfh.write("\nStarting OeDepictTests testDepictSMILES\n")
+        imagePath = os.path.join(self.__testoutput, "benzene.svg")
+        oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
+        ok = oem.importSmiles("c1ccccc1")
+        self.assertTrue(ok)
+
+        oed = OeDepict(verbose=self.__verbose, log=self.__lfh)
+        oed.setMolTitleList([("benzene", oem, "Title for benzene")])
+        oed.setDisplayOptions(
+            labelAtomName=False,
+            labelAtomCIPStereo=True,
+            labelAtomIndex=False,
+            labelBondIndex=False,
+            bondDisplayWidth=1.0,
+        )
+        oed.setGridOptions(rows=1, cols=1)
+        oed.prepare()
+        oed.write(imagePath)
+        self.__assertFile(imagePath, b"<?xml")
+        with open(imagePath, encoding="utf-8") as ifh:
+            self.assertIn("Title for benzene", ifh.read())
 
 
-def suiteSmiles():
+def suiteSmiles() -> unittest.TestSuite:
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(OeDepictTests("testDepictSMILES"))
     return suiteSelect
 
 
-def suiteDepict():
+def suiteDepict() -> unittest.TestSuite:
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(OeDepictTests("testDepictIdList"))
     suiteSelect.addTest(OeDepictTests("testDepictPathList"))
     return suiteSelect
 
 
-def suiteDepictMulti():
+def suiteDepictMulti() -> unittest.TestSuite:
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(OeDepictTests("testDepictIdListMulti"))
     suiteSelect.addTest(OeDepictTests("testDepictPathListMulti"))
@@ -389,19 +385,19 @@ def suiteDepictMulti():
     return suiteSelect
 
 
-def suiteDepictPrd():
+def suiteDepictPrd() -> unittest.TestSuite:
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(OeDepictTests("testDepictPrdCCPathList"))
     return suiteSelect
 
 
-def suiteDepictCC():
+def suiteDepictCC() -> unittest.TestSuite:
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(OeDepictTests("testDepictCCIdList"))
     return suiteSelect
 
 
-def suiteDepictSDF():
+def suiteDepictSDF() -> unittest.TestSuite:
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(OeDepictTests("testDepictOneSDF"))
     return suiteSelect
@@ -424,6 +420,3 @@ if __name__ == "__main__":
 
     mySuite5 = suiteSmiles()
     unittest.TextTestRunner(verbosity=2).run(mySuite5)
-
-    mySuite3 = suiteDepictCC()
-    unittest.TextTestRunner(verbosity=2).run(mySuite3)

@@ -19,10 +19,11 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.01"
 
+
+import io
 import os
-import sys
-import traceback
 import unittest
+from typing import List, Optional
 
 try:
     from openeye.oechem import OEFloatArray  # noqa: F401 pylint: disable=unused-import
@@ -37,78 +38,74 @@ if not skiptests:
 from mmcif_utils.chemcomp.PdbxChemCompModel import PdbxChemCompModelDescriptor
 from mmcif_utils.chemcomp.PdbxChemCompModelIo import PdbxChemCompModelIo
 
+MODEL_ID = "MTGL00001"
+# Model has no stereo centers so canonical and isomeric SMILES coincide
+MODEL_SMILES = "CCCCCCCCCCCCCCCCCC(=O)OCC(COC(=O)CCCCCCCCCCCCCCCCC)OC(=O)CCCCCCCCCCCCCCCCC"
+
 
 @unittest.skipIf(skiptests, "Requires oe library")
 class OeBuildModelMolTests(unittest.TestCase):
-    def setUp(self):
-        self.__lfh = sys.stderr
+    def setUp(self) -> None:
+        self.__lfh = io.StringIO()
         self.__verbose = True
         HERE = os.path.abspath(os.path.dirname(__file__))
         datadir = os.path.join(HERE, "data")
         self.__modelFilePath = os.path.join(datadir, "MTGL00001.cif")
-        self.__modelFilePathList = [self.__modelFilePath]
+        self.__modelFilePathList: List[str] = [self.__modelFilePath]
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         pass
 
-    def testBuildFromModel(self):
+    def testBuildFromModel(self) -> None:
         """Test case -  build OE molecule from model instance"""
-        self.__lfh.write("\nStarting OeBuildModelMolTests testBuildFromModel\n")
-        try:
-            oem = OeBuildModelMol(verbose=self.__verbose, log=self.__lfh)  # pylint: disable=possibly-used-before-assignment
+        oem = OeBuildModelMol(verbose=self.__verbose, log=self.__lfh)  # pylint: disable=possibly-used-before-assignment
 
-            modelId = oem.setChemCompModelPath(self.__modelFilePath)
-            self.__lfh.write("Model              = %s\n" % modelId)
-            oem.build3D()
-            self.__lfh.write("Title              = %s\n" % oem.getTitle())
-            self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
-            self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
-            pccm = PdbxChemCompModelIo(verbose=self.__verbose, log=self.__lfh)
-            pccm.setFilePath(self.__modelFilePath)
-            dL = pccm.getDescriptorList()
-            for d in dL:
-                pd = PdbxChemCompModelDescriptor(d, verbose=self.__verbose, log=self.__lfh)
-                print(pd.getType())  # noqa: T201
-                if pd.getType() == "SMILES_CANNONICAL":
-                    sm = pd.getDescriptor()
-                    if sm == oem.getIsoSMILES():
-                        self.__lfh.write("+testBuildFromModel. SMILES MATCH for %s\n" % modelId)
-                    else:
-                        self.__lfh.write("+testBuildFromModel. SMILES MISMATCH for %s\n" % modelId)
-                        self.__lfh.write("+testBuildFromModel. SMILES (model)               %s\n" % sm)
-                        self.__lfh.write("+testBuildFromModel. SMILES (reconstructed model) %s\n" % oem.getIsoSMILES())
-        except:  # noqa: E722 pylint: disable=bare-except
-            traceback.print_exc(file=self.__lfh)
-            self.fail()
+        modelId = oem.setChemCompModelPath(self.__modelFilePath)
+        self.assertEqual(modelId, MODEL_ID)
+        self.assertTrue(oem.build3D())
+        self.assertEqual(oem.getTitle(), MODEL_ID)
+        self.assertEqual(oem.getCanSMILES(), MODEL_SMILES)
+        self.assertEqual(oem.getIsoSMILES(), MODEL_SMILES)
 
-    def testSerialize3D(self):
+        pccm = PdbxChemCompModelIo(verbose=self.__verbose, log=self.__lfh)
+        self.assertTrue(pccm.setFilePath(self.__modelFilePath))
+        dL = pccm.getDescriptorList()
+        self.assertGreater(len(dL), 0)
+        typeL: List[Optional[str]] = []
+        for d in dL:
+            # mmcif_utils annotations disagree: getDescriptorList() rows allow None values
+            pd = PdbxChemCompModelDescriptor(d, verbose=self.__verbose, log=self.__lfh)  # type: ignore[arg-type]
+            typeL.append(pd.getType())
+            if pd.getType() == "SMILES_CANNONICAL":
+                # The reconstructed molecule must match the model's stored descriptor
+                self.assertEqual(pd.getDescriptor(), oem.getIsoSMILES())
+        self.assertIn("SMILES_CANNONICAL", typeL)
+
+    def testSerialize3D(self) -> None:
         """Test case -  build OE molecule using 3D data in the chemical component model instance and
         then serialize and deserialize this molecule.
 
         """
-        self.__lfh.write("\nStarting OeBuildModelMolTests testSerialize3D\n")
-        try:
-            oem = OeBuildModelMol(verbose=self.__verbose, log=self.__lfh)
-            for pth in self.__modelFilePathList:
-                modelId = oem.setChemCompModelPath(pth)
-                self.__lfh.write("Model              = %s\n" % modelId)
-                oem.build3D()
-                self.__lfh.write("Title              = %s\n" % oem.getTitle())
-                self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
-                self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
-                oeS = oem.serialize()
-                self.__lfh.write("Serialized string length = %d\n" % len(oeS))
-                oemD = OeBuildModelMol(verbose=self.__verbose, log=self.__lfh)
-                ok = oemD.deserialize(oeS)
-                self.__lfh.write("Deserialized status = %s\n" % ok)
-                self.__lfh.write("Deserialized SMILES (canonical) = %s\n" % oemD.getCanSMILES())
-                self.__lfh.write("Deserialized SMILES (isomeric)  = %s\n" % oemD.getIsoSMILES())
-        except:  # noqa: E722 pylint: disable=bare-except
-            traceback.print_exc(file=self.__lfh)
-            self.fail()
+        oem = OeBuildModelMol(verbose=self.__verbose, log=self.__lfh)
+        for pth in self.__modelFilePathList:
+            modelId = oem.setChemCompModelPath(pth)
+            self.assertEqual(modelId, MODEL_ID)
+            self.assertTrue(oem.build3D())
+            self.assertEqual(oem.getTitle(), MODEL_ID)
+            oeS = oem.serialize()
+            self.assertGreater(len(oeS), 0)
+            oemD = OeBuildModelMol(verbose=self.__verbose, log=self.__lfh)
+            self.assertTrue(oemD.deserialize(oeS))
+            self.assertEqual(oemD.getTitle(), MODEL_ID)
+            self.assertEqual(oemD.getCanSMILES(), oem.getCanSMILES())
+            self.assertEqual(oemD.getIsoSMILES(), oem.getIsoSMILES())
+            mol = oem.getMol()
+            molD = oemD.getMol()
+            assert mol is not None and molD is not None
+            self.assertEqual(molD.NumAtoms(), mol.NumAtoms())
 
 
-def suiteOeModelBuild():
+def suiteOeModelBuild() -> unittest.TestSuite:
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(OeBuildModelMolTests("testBuildFromModel"))
     suiteSelect.addTest(OeBuildModelMolTests("testSerialize3D"))

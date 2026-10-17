@@ -18,8 +18,7 @@ classifiers = [
     "Natural Language :: English",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.6",
-    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
 ]
 dependencies = [
     "mmcif.utils",
@@ -28,7 +27,7 @@ dependencies = [
     "wwpdb.utils.cc_dict_util >= 0.2",
 ]
 
-requires-python = ">=3.6"
+requires-python = ">=3.8"
 
 # https://hatch.pypa.io/latest/how-to/environment/dependency-resolution/
 [project.optional-dependencies]
@@ -61,6 +60,8 @@ exclude = ["/wwpdb/mock-data", "/wwpdb/utils/oe_util/Archive"]
 
 #=================================== Ruff basics =============================#
 [tool.ruff]
+target-version = "py38"
+output-format = "concise"
 
 line-length = 120 # 120 is hatch's default via 'hatch init'
 include = [
@@ -78,12 +79,14 @@ exclude = ["Archive"]
 
 #
 # ------------------------- Ruff misc. options ----------------------
-preview = true
+preview = false
 explicit-preview-rules = true
 
 ignore = [
   "C402",     #  Unnecessary generator (rewrite as a `dict` comprehension)
+  "D419",     # Docstring is empty
   "EXE001",   # Shebang is present but file is not executabl
+  "FA100",    # Add `from __future__ import annotations` - keep typing.List etc. for Python 3.8
   "FBT002",   # Boolean default positional argument in function definition
   "FBT001",   # Boolean-typed positional argument in function definition
   "FURB113",  # Use `stPL.extend(...)` instead of repeatedly calling `stPL.append()`
@@ -120,7 +123,7 @@ ignore = [
 # -------------------- default environment scripts ------------------
 [tool.hatch.envs.default]
 skip-install = true
-dependencies = ["mypy", "ruff >=0.6.9", "wwpdb.utils.testing", "OpenEye-toolkits~=2022.1.1"]
+dependencies = ["mypy", "ruff >=0.6.9", "wwpdb.utils.testing", "mmcif_utils", "wwpdb.utils.cc_dict_util", "OpenEye-toolkits~=2022.1.1"]
 
 [tool.hatch.envs.default.env-vars]
 PIP_EXTRA_INDEX_URL = "https://pypi.anaconda.org/OpenEye/simple"
@@ -159,16 +162,23 @@ run = ["tox"]
 
 # -------------------------  Mypy disable ---------
 [[tool.mypy.overrides]]
-module = ["wwpdb.*", "openeye.*", "mmcif_utils.*", "mmcif.*"]
+module = ["openeye.*", "mmcif.*"]
 ignore_missing_imports = true
 
 [tool.mypy]
+strict = true
+
 exclude = [
 	"test-output",
+    "tests/Archive",
+    "wwpdb/utils/oe_util/Archive"
 ]
 
 # ------------------------ ruff disable until typing added
 [tool.ruff.lint.per-file-ignores]
-"awwpdb/utils/config/ConfigInfoData.py" = ["RUF012"]  # typing.ClassVar
-"wwpdb/utils/config/ConfigInfoData.py" = ["SLF001", "RUF012", "F401"]  # Private member access, should use typing.ClassVar, do not remove unused imports
-
+"tests/*.py" = ["EM101", "TRY003", "S101", "PT027", "PT018"]
+"wwpdb/utils/oe_util/oedepict/OeDepict.py" = ["S101", "PT018"]
+"wwpdb/utils/oe_util/oedepict/OeAlignDepict.py" = ["S101", "PT018"]
+"wwpdb/utils/oe_util/build/OePersist.py" = ["EM101", "TRY003", "TRY301"]
+"wwpdb/utils/oe_util/build/OeChemCompIoUtils.py" = ["EM101", "TRY003"]
+"wwpdb/utils/oe_util/build/OeBuildModelMol.py" = ["EM101", "TRY003"]

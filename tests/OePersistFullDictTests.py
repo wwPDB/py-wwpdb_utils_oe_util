@@ -26,11 +26,11 @@ __version__ = "V0.01"
 import fnmatch
 import os
 import os.path
-import platform
 import sys
+import tempfile
 import time
-import traceback
 import unittest
+from typing import Any, ClassVar, Dict, List, Optional, TextIO, Tuple
 
 try:
     from openeye.oechem import OEFloatArray  # noqa: F401 pylint: disable=unused-import
@@ -41,9 +41,9 @@ except ImportError:
 
 if not skiptests:
     from mmcif_utils.persist.PdbxPersist import PdbxPersist
-
     from wwpdb.utils.cc_dict_util.persist.PdbxChemCompDictIndex import PdbxChemCompDictIndex
     from wwpdb.utils.cc_dict_util.persist.PdbxChemCompDictUtil import PdbxChemCompDictUtil
+
     from wwpdb.utils.oe_util.build.OeBuildMol import OeBuildMol
     from wwpdb.utils.oe_util.build.OePersist import OePersist
 
@@ -52,111 +52,158 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
+HERE = os.path.abspath(os.path.dirname(__file__))
+##
+# Set these as appropriate to checked out versions of the CC and PRDCC CVS repositories
+##
+PATH_CHEM_COMP_CVS = os.path.join(HERE, "ligand-dict-v3")
+PATH_PRD_CHEM_COMP_CVS = os.path.join(HERE, "prdcc-v3")
+EXCLUDE_DIRS = ["CVS", "REMOVED", "FULL"]
+
+
+def getPathList(
+    topPath: str, pattern: str = "*", excludeDirs: Optional[List[str]] = None, recurse: bool = True
+) -> List[str]:
+    """Return a list of file paths in the input topPath which satisfy the input search criteria.
+
+    This version does not follow symbolic links.
+    """
+    pathList: List[str] = []
+    if excludeDirs is None:
+        excludeDirs = []
+    try:
+        names = os.listdir(topPath)
+    except OSError:
+        return pathList
+
+    # expand pattern
+    pattern = pattern or "*"
+    patternList = str.split(pattern, ";")
+
+    for name in names:
+        fullname = os.path.normpath(os.path.join(topPath, name))
+        # check for matching files
+        for pat in patternList:
+            if fnmatch.fnmatch(name, pat):
+                if os.path.isfile(fullname):
+                    pathList.append(fullname)
+                    continue
+        if recurse:
+            # recursively scan directories
+            if os.path.isdir(fullname) and not os.path.islink(fullname) and (name not in excludeDirs):
+                pathList.extend(
+                    getPathList(topPath=fullname, pattern=pattern, excludeDirs=excludeDirs, recurse=recurse)
+                )
+
+    return pathList
+
+
+def getContainerNameList(storePath: str, verbose: bool, lfh: TextIO) -> List[str]:
+    """Return the container names recorded in the index of a chemical component persistent store."""
+    myPersist = PdbxPersist(verbose, lfh)
+    indexD = myPersist.getIndex(dbFileName=storePath)
+    return [str(tup[0]) for tup in indexD.get("__containers__", [])]
+
+
+def makeChemCompStore(storePath: str, verbose: bool, lfh: TextIO) -> Tuple[bool, List[str]]:
+    """Create a chemical component persistent store from the CC repository.  Return status and the input path list."""
+    ccPathList = getPathList(topPath=PATH_CHEM_COMP_CVS, pattern="*.cif", excludeDirs=EXCLUDE_DIRS)
+    if verbose:
+        lfh.write("Pathlist length is %d\n" % len(ccPathList))
+    dUtil = PdbxChemCompDictUtil(verbose=verbose, log=lfh)
+    ok = dUtil.makeStoreFromPathList(pathList=ccPathList, storePath=storePath)
+    return ok, ccPathList
+
+
+def makeOeStore(
+    ccStorePath: str, oeStorePath: str, verbose: bool, lfh: TextIO, debug: bool = False
+) -> Tuple[bool, Dict[str, str]]:
+    """Build a persistent store of OE molecules from the contents of a chemical component persistent store.
+
+    Return the store status and a dictionary of isomeric SMILES for each stored molecule.
+    """
+    myPersist = PdbxPersist(verbose, lfh)
+    myPersist.open(dbFileName=ccStorePath)
+    containerNameList = myPersist.getStoreContainerIndex()
+
+    oem = OeBuildMol(verbose=verbose, log=lfh)
+    molList: List[Dict[str, Any]] = []
+    smilesD: Dict[str, str] = {}
+    for ccId in containerNameList:
+        ccAt = myPersist.fetchObject(containerName=ccId, objectName="chem_comp_atom")
+        ccBnd = myPersist.fetchObject(containerName=ccId, objectName="chem_comp_bond")
+        if ccAt is None or ccBnd is None:
+            continue
+        oem.set(ccId, dcChemCompAtom=ccAt, dcChemCompBond=ccBnd)
+        oem.build3D()
+        if debug:
+            lfh.write("Title              = %s\n" % oem.getTitle())
+            lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
+            lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
+        smilesD[ccId] = oem.getIsoSMILES()
+        molList.append({"name": ccId, "oeb": oem.serialize()})
+
+    myPersist.close()
+    oeP = OePersist(verbose, lfh)
+    ok = oeP.setMoleculeList(moleculeList=molList) and oeP.store(dbFileName=oeStorePath)
+    return ok, smilesD
+
 
 @unittest.skipIf(skiptests, "Cannot import openeye.oechem for tests")
+@unittest.skipUnless(
+    os.path.isdir(PATH_CHEM_COMP_CVS), "Chemical component repository %s not available" % PATH_CHEM_COMP_CVS
+)
 class OePersistFullDictTests(unittest.TestCase):
-    def setUp(self):
+    # Shared, read-only stores used by the fetch tests - built once in setUpClass
+    sharedTmpDir: "ClassVar[Optional[tempfile.TemporaryDirectory[str]]]" = None
+    sharedStorePath: ClassVar[str] = ""
+    sharedSmilesD: ClassVar[Dict[str, str]] = {}
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.sharedTmpDir = tempfile.TemporaryDirectory()
+        ccStorePath = os.path.join(cls.sharedTmpDir.name, "chemcomp-store.db")
+        cls.sharedStorePath = os.path.join(cls.sharedTmpDir.name, "oe-store.db")
+        ok, _ = makeChemCompStore(ccStorePath, True, sys.stdout)
+        if not ok:
+            raise RuntimeError("Failed to build shared chemical component store")
+        ok, cls.sharedSmilesD = makeOeStore(ccStorePath, cls.sharedStorePath, True, sys.stdout)
+        if not ok or not cls.sharedSmilesD:
+            raise RuntimeError("Failed to build shared OE molecule store")
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        if cls.sharedTmpDir is not None:
+            cls.sharedTmpDir.cleanup()
+            cls.sharedTmpDir = None
+
+    def setUp(self) -> None:
         self.__lfh = sys.stdout
         self.__verbose = True
         self.__debug = False
         ##
-        self.__here = os.path.abspath(os.path.dirname(__file__))
-        self.__testoutput = os.path.join(self.__here, "test-output", platform.python_version())
-        if not os.path.exists(self.__testoutput):
-            os.makedirs(self.__testoutput)
-
-        ##
-        # Set these as appropriate to checked out versions of the CC and PRDCC CVS repositories
-        ##
-        self.__pathChemCompCVS = os.path.join(self.__here, "ligand-dict-v3")
-        self.__pathPrdChemCompCVS = os.path.join(self.__here, "prdcc-v3")
+        self.__tmpDir = tempfile.TemporaryDirectory()
+        self.__testoutput = self.__tmpDir.name
         ##
         # file names for persistent stores -
         self.__persistStorePathCC = os.path.join(self.__testoutput, "chemcomp-store.db")
         self.__indexPathCC = os.path.join(self.__testoutput, "chemcomp-index.pic")
         self.__storePath = os.path.join(self.__testoutput, "oe-store.db")
-        #
-        # Test list of PRD molecule ids
-        #
-        # self.__prdIdListO = [
-        #     "PRDCC_000009",
-        #     "PRDCC_000109",
-        #     "PRDCC_000159",
-        #     "PRDCC_000199",
-        #     "PRDCC_000209",
-        #     "PRDCC_000219",
-        #     "PRDCC_000239",
-        #     "PRDCC_000259",
-        #     "PRDCC_000289",
-        #     "PRDCC_000299",
-        #     "PRDCC_000309",
-        #     "PRDCC_000319",
-        #     "PRDCC_000339",
-        #     "PRDCC_000379",
-        #     "PRDCC_000409",
-        #     "PRDCC_000419",
-        # ]
 
-        #
-        # self.__prdIdList = [
-        #     "PRD_000009",
-        #     "PRD_000109",
-        #     "PRD_000159",
-        #     "PRD_000199",
-        #     "PRD_000209",
-        #     "PRD_000219",
-        #     "PRD_000239",
-        #     "PRD_000259",
-        #     "PRD_000289",
-        #     "PRD_000299",
-        #     "PRD_000309",
-        #     "PRD_000319",
-        #     "PRD_000339",
-        #     "PRD_000379",
-        #     "PRD_000409",
-        #     "PRD_000419",
-        # ]
+    def tearDown(self) -> None:
+        self.__tmpDir.cleanup()
 
-        # self.__prdIdList = ["PRDCC_000010"]
+    def __createChemCompStore(self) -> List[str]:
+        """Create the per-test chemical component store and return the list of stored container names."""
+        ok, ccPathList = makeChemCompStore(self.__persistStorePathCC, self.__verbose, self.__lfh)
+        self.assertTrue(ok, "makeStoreFromPathList failed")
+        self.assertTrue(len(ccPathList) > 0)
+        containerNameList = getContainerNameList(self.__persistStorePathCC, self.__verbose, self.__lfh)
+        expectedIds = sorted(os.path.splitext(os.path.basename(pth))[0] for pth in ccPathList)
+        self.assertEqual(sorted(containerNameList), expectedIds)
+        return containerNameList
 
-    def tearDown(self):
-        pass
-
-    def getPathList(self, topPath, pattern="*", excludeDirs=None, recurse=True):
-        """Return a list of file paths in the input topPath which satisfy the input search criteria.
-
-        This version does not follow symbolic links.
-        """
-        pathList = []
-        if excludeDirs is None:
-            excludeDirs = []
-        try:
-            names = os.listdir(topPath)
-        except OSError:
-            return pathList
-
-        # expand pattern
-        pattern = pattern or "*"
-        patternList = str.split(pattern, ";")
-
-        for name in names:
-            fullname = os.path.normpath(os.path.join(topPath, name))
-            # check for matching files
-            for pat in patternList:
-                if fnmatch.fnmatch(name, pat):
-                    if os.path.isfile(fullname):
-                        pathList.append(fullname)
-                        continue
-            if recurse:
-                # recursively scan directories
-                if os.path.isdir(fullname) and not os.path.islink(fullname) and (name not in excludeDirs):
-                    pathList.extend(
-                        self.getPathList(topPath=fullname, pattern=pattern, excludeDirs=excludeDirs, recurse=recurse)
-                    )
-
-        return pathList
-
-    def testCreateChemCompStore(self):
+    def testCreateChemCompStore(self) -> None:
         """Test case -  create persistent store from a path list of chemical component defintions.
 
         Extract the path list by searching the file system of the CVS repository
@@ -166,18 +213,8 @@ class OePersistFullDictTests(unittest.TestCase):
             "\nStarting OePersistFullDictTests testCreateChemCompStore at %s\n"
             % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
         )
-        try:
-            ccPathList = self.getPathList(
-                topPath=self.__pathChemCompCVS, pattern="*.cif", excludeDirs=["CVS", "REMOVED", "FULL"]
-            )
-            if self.__verbose:
-                self.__lfh.write("Pathlist length is %d\n" % len(ccPathList))
-            dUtil = PdbxChemCompDictUtil(verbose=self.__verbose, log=self.__lfh)
-            ret = dUtil.makeStoreFromPathList(pathList=ccPathList, storePath=self.__persistStorePathCC)
-            self.assertTrue(ret, "makeStoreFromPathList failed")
-        except:  # noqa: E722 pylint: disable=bare-except
-            traceback.print_exc(file=self.__lfh)
-            self.fail()
+        containerNameList = self.__createChemCompStore()
+        self.assertIn("ATP", containerNameList)
 
         endTime = time.time()
         self.__lfh.write(
@@ -185,7 +222,8 @@ class OePersistFullDictTests(unittest.TestCase):
             % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime)
         )
 
-    def testUpdateChemCompStoreWithPrd(self):
+    @unittest.skipUnless(os.path.isdir(PATH_PRD_CHEM_COMP_CVS), "PRD chemical component repository not available")
+    def testUpdateChemCompStoreWithPrd(self) -> None:
         """Test case -  update persistent store from a path list of PRD chemical component defintions.
 
         Extract the path list from the file system of the PRD CVS repository.
@@ -195,17 +233,18 @@ class OePersistFullDictTests(unittest.TestCase):
             "\nStarting OePersistFullDictTests testUpdateChemCompStoreWithPrd at %s\n"
             % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
         )
-        try:
-            ccPathList = self.getPathList(
-                topPath=self.__pathPrdChemCompCVS, pattern="*.cif", excludeDirs=["CVS", "REMOVED", "FULL"]
-            )
-            if self.__verbose:
-                self.__lfh.write("PRDCC pathlist length is %d\n" % len(ccPathList))
-            dUtil = PdbxChemCompDictUtil(verbose=self.__verbose, log=self.__lfh)
-            dUtil.updateStoreByFile(pathList=ccPathList, storePath=self.__persistStorePathCC)
-        except:  # noqa: E722 pylint: disable=bare-except
-            traceback.print_exc(file=self.__lfh)
-            self.fail()
+        ccNameList = self.__createChemCompStore()
+        ccPathList = getPathList(topPath=PATH_PRD_CHEM_COMP_CVS, pattern="*.cif", excludeDirs=EXCLUDE_DIRS)
+        if self.__verbose:
+            self.__lfh.write("PRDCC pathlist length is %d\n" % len(ccPathList))
+        self.assertTrue(len(ccPathList) > 0)
+        dUtil = PdbxChemCompDictUtil(verbose=self.__verbose, log=self.__lfh)
+        ok = dUtil.updateStoreByFile(pathList=ccPathList, storePath=self.__persistStorePathCC)
+        self.assertTrue(ok, "updateStoreByFile failed")
+
+        updatedNameList = getContainerNameList(self.__persistStorePathCC, self.__verbose, self.__lfh)
+        prdIds = sorted(os.path.splitext(os.path.basename(pth))[0] for pth in ccPathList)
+        self.assertEqual(sorted(updatedNameList), sorted(ccNameList + prdIds))
 
         endTime = time.time()
         self.__lfh.write(
@@ -213,22 +252,22 @@ class OePersistFullDictTests(unittest.TestCase):
             % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime)
         )
 
-    def testCreateChemCompIndex(self):
+    def testCreateChemCompIndex(self) -> None:
         """Test case -  create search index from chemical component persistent store"""
         startTime = time.time()
         self.__lfh.write(
             "\nStarting OePersistFullDictTests testCreateChemCompIndex at %s\n"
             % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
         )
-        try:
-            if not os.path.exists(self.__persistStorePathCC):
-                self.testCreateChemCompStore()
-            dIndx = PdbxChemCompDictIndex(verbose=self.__verbose, log=self.__lfh)
-            ret = dIndx.makeIndex(storePath=self.__persistStorePathCC, indexPath=self.__indexPathCC)
-            self.assertTrue(len(ret) != 0, "Index failed")
-        except:  # noqa: E722 pylint: disable=bare-except
-            traceback.print_exc(file=self.__lfh)
-            self.fail()
+        containerNameList = self.__createChemCompStore()
+        dIndx = PdbxChemCompDictIndex(verbose=self.__verbose, log=self.__lfh)
+        ret = dIndx.makeIndex(storePath=self.__persistStorePathCC, indexPath=self.__indexPathCC)
+        self.assertTrue(len(ret) != 0, "Index failed")
+        self.assertTrue(os.path.exists(self.__indexPathCC))
+        self.assertTrue(set(ret.keys()) <= set(containerNameList))
+        self.assertIn("ATP", ret)
+        # The index written to disk matches the returned index
+        self.assertEqual(sorted(dIndx.readIndex(indexPath=self.__indexPathCC).keys()), sorted(ret.keys()))
 
         endTime = time.time()
         self.__lfh.write(
@@ -236,7 +275,7 @@ class OePersistFullDictTests(unittest.TestCase):
             % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime)
         )
 
-    def testCreateStoreOE(self):
+    def testCreateStoreOE(self) -> None:
         """Test case -  build persistent store of OE molecules using the contents of the persistent store
         of chemical component defintions.
         """
@@ -245,41 +284,19 @@ class OePersistFullDictTests(unittest.TestCase):
             "\nStarting OePersistFullDictTests testCreateStoreOE at %s\n"
             % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
         )
-        try:
-            myPersist = PdbxPersist(self.__verbose, self.__lfh)
-            indexD = myPersist.getIndex(dbFileName=self.__persistStorePathCC)  # noqa: F841 pylint: disable=unused-variable
-            myPersist.open(dbFileName=self.__persistStorePathCC)
-            containerNameList = myPersist.getStoreContainerIndex()
-
-            oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
-            molList = []
-            for ccId in containerNameList:
-                ccAt = myPersist.fetchObject(containerName=ccId, objectName="chem_comp_atom")
-                ccBnd = myPersist.fetchObject(containerName=ccId, objectName="chem_comp_bond")
-                if ccAt is None or ccBnd is None:
-                    continue
-                oem.set(ccId, dcChemCompAtom=ccAt, dcChemCompBond=ccBnd)
-                oem.build3D()
-                if self.__debug:
-                    self.__lfh.write("Title              = %s\n" % oem.getTitle())
-                    self.__lfh.write("SMILES (canonical) = %s\n" % oem.getCanSMILES())
-                    self.__lfh.write("SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
-                molD = {}
-                molD["name"] = ccId
-                molD["oeb"] = oem.serialize()
-                molList.append(molD)
-
-            myPersist.close()
-            oeP = OePersist(self.__verbose, self.__lfh)
-            oeP.setMoleculeList(moleculeList=molList)
-            oeP.store(dbFileName=self.__storePath)
-            mL = oeP.getIndex(dbFileName=self.__storePath)
-            if self.__debug:
-                self.__lfh.write("OePersistTests(testCreateStore) molecule list %r\n" % mL)
-
-        except:  # noqa: E722 pylint: disable=bare-except
-            traceback.print_exc(file=self.__lfh)
-            self.fail()
+        containerNameList = self.__createChemCompStore()
+        ok, smilesD = makeOeStore(
+            self.__persistStorePathCC, self.__storePath, self.__verbose, self.__lfh, debug=self.__debug
+        )
+        self.assertTrue(ok, "OE molecule store creation failed")
+        self.assertTrue(len(smilesD) > 0)
+        oeP = OePersist(self.__verbose, self.__lfh)
+        mL = oeP.getIndex(dbFileName=self.__storePath)
+        if self.__debug:
+            self.__lfh.write("OePersistTests(testCreateStore) molecule list %r\n" % mL)
+        self.assertEqual(sorted(mL), sorted(smilesD.keys()))
+        self.assertTrue(set(mL) <= set(containerNameList))
+        self.assertIn("ATP", mL)
 
         endTime = time.time()
         self.__lfh.write(
@@ -287,34 +304,37 @@ class OePersistFullDictTests(unittest.TestCase):
             % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime)
         )
 
-    def testFetchAll(self):
+    def __assertRoundTrip(self, oem: "OeBuildMol", molD: Any, ccId: str) -> None:
+        """Check that a fetched molecule deserializes to the molecule originally stored."""
+        self.assertIsNotNone(molD, "fetch failed for %s" % ccId)
+        self.assertEqual(molD["name"], ccId)
+        ok = oem.deserialize(molD["oeb"])
+        if not ok:
+            self.__lfh.write("Deserialized status %s = %s\n" % (ccId, ok))
+        self.assertTrue(ok, "deserialize failed for %s" % ccId)
+        if self.__debug:
+            self.__lfh.write("Deserialized SMILES (canonical) = %s\n" % oem.getCanSMILES())
+            self.__lfh.write("Deserialized SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
+        self.assertEqual(oem.getIsoSMILES(), self.sharedSmilesD[ccId], "SMILES mismatch for %s" % ccId)
+
+    def testFetchAll(self) -> None:
         """Test case -  fetch all of the molecules in an 'open' persistent store"""
         startTime = time.time()
         self.__lfh.write(
             "\nStarting OePersistFullDictTests testFetchAll at %s\n"
             % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
         )
+        myPersist = OePersist(self.__verbose, self.__lfh)
+        self.assertTrue(myPersist.open(dbFileName=self.sharedStorePath))
         try:
-            myPersist = OePersist(self.__verbose, self.__lfh)
-            myPersist.open(dbFileName=self.__storePath)
             moleculeNameList = myPersist.getStoreMoleculeIndex()
+            self.assertEqual(sorted(moleculeNameList), sorted(self.sharedSmilesD.keys()))
             oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
             for ccId in moleculeNameList:
                 molD = myPersist.fetchMolecule(moleculeName=ccId)
-                # name = molD['name']
-                ok = oem.deserialize(molD["oeb"])
-                if not ok:
-                    self.__lfh.write("Deserialized status %s = %s\n" % (ccId, ok))
-                    continue
-                if self.__debug:
-                    self.__lfh.write("Deserialized SMILES (canonical) = %s\n" % oem.getCanSMILES())
-                    self.__lfh.write("Deserialized SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
-
-            myPersist.close()
-
-        except:  # noqa: E722 pylint: disable=bare-except
-            traceback.print_exc(file=self.__lfh)
-            self.fail()
+                self.__assertRoundTrip(oem, molD, ccId)
+        finally:
+            self.assertTrue(myPersist.close())
 
         endTime = time.time()
         self.__lfh.write(
@@ -322,7 +342,7 @@ class OePersistFullDictTests(unittest.TestCase):
             % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime)
         )
 
-    def testFetchOne(self):
+    def testFetchOne(self) -> None:
         """Test case -  fetch all of the molecules in the persistent store one by one.  Each fetch reopens
         the store.
         """
@@ -331,25 +351,13 @@ class OePersistFullDictTests(unittest.TestCase):
             "\nStarting OePersistFullDictTests testFetchOne at %s\n"
             % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
         )
-        try:
-            myPersist = OePersist(self.__verbose, self.__lfh)
-            moleculeNameList = myPersist.getIndex(dbFileName=self.__storePath)
-            oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
-            for ccId in moleculeNameList:
-                molD = myPersist.fetchOneMolecule(dbFileName=self.__storePath, moleculeName=ccId)
-                # name = molD['name']
-                ok = oem.deserialize(molD["oeb"])
-                if not ok:
-                    self.__lfh.write("Deserialized status %s = %s\n" % (ccId, ok))
-                    continue
-
-                if self.__debug:
-                    self.__lfh.write("Deserialized SMILES (canonical) = %s\n" % oem.getCanSMILES())
-                    self.__lfh.write("Deserialized SMILES (isomeric)  = %s\n" % oem.getIsoSMILES())
-
-        except:  # noqa: E722 pylint: disable=bare-except
-            traceback.print_exc(file=self.__lfh)
-            self.fail()
+        myPersist = OePersist(self.__verbose, self.__lfh)
+        moleculeNameList = myPersist.getIndex(dbFileName=self.sharedStorePath)
+        self.assertEqual(sorted(moleculeNameList), sorted(self.sharedSmilesD.keys()))
+        oem = OeBuildMol(verbose=self.__verbose, log=self.__lfh)
+        for ccId in moleculeNameList:
+            molD = myPersist.fetchOneMolecule(dbFileName=self.sharedStorePath, moleculeName=ccId)
+            self.__assertRoundTrip(oem, molD, ccId)
 
         endTime = time.time()
         self.__lfh.write(
@@ -358,20 +366,20 @@ class OePersistFullDictTests(unittest.TestCase):
         )
 
 
-def suiteCreateStoreCC():
+def suiteCreateStoreCC() -> unittest.TestSuite:
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(OePersistFullDictTests("testCreateChemCompStore"))
     #    suiteSelect.addTest(OePersistFullDictTests("testUpdateChemCompStoreWithPrd"))
     return suiteSelect
 
 
-def suiteCreateIndexCC():
+def suiteCreateIndexCC() -> unittest.TestSuite:
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(OePersistFullDictTests("testCreateChemCompIndex"))
     return suiteSelect
 
 
-def suiteCreateStoreOE():
+def suiteCreateStoreOE() -> unittest.TestSuite:
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(OePersistFullDictTests("testCreateStoreOE"))
     #    suiteSelect.addTest(OePersistFullDictTests("testFetchAll"))
@@ -380,7 +388,7 @@ def suiteCreateStoreOE():
     return suiteSelect
 
 
-def suiteSearchStoreOE():
+def suiteSearchStoreOE() -> unittest.TestSuite:
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(OePersistFullDictTests("testFetchAll"))
     suiteSelect.addTest(OePersistFullDictTests("testFetchOne"))
@@ -388,19 +396,15 @@ def suiteSearchStoreOE():
 
 
 if __name__ == "__main__":
-    here = os.path.abspath(os.path.dirname(__file__))
-    testoutput = os.path.join(here, "test-output", platform.python_version())
-    if not os.access(os.path.join(testoutput, "chemcomp-store.db"), os.F_OK):
-        mySuite = suiteCreateStoreCC()
-        unittest.TextTestRunner(verbosity=2).run(mySuite)
+    # Each test builds the stores it needs in a temporary directory, so the suites are independent
+    mySuite = suiteCreateStoreCC()
+    unittest.TextTestRunner(verbosity=2).run(mySuite)
 
-    # if not os.access(os.path.join(testoutput, "chemcomp-index.pic"), os.F_OK):
-    #     mySuite = suiteCreateIndexCC()
-    #     unittest.TextTestRunner(verbosity=2).run(mySuite)
+    # mySuite = suiteCreateIndexCC()
+    # unittest.TextTestRunner(verbosity=2).run(mySuite)
 
-    # if not os.access(os.path.join(testoutput, "oe-store.db"), os.F_OK):
-    #     mySuite = suiteCreateStoreOE()
-    #     unittest.TextTestRunner(verbosity=2).run(mySuite)
+    # mySuite = suiteCreateStoreOE()
+    # unittest.TextTestRunner(verbosity=2).run(mySuite)
 
     # mySuite = suiteSearchStoreOE()
     # unittest.TextTestRunner(verbosity=2).run(mySuite)

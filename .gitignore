@@ -107,3 +107,6 @@ test-output/
 
 # emacs
 *~
+
+# OpenEye license (local only)
+oe_license.txt
