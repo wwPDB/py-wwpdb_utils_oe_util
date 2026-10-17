@@ -26,6 +26,7 @@ import os
 import os.path
 import sys
 import traceback
+from typing import Any, Dict, Iterable, List, Optional, TextIO, Tuple
 
 from openeye.oechem import (
     OEAddExplicitHydrogens,
@@ -36,6 +37,7 @@ from openeye.oechem import (
     OEExprOpts_ExactAtoms,
     OEExprOpts_ExactBonds,
     OEFloatArray,
+    OEGraphMol,
     OEGreenTint,
     OEIsAtomMember,
     OEIsBondMember,
@@ -67,9 +69,18 @@ from openeye.oedepict import (
     OEWriteImage,
     OEWriteMultiPageImage,
 )
-
 from wwpdb.utils.cc_dict_util.timeout.TimeoutMultiProc import timeout
+
 from wwpdb.utils.oe_util.build.OeBuildMol import OeBuildMol
+
+# (refId, refPath, refTitle, fitId, fitPath, fitTitle)
+PairTuple = Tuple[str, str, str, str, str, str]
+# (refId, refAtomIdx, refAtomType, refAtomName, fitId, fitAtomIdx, fitAtomName)
+AtomMapTuple = Tuple[Optional[str], int, str, str, Optional[str], int, str]
+# (refId, refAtomIdx, refAtomicNum, refAtomName, fitId, fitAtomIdx, fitAtomicNum, fitAtomName)
+AtomMapAltTuple = Tuple[Optional[str], int, int, str, Optional[str], int, int, str]
+# (refId, refAtomName, fitId, fitAtomName)
+AtomNameMapTuple = Tuple[Optional[str], str, Optional[str], str]
 
 
 class OeDepictMCSAlign:
@@ -79,37 +90,43 @@ class OeDepictMCSAlign:
 
     """
 
-    def __init__(self, verbose=True, log=sys.stderr):
+    def __init__(self, verbose: bool = True, log: TextIO = sys.stderr) -> None:
         self.__verbose = verbose
         self.__debug = False
         self.__lfh = log
-        self.__refId = None
-        self.__refmol = None
-        self.__refTitle = None
-        self.__fitId = None
-        self.__fitmol = None
-        self.__fitTitle = None
-        self.__pairTupleList = []
+        self.__refId: Optional[str] = None
+        self.__refmol: Optional[OEGraphMol] = None
+        self.__refTitle: Optional[str] = None
+        self.__fitId: Optional[str] = None
+        self.__fitmol: Optional[OEGraphMol] = None
+        self.__fitTitle: Optional[str] = None
+        self.__pairTupleList: List[PairTuple] = []
         self.__minAtomMatchFraction = 0.50
         self.__pageOrientation = "portrait"
         self.__searchType = "default"
-        self.__refFD = {}
-        self.__fitFD = {}
-        self.__refPath = None
-        self.__fitPath = None
-        self.__mcss = None
-        self.__image = None
-        self.__grid = None
-        self.__opts = None
-        self.__gridRows = None
-        self.__gridCols = None
-        self.__multi = None
+        self.__refFD: Optional[Dict[str, Any]] = {}
+        self.__fitFD: Dict[str, Any] = {}
+        self.__refPath: Optional[str] = None
+        self.__fitPath: Optional[str] = None
+        self.__mcss: Optional[OEMCSSearch] = None
+        self.__image: Optional[OEImage] = None
+        self.__grid: Optional[OEImageGrid] = None
+        self.__opts: Optional[OE2DMolDisplayOptions] = None
+        self.__gridRows: Optional[int] = None
+        self.__gridCols: Optional[int] = None
+        self.__multi: Optional[OEMultiPageImageFile] = None
 
-    def setSearchType(self, sType="default"):
+    def setSearchType(self, sType: str = "default") -> str:
         self.__searchType = sType
         return self.__searchType
 
-    def setRefId(self, ccId, title=None, suppressHydrogens=False, cachePath="/data/components/ligand-dict-v3"):
+    def setRefId(
+        self,
+        ccId: str,
+        title: Optional[str] = None,
+        suppressHydrogens: bool = False,
+        cachePath: str = "/data/components/ligand-dict-v3",
+    ) -> None:
         """Set the query molecule for MCSS comparison using the input chemical component ID.
         It is assumed that the definition for this ID can be obtained from the chemical component
         repository.
@@ -136,7 +153,14 @@ class OeDepictMCSAlign:
         OEPrepareDepiction(self.__refmol)
         self.__setupMCSS(self.__refmol)
 
-    def setRefPath(self, ccPath, title=None, suppressHydrogens=False, type="CC", importType="2D"):  # noqa: A002 pylint: disable=redefined-builtin
+    def setRefPath(
+        self,
+        ccPath: str,
+        title: Optional[str] = None,
+        suppressHydrogens: bool = False,
+        type: str = "CC",  # noqa: A002 pylint: disable=redefined-builtin
+        importType: str = "2D",
+    ) -> None:
         """Set the query molecule for MCSS comparison using the input file path.
 
         The file type is either ['CC'] for a chemical component definition or another file type
@@ -160,20 +184,28 @@ class OeDepictMCSAlign:
 
         if self.__verbose:
             self.__lfh.write("Derived ref ID     = %s\n" % self.__refId)
-            self.__lfh.write("SMILES (stereo)  = %s\n" % self.__refFD["SMILES_STEREO"])
+            # Known issue: __refFD is None when __getMiscFile fails (TypeError, relied on by tests)
+            self.__lfh.write("SMILES (stereo)  = %s\n" % self.__refFD["SMILES_STEREO"])  # type: ignore[index]
         #
         # Insert title here -
+        # Known issue: __refmol is None when __getMiscFile fails (AttributeError, relied on by tests)
         if title is not None:
-            self.__refmol.SetTitle(title)
+            self.__refmol.SetTitle(title)  # type: ignore[union-attr]
             self.__refTitle = title
         else:
-            self.__refmol.SetTitle(self.__refId)
+            self.__refmol.SetTitle(self.__refId)  # type: ignore[union-attr]
             self.__refTitle = None
 
         OEPrepareDepiction(self.__refmol)
         self.__setupMCSS(self.__refmol)
 
-    def setFitId(self, ccId, title=None, suppressHydrogens=False, cachePath="/data/components/ligand-dict-v3"):
+    def setFitId(
+        self,
+        ccId: str,
+        title: Optional[str] = None,
+        suppressHydrogens: bool = False,
+        cachePath: str = "/data/components/ligand-dict-v3",
+    ) -> None:
         """Set the ID of the target/library molecule for MCSS comparison."""
         self.__fitId = ccId
         ccIdU = ccId.upper()
@@ -191,7 +223,7 @@ class OeDepictMCSAlign:
             self.__fitmol.SetTitle(self.__fitId)
             self.__fitTitle = None
 
-    def setFitPath(self, ccPath, title=None, suppressHydrogens=False):
+    def setFitPath(self, ccPath: str, title: Optional[str] = None, suppressHydrogens: bool = False) -> None:
         """Set the path of the target/library molecule for MCSS comparison."""
         (self.__fitId, self.__fitmol, self.__fitFD) = self.__getCCDefFile(ccPath, suppressHydrogens=suppressHydrogens)
         if title is not None:
@@ -201,7 +233,12 @@ class OeDepictMCSAlign:
             self.__fitmol.SetTitle(self.__fitId)
             self.__fitTitle = None
 
-    def setFitIdList(self, ccIdList, cachePath="/data/components/ligand-dict-v3", suppressHydrogens=False):  # noqa: ARG002 pylint: disable=unused-argument
+    def setFitIdList(
+        self,
+        ccIdList: Iterable[str],
+        cachePath: str = "/data/components/ligand-dict-v3",
+        suppressHydrogens: bool = False,  # noqa: ARG002 pylint: disable=unused-argument
+    ) -> None:
         """Set the list of IDs to be compared with reference molecule by MCSS.
 
         From the input ID list build the internal pair list of
@@ -209,6 +246,9 @@ class OeDepictMCSAlign:
         """
         self.__pairTupleList = []
         for ccId in ccIdList:
+            assert (
+                self.__refId is not None and self.__refPath is not None
+            )  # refId + '/' raises TypeError below; refPath is always set with refId
             refId = self.__refId
             refPath = self.__refPath
             fitId = ccId
@@ -218,7 +258,11 @@ class OeDepictMCSAlign:
             fitTitle = fitId + "/" + refId
             self.__pairTupleList.append((refId, refPath, refTitle, fitId, fitPath, fitTitle))
 
-    def setFitPathList(self, fitPathTupList, suppressHydrogens=False):  # noqa: ARG002 pylint: disable=unused-argument
+    def setFitPathList(
+        self,
+        fitPathTupList: Iterable[Tuple[str, str, Optional[str]]],
+        suppressHydrogens: bool = False,  # noqa: ARG002 pylint: disable=unused-argument
+    ) -> None:
         """Set the list of paths for the target/library molecules to be compared with reference molecule by MCSS.
 
         From the input path tuple list build the internal pair list of
@@ -226,13 +270,21 @@ class OeDepictMCSAlign:
         """
         self.__pairTupleList = []
         for fitId, fitPath, _fitTitle in fitPathTupList:
+            assert (
+                self.__refId is not None and self.__refPath is not None
+            )  # refId + '/' raises TypeError below; refPath is always set with refId
             refId = self.__refId
             refPath = self.__refPath
             refTitle = refId + "/" + fitId
             newFitTitle = fitId + "/" + refId
             self.__pairTupleList.append((refId, refPath, refTitle, fitId, fitPath, newFitTitle))
 
-    def setPairIdList(self, pairIdList, cachePath="/data/components/ligand-dict-v3", suppressHydrogens=False):  # noqa: ARG002 pylint: disable=unused-argument
+    def setPairIdList(
+        self,
+        pairIdList: Iterable[Tuple[str, str]],
+        cachePath: str = "/data/components/ligand-dict-v3",
+        suppressHydrogens: bool = False,  # noqa: ARG002 pylint: disable=unused-argument
+    ) -> None:
         """Set the list of ID pais to be aligned by MCSS.
 
         From the input ID list build the internal pair list of
@@ -249,7 +301,9 @@ class OeDepictMCSAlign:
             fitTitle = fitId + "/" + refId
             self.__pairTupleList.append((refId, refPath, refTitle, fitId, fitPath, fitTitle))
 
-    def __getCCDefFile(self, ccPath, suppressHydrogens=False):
+    def __getCCDefFile(
+        self, ccPath: str, suppressHydrogens: bool = False
+    ) -> Tuple[Optional[str], OEGraphMol, Dict[str, Any]]:
         """Fetch the molecule definition (ccPath) and build OE molecules
         for comparison and depiction.
 
@@ -267,7 +321,7 @@ class OeDepictMCSAlign:
             self.__lfh.write("  InChI key          = %s\n" % oem.getInChIKey())
             self.__lfh.write("  InChI              = %s\n" % oem.getInChI())
 
-        fD = {}
+        fD: Dict[str, Any] = {}
         fD = {
             "Formula": oem.getFormula(),
             "SMILES": oem.getCanSMILES(),
@@ -280,7 +334,9 @@ class OeDepictMCSAlign:
             return (ccId, oem.getGraphMolSuppressH(), fD)
         return (ccId, oem.getMol(), fD)
 
-    def __getMiscFile(self, ccPath, suppressHydrogens=False, importType="2D"):
+    def __getMiscFile(
+        self, ccPath: str, suppressHydrogens: bool = False, importType: str = "2D"
+    ) -> Tuple[Optional[str], Optional[OEGraphMol], Optional[Dict[str, Any]]]:
         """Fetch a miscellaneous chemical file (ccPath) and build OE molecules
         for comparison and depiction.
 
@@ -307,7 +363,7 @@ class OeDepictMCSAlign:
             else:
                 tMol = oem.getMol()
 
-            molXyzL = []
+            molXyzL: List[Tuple[int, int, int, str, str, str, str, str]] = []
             if importType == "3D":
                 for ii, atm in enumerate(tMol.GetAtoms()):
                     xyzL = OEFloatArray(3)
@@ -324,7 +380,7 @@ class OeDepictMCSAlign:
                             "%.3f" % xyzL[2],
                         )
                     )
-            fD = {}
+            fD: Dict[str, Any] = {}
             fD = {
                 "Formula": oem.getFormula(),
                 "SMILES": oem.getCanSMILES(),
@@ -350,7 +406,7 @@ class OeDepictMCSAlign:
 
         return None, None, None
 
-    def __setupMCSS(self, refmol):
+    def __setupMCSS(self, refmol: OEGraphMol) -> None:
         """Internal initialization for the MCSS comparison."""
         if self.__searchType == "default":
             self.__mcss = OEMCSSearch(OEMCSType_Approximate)
@@ -390,11 +446,19 @@ class OeDepictMCSAlign:
         # self.__mcss.SetMinAtoms(nAtomsRef/2)
 
     @timeout(15)
-    def testAlign(self, suppressHydrogens=False, unique=True, minFrac=1.0):  # noqa: ARG002 pylint: disable=unused-argument
+    def testAlign(
+        self,
+        suppressHydrogens: bool = False,  # noqa: ARG002 pylint: disable=unused-argument
+        unique: bool = True,
+        minFrac: float = 1.0,
+    ) -> List[AtomMapTuple]:
         """Test the MCSS comparison between current reference and fit molecules -
         Return list of corresponding atoms on success or an empty list otherwise.
         """
-        atomMap = []
+        atomMap: List[AtomMapTuple] = []
+        assert (
+            self.__refmol is not None and self.__fitmol is not None and self.__mcss is not None
+        )  # would raise AttributeError below anyway
         nAtomsRef = self.__refmol.NumAtoms()
         nAtomsFit = self.__fitmol.NumAtoms()
         minAtoms = int(min(nAtomsRef, nAtomsFit) * minFrac)
@@ -426,11 +490,19 @@ class OeDepictMCSAlign:
         return atomMap
 
     @timeout(30)
-    def doAlign(self, suppressHydrogens=False, unique=True, minFrac=1.0):  # noqa: ARG002  pylint: disable=unused-argument
+    def doAlign(
+        self,
+        suppressHydrogens: bool = False,  # noqa: ARG002 pylint: disable=unused-argument
+        unique: bool = True,
+        minFrac: float = 1.0,
+    ) -> Tuple[int, str, int, str, List[AtomMapTuple]]:
         """Test the MCSS comparison between current reference and fit molecules -
         Return list of corresponding atoms on success or an empty list otherwise.
         """
-        atomMap = []
+        atomMap: List[AtomMapTuple] = []
+        assert (
+            self.__refmol is not None and self.__fitmol is not None and self.__mcss is not None
+        )  # would raise AttributeError below anyway
         nAtomsRef = self.__refmol.NumAtoms()
         nAtomsFit = self.__fitmol.NumAtoms()
         minAtoms = int(min(nAtomsRef, nAtomsFit) * minFrac)
@@ -459,14 +531,23 @@ class OeDepictMCSAlign:
                     )
                 )
 
+        assert self.__refFD is not None  # would raise TypeError below anyway
         return (nAtomsRef, self.__refFD["SMILES_STEREO"], nAtomsFit, self.__fitFD["SMILES_STEREO"], atomMap)
 
     @timeout(30)
-    def doAlignAlt(self, suppressHydrogens=False, unique=True, minFrac=1.0):  # noqa: ARG002 pylint: disable=unused-argument
+    def doAlignAlt(
+        self,
+        suppressHydrogens: bool = False,  # noqa: ARG002 pylint: disable=unused-argument
+        unique: bool = True,
+        minFrac: float = 1.0,
+    ) -> Tuple[int, Optional[Dict[str, Any]], int, Dict[str, Any], List[AtomMapAltTuple]]:
         """Test the MCSS comparison between current reference and fit molecules -
         Return list of corresponding atoms on success or an empty list otherwise.
         """
-        atomMap = []
+        atomMap: List[AtomMapAltTuple] = []
+        assert (
+            self.__refmol is not None and self.__fitmol is not None and self.__mcss is not None
+        )  # would raise AttributeError below anyway
         nAtomsRef = self.__refmol.NumAtoms()
         nAtomsFit = self.__fitmol.NumAtoms()
         minAtoms = int(min(nAtomsRef, nAtomsFit) * minFrac)
@@ -497,7 +578,7 @@ class OeDepictMCSAlign:
                 )
         return (nAtomsRef, self.__refFD, nAtomsFit, self.__fitFD, atomMap)
 
-    def __setupImage(self, imageX=400, imageY=400):
+    def __setupImage(self, imageX: int = 400, imageY: int = 400) -> None:
         """Internal method to configure a single pair alignment image."""
         self.__image = OEImage(imageX, imageY)
         rows = 1
@@ -508,7 +589,7 @@ class OeDepictMCSAlign:
             self.__lfh.write("Num rows    %d\n" % self.__grid.NumRows())
         self.__opts = OE2DMolDisplayOptions(self.__grid.GetCellWidth(), self.__grid.GetCellHeight(), OEScale_AutoScale)
 
-    def __setupImageMulti(self, gridRows=2, gridCols=2):
+    def __setupImageMulti(self, gridRows: int = 2, gridCols: int = 2) -> None:
         """Internal method to configure a multipage image."""
         self.__gridRows = gridRows
         self.__gridCols = gridCols
@@ -521,10 +602,11 @@ class OeDepictMCSAlign:
         # self.__opts = OE2DMolDisplayOptions()
         self.__newPage()
 
-    def __newPage(self):
+    def __newPage(self) -> None:
         """Internal method to advance to a new page in a multipage configuration."""
         rows = self.__gridRows
         cols = self.__gridCols
+        assert self.__multi is not None  # would raise AttributeError below anyway
         self.__image = self.__multi.NewPage()
         self.__grid = OEImageGrid(self.__image, rows, cols)
         self.__grid.SetCellGap(20)
@@ -534,23 +616,30 @@ class OeDepictMCSAlign:
             self.__lfh.write("Num rows    %d\n" % self.__grid.NumRows())
         self.__opts = OE2DMolDisplayOptions(self.__grid.GetCellWidth(), self.__grid.GetCellHeight(), OEScale_AutoScale)
 
-    def alignPair(self, imagePath="mcs-match.svg", imageX=400, imageY=400):
+    def alignPair(
+        self, imagePath: str = "mcs-match.svg", imageX: int = 400, imageY: int = 400
+    ) -> List[AtomNameMapTuple]:
         """Compare current reference and fit molecules by MCSS.
 
         Map of corresponding atoms is returned.
 
         imagePath is the path of the output image.
         """
-        atomMap = []
+        atomMap: List[AtomNameMapTuple] = []
         self.__setupImage(imageX=imageX, imageY=imageY)
 
+        assert self.__image is not None and self.__grid is not None and self.__opts is not None  # set by __setupImage
         if self.__refTitle is None:
+            assert self.__refId is not None and self.__fitId is not None  # would raise TypeError below anyway
             self.__refTitle = self.__refId + "/" + self.__fitId
+        assert self.__refmol is not None  # would raise AttributeError below anyway
         self.__refmol.SetTitle(self.__refTitle)
         OEPrepareDepiction(self.__refmol)
 
         if self.__fitTitle is None:
+            assert self.__fitId is not None and self.__refId is not None  # would raise TypeError below anyway
             self.__fitTitle = self.__fitId + "/" + self.__refId
+        assert self.__fitmol is not None  # would raise AttributeError below anyway
         self.__fitmol.SetTitle(self.__fitTitle)
         OEPrepareDepiction(self.__fitmol)
 
@@ -570,6 +659,7 @@ class OeDepictMCSAlign:
         hstyle = OEHighlightStyle_BallAndStick
 
         unique = True
+        assert self.__mcss is not None  # would raise AttributeError below anyway
         miter = self.__mcss.Match(self.__fitmol, unique)
         if miter.IsValid():
             match = miter.Target()
@@ -601,15 +691,15 @@ class OeDepictMCSAlign:
 
     def alignPairList(
         self,
-        imagePath="multi.pdf",
-        suppressHydrogens=False,
-        gridRows=2,
-        gridCols=2,
-        optInverseFit=True,
-        highLightStyle="stick",
-        highLightMatchColor="green",
-        highLightNotMatchColor="pink",
-    ):
+        imagePath: str = "multi.pdf",
+        suppressHydrogens: bool = False,
+        gridRows: int = 2,
+        gridCols: int = 2,
+        optInverseFit: bool = True,
+        highLightStyle: str = "stick",
+        highLightMatchColor: str = "green",
+        highLightNotMatchColor: str = "pink",
+    ) -> List[AtomNameMapTuple]:
         """Compare molecule pairs in the current __pairTupleList.
 
         pairTupleList = (refId,refPath,refTitle,fitId,fitPath,fitTitle)
@@ -619,11 +709,13 @@ class OeDepictMCSAlign:
         Image Output is in multipage layout.
         """
         self.__setupImageMulti(gridRows=gridRows, gridCols=gridCols)
-        atomMap = []
+        assert self.__grid is not None and self.__opts is not None  # set by __setupImageMulti
+        atomMap: List[AtomNameMapTuple] = []
         numRows = self.__grid.NumRows()
         rowIdx = 0
         for refId, refPath, refTitle, fitId, fitPath, fitTitle in self.__pairTupleList:
             self.setRefPath(refPath, title=refTitle, suppressHydrogens=suppressHydrogens)
+            assert self.__refmol is not None  # set by setRefPath (raises otherwise)
             OEPrepareDepiction(self.__refmol)
 
             _tId, fitmol, _fitFD = self.__getCCDefFile(fitPath, suppressHydrogens=suppressHydrogens)
@@ -635,6 +727,7 @@ class OeDepictMCSAlign:
             nAtomsFit = fitmol.NumAtoms()
             minAtoms = min(nAtomsRef, nAtomsFit)
             mcssMinAtoms = int(minAtoms * self.__minAtomMatchFraction)
+            assert self.__mcss is not None  # would raise AttributeError below anyway
             self.__mcss.SetMinAtoms(mcssMinAtoms)
 
             OEPrepareDepiction(fitmol)

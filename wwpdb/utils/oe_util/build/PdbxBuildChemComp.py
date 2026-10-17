@@ -22,6 +22,7 @@ __version__ = "V0.01"
 import sys
 import time
 import traceback
+from typing import Any, Dict, List, Optional, TextIO, Union
 
 from mmcif_utils.style.ChemCompCategoryStyle import ChemCompCategoryStyle
 from mmcif_utils.style.PdbxStyleIoUtil import PdbxStyleIoUtil
@@ -41,6 +42,7 @@ from openeye.oechem import (
     OECreateIsoSmiString,
     OEGetAtomicSymbol,
     OEMol,
+    OEMolBase,
     OEMolecularFormula,
     OEPerceiveCIPStereo,
     OEWriteConstMolecule,
@@ -52,41 +54,41 @@ from openeye.oechem import (
 class PdbxBuildChemComp(PdbxStyleIoUtil):
     """Methods to build chemical component definitions from OE molecule objects."""
 
-    def __init__(self, verbose=True, log=sys.stderr):
+    def __init__(self, verbose: bool = True, log: TextIO = sys.stderr) -> None:
         super(PdbxBuildChemComp, self).__init__(styleObject=ChemCompCategoryStyle(), verbose=verbose, log=log)
 
         # self.__verbose = verbose
         # self.__debug = False
         self.__lfh = log
 
-    def getCategory(self, catName="chem_comp"):
+    def getCategory(self, catName: str = "chem_comp") -> List[Dict[str, str]]:
         return self.getItemDictList(catName)
 
-    def getChemCompCategory(self, catName="chem_comp"):
+    def getChemCompCategory(self, catName: str = "chem_comp") -> List[Dict[str, str]]:
         return self.getItemDictList(catName)
 
-    def getChemCompDict(self):
+    def getChemCompDict(self) -> List[Dict[str, str]]:
         return self.getItemDictList(catName="chem_comp")
 
-    def getBondList(self):
+    def getBondList(self) -> List[List[Union[str, int, float]]]:
         return self.getRowDataList(catName="chem_comp_bond")
 
-    def complyStyle(self):
+    def complyStyle(self) -> bool:
         return self.testStyleComplete(self.__lfh)
 
-    def setBlock(self, blockId):
+    def setBlock(self, blockId: str) -> bool:
         return self.setContainer(containerName=blockId)
 
-    def newBlock(self, blockId):
+    def newBlock(self, blockId: str) -> bool:
         return self.newContainer(containerName=blockId)
 
-    def update(self, catName, attributeName, value, iRow=0):
+    def update(self, catName: str, attributeName: str, value: Union[str, float], iRow: int = 0) -> bool:
         return self.updateAttribute(catName, attributeName, value, iRow=iRow)
 
-    def write(self, filePath):
+    def write(self, filePath: str) -> bool:
         return self.writeFile(filePath)
 
-    def setOeMol(self, oeMol, ccId, name=None, missingModelXyz=True):
+    def setOeMol(self, oeMol: OEMolBase, ccId: str, name: Optional[str] = None, missingModelXyz: bool = True) -> None:
         ccIdU = str(ccId).strip().upper()
         self.newContainer(containerName=ccIdU, overWrite=True)
         self.setContainer(containerName=ccIdU)
@@ -115,7 +117,7 @@ class PdbxBuildChemComp(PdbxStyleIoUtil):
         rowD = self.__makeChemCompAuditRow(ccIdU)
         self.updateRowByAttribute(rowD, "pdbx_chem_comp_audit", iRow=0)
 
-    def writeOther(self, oeMol, filePath, title="None", constantMol=False):
+    def writeOther(self, oeMol: OEMolBase, filePath: str, title: str = "None", constantMol: bool = False) -> bool:
         try:
             ofs = oemolostream()
             ofs.open(filePath)
@@ -132,15 +134,21 @@ class PdbxBuildChemComp(PdbxStyleIoUtil):
             traceback.print_exc(file=self.__lfh)
         return False
 
-    def __getFormalCharge(self, oeMol):
-        fCharge = 0
+    def __getFormalCharge(self, oeMol: OEMolBase) -> int:
+        fCharge: int = 0
         for atom in oeMol.GetAtoms():
             fCharge += atom.GetFormalCharge()
         return fCharge
 
     def __makeChemCompAuditRow(
-        self, ccId, action="CREATE", date=None, processingSite="RCSB", annotator="?", details="?"
-    ):
+        self,
+        ccId: str,
+        action: str = "CREATE",
+        date: Optional[str] = None,
+        processingSite: str = "RCSB",
+        annotator: str = "?",
+        details: str = "?",
+    ) -> Dict[str, Any]:
         """
         loop_
         _pdbx_chem_comp_audit.comp_id
@@ -152,7 +160,7 @@ class PdbxBuildChemComp(PdbxStyleIoUtil):
         ARG "Create component"  1999-07-08 RCSB ? ?
 
         """
-        aRow = {}
+        aRow: Dict[str, Any] = {}
         aRow["comp_id"] = ccId
         aRow["action_type"] = action
         if date is None:
@@ -163,7 +171,7 @@ class PdbxBuildChemComp(PdbxStyleIoUtil):
         aRow["details"] = details
         return aRow
 
-    def __makeChemCompDescriptorCategory(self, ccId, oeMol):
+    def __makeChemCompDescriptorCategory(self, ccId: str, oeMol: OEMolBase) -> List[Dict[str, Any]]:
         """
         loop_
         _pdbx_chem_comp_descriptor.comp_id
@@ -180,8 +188,8 @@ class PdbxBuildChemComp(PdbxStyleIoUtil):
         ARG InChIKey         InChI                1.03  ODKSFYDXXFIFQN-BYPYZUCNSA-O
         #
         """
-        rowL = []
-        aRow = {}
+        rowL: List[Dict[str, Any]] = []
+        aRow: Dict[str, Any] = {}
         aRow["comp_id"] = ccId
         aRow["type"] = "SMILES_CANONICAL"
         aRow["program"] = "OpenEye OEToolkits"
@@ -212,10 +220,17 @@ class PdbxBuildChemComp(PdbxStyleIoUtil):
         return rowL
 
     def __makeChemCompCategory(
-        self, ccId, name=None, formula=None, charge=None, fW=None, site="RCSB", missingModelXyz=False
-    ):
+        self,
+        ccId: str,
+        name: Optional[str] = None,
+        formula: Optional[str] = None,
+        charge: Optional[int] = None,
+        fW: Optional[float] = None,
+        site: str = "RCSB",
+        missingModelXyz: bool = False,
+    ) -> Dict[str, Any]:
         lt = time.strftime("%Y-%m-%d", time.localtime())
-        ccRow = {}
+        ccRow: Dict[str, Any] = {}
         ccRow["id"] = ccId
         if name is not None:
             ccRow["name"] = name
@@ -257,12 +272,12 @@ class PdbxBuildChemComp(PdbxStyleIoUtil):
         ccRow["pdbx_subcomponent_list"] = "?"
         return ccRow
 
-    def __makeChemCompAtomCategory(self, ccId, oeMol):
+    def __makeChemCompAtomCategory(self, ccId: str, oeMol: OEMolBase) -> List[Dict[str, Any]]:
         """Populate elements of chemical component definition for atoms and bonds."""
         idCode = ccId
-        rowL = []
+        rowL: List[Dict[str, Any]] = []
         for ii, atom in enumerate(oeMol.GetAtoms()):
-            atRow = {}
+            atRow: Dict[str, Any] = {}
             atRow["comp_id"] = idCode
             (x, y, z) = oeMol.GetCoords(atom)
             # pdbx_model_Cartn_x_ideal
@@ -287,7 +302,7 @@ class PdbxBuildChemComp(PdbxStyleIoUtil):
             else:
                 atRow["pdbx_aromatic_flag"] = "N"
             # oeSt = OEGetCIPStereo(mol, atom)
-            oeSt = None
+            oeSt: Optional[str] = None
             # if atom.IsChiral():
             cip = OEPerceiveCIPStereo(oeMol, atom)
             if atom.HasStereoSpecified():
@@ -311,9 +326,9 @@ class PdbxBuildChemComp(PdbxStyleIoUtil):
             rowL.append(atRow)
         return rowL
 
-    def __makeChemCompBondCategory(self, ccId, oeMol):
+    def __makeChemCompBondCategory(self, ccId: str, oeMol: OEMolBase) -> List[Dict[str, Any]]:
         idCode = ccId
-        rowL = []
+        rowL: List[Dict[str, Any]] = []
         iBondD = {1: "SING", 2: "DOUB", 3: "TRIP", 4: "QUAD", 5: "AROM", 0: "DELO"}
 
         for ii, bond in enumerate(oeMol.GetBonds()):
@@ -325,7 +340,7 @@ class PdbxBuildChemComp(PdbxStyleIoUtil):
             if (b2 is None) or (len(b1) < 1):
                 continue
             if int(oeOrder) in iBondD:
-                bndRow = {}
+                bndRow: Dict[str, Any] = {}
                 bndRow["comp_id"] = idCode
                 bndRow["atom_id_1"] = b1
                 bndRow["atom_id_2"] = b2
@@ -336,7 +351,7 @@ class PdbxBuildChemComp(PdbxStyleIoUtil):
                 else:
                     bndRow["pdbx_aromatic_flag"] = "N"
 
-                oeSt = None
+                oeSt: Optional[str] = None
                 if bond.GetOrder() == 2:
                     cip = OEPerceiveCIPStereo(oeMol, bond)
                     if bond.HasStereoSpecified():

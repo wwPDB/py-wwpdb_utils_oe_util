@@ -23,6 +23,7 @@ import shelve  # noqa: S403
 import shutil
 import sys
 import traceback
+from typing import Any, Dict, List, Literal, Optional, TextIO, Union
 
 from mmcif_utils.persist.LockFile import LockFile
 
@@ -30,30 +31,30 @@ from mmcif_utils.persist.LockFile import LockFile
 class OePersist:
     """Persistent storage for instances of OE molecules."""
 
-    def __init__(self, verbose=True, log=sys.stderr):
+    def __init__(self, verbose: bool = True, log: TextIO = sys.stderr) -> None:
         self.__verbose = verbose
         self.__debug = True
         self.__lfh = log
-        self.__moleculeList = []
+        self.__moleculeList: List[Dict[str, Any]] = []
 
-        self.__moleculeNameList = []
+        self.__moleculeNameList: List[str] = []
         #
         # Parameters to tune lock file management --
         self.__timeoutSeconds = 10
         self.__retrySeconds = 0.2
         # placeholder for LockFile object for open/close methods
-        self.__lockObj = None
+        self.__lockObj: Optional[LockFile] = None
         self.__isExpired = True
-        self.__db = None
+        self.__db: Optional[shelve.Shelf[Any]] = None
 
-    def __reIndex(self):
+    def __reIndex(self) -> None:
         """Rebuild name and type lists from molecule object list."""
         self.__moleculeNameList = []
         for molecule in self.__moleculeList:
             self.__moleculeNameList.append(molecule["name"])
         self.__isExpired = False
 
-    def __getMoleculeIndex(self, name):
+    def __getMoleculeIndex(self, name: str) -> Optional[int]:
         try:
             if self.__isExpired:
                 self.__reIndex()
@@ -61,10 +62,11 @@ class OePersist:
         except:  # noqa: E722 pylint: disable=bare-except
             return None
 
-    def setMoleculeList(self, moleculeList=None):
+    def setMoleculeList(self, moleculeList: Optional[List[Dict[str, Any]]] = None) -> bool:
         """Initialize molecule data in the internal molecule to be persisted to the data store."""
         try:
-            self.__moleculeList = moleculeList
+            # A None argument is stored as-is; len() below then raises and False is returned.
+            self.__moleculeList = moleculeList  # type: ignore[assignment]  # None kept as-is
             self.__isExpired = True
             if self.__debug:
                 self.__lfh.write("+OePersist.setMoleculeList() - Container list length %d\n" % len(self.__moleculeList))
@@ -76,9 +78,12 @@ class OePersist:
                 traceback.print_exc(file=self.__lfh)
             return False
 
-    def appendMoleculeList(self, moleculeList=None):
+    def appendMoleculeList(self, moleculeList: Optional[List[Dict[str, Any]]] = None) -> bool:
         """Append container data to the internal moleculeList to be persisted to the data store."""
         try:
+            if moleculeList is None:
+                # Same failure extend(None) would raise
+                raise TypeError("'NoneType' object is not iterable")
             self.__moleculeList.extend(moleculeList)
             self.__isExpired = True
             if self.__debug:
@@ -93,7 +98,7 @@ class OePersist:
                 traceback.print_exc(file=self.__lfh)
             return False
 
-    def getMolecule(self, moleculeName):
+    def getMolecule(self, moleculeName: str) -> Optional[Dict[str, Any]]:
         """Return the molecule from internal MoleculeList corresponding to the input molecule name.
 
         **Note that this method is NOT directly fetching data from the internal store.  First recover the
@@ -104,17 +109,17 @@ class OePersist:
             return self.__moleculeList[idx]
         return None
 
-    def getMoleculeList(self):
+    def getMoleculeList(self) -> List[Dict[str, Any]]:
         """Return the current molecule list."""
         return self.__moleculeList
 
-    def getMoleculeNameList(self):
+    def getMoleculeNameList(self) -> List[str]:
         """Return the current list of molecule names."""
         if self.__isExpired:
             self.__reIndex()
         return self.__moleculeNameList
 
-    def open(self, dbFileName="my.db", flag="r"):
+    def open(self, dbFileName: str = "my.db", flag: Literal["r", "w", "c", "n"] = "r") -> bool:
         """Open the persistent store with the input database file name and access mode.
 
         flag = 'r read-only'
@@ -141,15 +146,22 @@ class OePersist:
                 traceback.print_exc(file=self.__lfh)
             return False
 
-    def getStoreMoleculeIndex(self):
+    def getStoreMoleculeIndex(self) -> List[str]:
         try:
-            return self.__db["__index__"]
+            if self.__db is None:
+                # Same failure subscripting None would raise
+                raise TypeError("'NoneType' object is not subscriptable")
+            storeIndex: List[str] = self.__db["__index__"]
+            return storeIndex
         except:  # noqa: E722 pylint: disable=bare-except
             return []
 
-    def close(self):
+    def close(self) -> bool:
         """Close the persistent store"""
         try:
+            if self.__db is None:
+                # Same failure None.close() would raise
+                raise AttributeError("'NoneType' object has no attribute 'close'")
             self.__db.close()
             if self.__lockObj is not None:
                 self.__lockObj.release()
@@ -160,7 +172,7 @@ class OePersist:
                 self.__lockObj.release()
             return False
 
-    def moveStore(self, srcDbFilePath, dstDbFilePath):
+    def moveStore(self, srcDbFilePath: str, dstDbFilePath: str) -> bool:
         """Move source store to destination store with destination locking.
 
         No locking is performed on the source file.
@@ -175,7 +187,7 @@ class OePersist:
             retVal = self.__moveStore(srcDbFilePath, dstDbFilePath)
         return retVal
 
-    def store(self, dbFileName="my.db"):
+    def store(self, dbFileName: str = "my.db") -> bool:
         """Store the current molecule list in persistent database."""
         with LockFile(
             dbFileName,
@@ -187,7 +199,7 @@ class OePersist:
             retVal = self.__storeShelve(dbFileName)
         return retVal
 
-    def recover(self, dbFileName="my.db"):
+    def recover(self, dbFileName: str = "my.db") -> bool:
         """Recover the stored state to the current in-memory molecule representation."""
         with LockFile(
             dbFileName,
@@ -199,7 +211,7 @@ class OePersist:
             retVal = self.__recoverShelve(dbFileName)
         return retVal
 
-    def getIndex(self, dbFileName="my.db"):
+    def getIndex(self, dbFileName: str = "my.db") -> Union[List[str], Dict[Any, Any]]:
         """Recover the index of the persistent store."""
         with LockFile(
             dbFileName,
@@ -211,7 +223,7 @@ class OePersist:
             retVal = self.__indexShelve(dbFileName)
         return retVal
 
-    def updateOneMolecule(self, inputMolecule, dbFileName="my.db"):
+    def updateOneMolecule(self, inputMolecule: Dict[str, Any], dbFileName: str = "my.db") -> bool:
         """Update or append a molecule to an existing store."""
         with LockFile(
             dbFileName,
@@ -223,7 +235,9 @@ class OePersist:
             retVal = self.__updateMoleculeShelve(dbFileName=dbFileName, inputMolecule=inputMolecule)
         return retVal
 
-    def updateMoleculeList(self, dbFileName="my.db", moleculeList=None):
+    def updateMoleculeList(
+        self, dbFileName: str = "my.db", moleculeList: Optional[List[Dict[str, Any]]] = None
+    ) -> bool:
         """Update or append the contents of the input molecule list to an existing store."""
         with LockFile(
             dbFileName,
@@ -235,7 +249,9 @@ class OePersist:
             retVal = self.__updateMoleculeListShelve(dbFileName=dbFileName, updateMoleculeList=moleculeList)
         return retVal
 
-    def fetchOneMolecule(self, dbFileName="my.db", moleculeName=None):
+    def fetchOneMolecule(
+        self, dbFileName: str = "my.db", moleculeName: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
         """Fetch a single object from a named molecule.  This is atomic operation with respect to the store."""
         with LockFile(
             dbFileName,
@@ -247,14 +263,14 @@ class OePersist:
             retVal = self.__fetchOneMoleculeShelve(dbFileName, moleculeName)
         return retVal
 
-    def fetchMolecule(self, moleculeName=None):
+    def fetchMolecule(self, moleculeName: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """Fetch molecule from an open store.
 
         Use this method to extract multiple molecules from an open store.
         """
         return self.__fetchMoleculeShelve(moleculeName)
 
-    def __moveStore(self, src, dst):
+    def __moveStore(self, src: str, dst: str) -> bool:
         """Internal method to perform file move."""
         try:
             shutil.move(src, dst)
@@ -266,7 +282,7 @@ class OePersist:
                 traceback.print_exc(file=self.__lfh)
             return False
 
-    def __storeShelve(self, dbFileName="my.db"):
+    def __storeShelve(self, dbFileName: str = "my.db") -> bool:
         """Create a new persistent store using the internal molecule list."""
         try:
             if self.__isExpired:
@@ -289,7 +305,7 @@ class OePersist:
                 traceback.print_exc(file=self.__lfh)
             return False
 
-    def __indexShelve(self, dbFileName="my.db"):
+    def __indexShelve(self, dbFileName: str = "my.db") -> Union[List[str], Dict[Any, Any]]:
         """Recover the index of molecules in the persistent store."""
         try:
             db = shelve.open(dbFileName, flag="r", protocol=pickle.HIGHEST_PROTOCOL)  # noqa: S301
@@ -307,7 +323,7 @@ class OePersist:
                 traceback.print_exc(file=self.__lfh)
             return {}
 
-    def __recoverShelve(self, dbFileName="my.db"):
+    def __recoverShelve(self, dbFileName: str = "my.db") -> bool:
         """Recover the list of molecules from the persistent store."""
         try:
             self.__moleculeList = []
@@ -332,16 +348,19 @@ class OePersist:
 
     def __fetchOneMoleculeShelve(
         self,
-        dbFileName="my.db",
-        moleculeName=None,
-    ):
+        dbFileName: str = "my.db",
+        moleculeName: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
         """Recover the molecule from from persistent store corresponding to the
         input molecule name.
         """
         try:
             db = shelve.open(dbFileName, flag="r", protocol=pickle.HIGHEST_PROTOCOL)  # noqa: S301
             ky = moleculeName
-            molecule = db[ky]
+            if ky is None:
+                # Same failure shelve raises for a None key
+                raise AttributeError("'NoneType' object has no attribute 'encode'")
+            molecule: Dict[str, Any] = db[ky]
             db.close()
             return molecule
         except Exception as e:  # noqa: BLE001
@@ -354,7 +373,7 @@ class OePersist:
                 traceback.print_exc(file=self.__lfh)
             return None
 
-    def __fetchMoleculeShelve(self, moleculeName=None):
+    def __fetchMoleculeShelve(self, moleculeName: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """Recover the molecule from from persistent store corresponding to the
         input molecule name.
 
@@ -362,7 +381,13 @@ class OePersist:
         """
         try:
             ky = moleculeName
-            molecule = self.__db[ky]
+            if self.__db is None:
+                # Same failure subscripting None would raise
+                raise TypeError("'NoneType' object is not subscriptable")
+            if ky is None:
+                # Same failure shelve raises for a None key
+                raise AttributeError("'NoneType' object has no attribute 'encode'")
+            molecule: Dict[str, Any] = self.__db[ky]
             return molecule
         except Exception as e:  # noqa: BLE001
             if self.__debug:
@@ -373,9 +398,12 @@ class OePersist:
                 traceback.print_exc(file=self.__lfh)
             return None
 
-    def __updateMoleculeShelve(self, dbFileName="my.db", inputMolecule=None):
+    def __updateMoleculeShelve(self, dbFileName: str = "my.db", inputMolecule: Optional[Dict[str, Any]] = None) -> bool:
         """Update/append the single input molecule object into the persistent store."""
         try:
+            if inputMolecule is None:
+                # Same failure subscripting None would raise
+                raise TypeError("'NoneType' object is not subscriptable")
             moleculeName = inputMolecule["name"]
             db = shelve.open(dbFileName, flag="w", protocol=pickle.HIGHEST_PROTOCOL)  # noqa: S301
             #
@@ -412,7 +440,9 @@ class OePersist:
                 traceback.print_exc(file=self.__lfh)
             return False
 
-    def __updateMoleculeListShelve(self, dbFileName="my.db", updateMoleculeList=None):
+    def __updateMoleculeListShelve(
+        self, dbFileName: str = "my.db", updateMoleculeList: Optional[List[Dict[str, Any]]] = None
+    ) -> bool:
         """Update/append the contents of the input molecule list into an existing persistent store."""
         try:
             db = shelve.open(dbFileName, flag="w", protocol=pickle.HIGHEST_PROTOCOL)  # noqa: S301
@@ -421,6 +451,9 @@ class OePersist:
             #
             moleculeNameList = db["__index__"]
 
+            if updateMoleculeList is None:
+                # Same failure iterating None would raise
+                raise TypeError("'NoneType' object is not iterable")
             for updateMolecule in updateMoleculeList:
                 updateMoleculeName = updateMolecule["name"]
                 #
