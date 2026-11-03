@@ -128,7 +128,6 @@ jobs:
         key: 'python | "$(Agent.OS)" | "${{ parameters.python }}" | requirements.txt'
         restoreKeys: | 
           python | "$(Agent.OS)" | "${{ parameters.python }}"
-          python
         path: $(PIP_CACHE_DIR)
       displayName: Cache pip packages
 
